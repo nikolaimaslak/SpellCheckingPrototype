@@ -1,0 +1,104 @@
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --text: #1c2430;
+  --muted: #5d6878;
+  --border: #d5dae1;
+  --accent: #2b6cb0;
+  --ok: #2f7d4f;
+  --bad: #b23a3a;
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14181e;
+    --panel: #1c222b;
+    --text: #e4e8ee;
+    --muted: #9aa5b4;
+    --border: #333c48;
+    --accent: #6ea8e8;
+    --ok: #6cc28f;
+    --bad: #e47c7c;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+h1 { font-size: 1.25rem; margin: 0 0 4px; }
+h2 { font-size: 1rem; margin: 0 0 8px; }
+
+.status { margin: 0 0 16px; color: var(--muted); font-size: 0.875rem; }
+.status[data-state='ready'] { color: var(--ok); }
+.status[data-state='failed'] { color: var(--bad); }
+
+main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.transcript {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  min-height: 120px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.transcript li {
+  white-space: pre-wrap;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  unicode-bidi: plaintext;
+}
+
+.composer {
+  min-height: 80px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  outline: none;
+  unicode-bidi: plaintext;
+}
+
+.composer:focus { border-color: var(--accent); }
+
+.composer:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted);
+}
+
+.email { min-height: 200px; }
+
+/* Each paragraph and list item resolves its own direction. */
+.email p, .email div, .email li { unicode-bidi: plaintext; margin: 0 0 0.5em; }
+
+.toolbar { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+.toolbar button {
+  font: inherit;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}

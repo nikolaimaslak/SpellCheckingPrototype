@@ -1,0 +1,8 @@
+{
+  "hunspell": { "tag": "v1.7.4", "commit": "92aa34b3f378ec115562fb06bd1728d566a339ec", "license": "MPL-1.1 (elected from MPL-1.1/GPL-2.0/LGPL-2.1)" },
+  "emsdk": { "version": "6.0.10", "image": "emscripten/emsdk@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65" },
+  "outputs": {
+    "hunspell.mjs": "f7dea078c3b5d1fc8613d4227ae23320beaaa3600bd8c1e30e57fb6aca7a0e0e",
+    "hunspell.wasm": "835565fa7b52e2f41341491df4df969b6afd2352b8ae8fd788dc17cce6a0d24b"
+  }
+}

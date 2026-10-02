@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Composer assistance demo</title>
+  </head>
+  <body>
+    <header>
+      <h1>Composer assistance demo</h1>
+      <p id="engine-status" class="status" role="status" aria-live="polite">Spelling engine: loading…</p>
+    </header>
+    <main>
+      <section class="panel" aria-labelledby="chat-title">
+        <h2 id="chat-title">Chat</h2>
+        <ol id="chat-transcript" class="transcript" aria-label="Chat transcript"></ol>
+        <div id="chat-composer" class="composer" contenteditable="plaintext-only" dir="auto" role="textbox"
+             aria-multiline="true" aria-label="Chat message" data-placeholder="Type a message — Enter sends, Shift+Enter for a new line"></div>
+      </section>
+      <section class="panel" aria-labelledby="email-title">
+        <h2 id="email-title">Email</h2>
+        <div class="toolbar" role="toolbar" aria-label="Formatting">
+          <button type="button" data-command="bold" aria-label="Bold"><b>B</b></button>
+          <button type="button" data-command="italic" aria-label="Italic"><i>I</i></button>
+          <button type="button" data-command="insertUnorderedList" aria-label="Bulleted list">• List</button>
+          <button type="button" data-command="insertOrderedList" aria-label="Numbered list">1. List</button>
+        </div>
+        <div id="email-composer" class="composer email" contenteditable="true" dir="auto" role="textbox"
+             aria-multiline="true" aria-label="Email body"><p><br /></p></div>
+      </section>
+    </main>
+    <script type="module" src="/src/demo/main.ts"></script>
+  </body>
+</html>

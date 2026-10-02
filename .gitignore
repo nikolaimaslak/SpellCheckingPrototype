@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+
+# Generated dictionaries (English regenerated from dictionary-en by fetch-dicts)
+public/dicts/
+# Arabic dictionary: licensing is an open legal item — local evaluation only, never commit
+.local-dicts/
+
+# Hunspell WASM build workspace (outputs in src/spell/wasm/ ARE committed)
+wasm/.build/
+
+.DS_Store
+*.log
+.vite/

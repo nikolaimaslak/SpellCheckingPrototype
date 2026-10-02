@@ -1,0 +1,139 @@
+9/14/26, 2:27 PM                                            #60254 - [PER] Auto Correct feature in chat and email
+
+
+
+            #60254 [PER] Auto Correct feature in chat and email
+
+     Submitted                          Received via        Requester
+     August 26, 2026 at 3:46 PM         Web form            Amr Khalil <a.khalil@2p.com.sa>
+
+     CCs
+     Andrey Stoychanov <andrey.stoychanov@brightpattern.com>, Sasha Volgin <sashav@brightpattern.com>
+     Status category        Ticket status       Type        Priority      Group                  Assignee
+     Open                   Open                Incident    -             Product Mgmt           Product Management
+
+
+     Customer Impact         Customer Urgency          BP Priority        Tenant URL         CaseType
+     Routine                 Normal                    P4                 2P                 Product Enhancement Request (PER)
+
+     Found in Version:        Sub -Category            Assigned to         Pending reason                           Carrier
+     5.35                     Agent Desktop 2.0        Sasha               Waiting for info from customer           NA
+
+     Andrey Stoychanov         August 26, 2026 at 3:46 PM
+
+     Dear Team,
+
+     Gosi has request this feature to be exist in the product so if it available please share how can we enable it and if
+     not can we please make it PER
+     Thank You,
+
+     Andrey Stoychanov
+
+     Join our BrightPattern community:
+     https://community.brightpattern.com/
+
+
+     Support       August 26, 2026 at 3:47 PM                                                                                 Internal note
+
+     Proposed Response:
+
+     Hello Amr,
+
+     Thank you for reaching out.
+
+     Bright Pattern Agent Desktop does not currently provide a built-in auto-correct or auto-complete function for
+     text that agents type in chat or email replies. The input fields in both channels use the native spell-check
+     capabilities of the agent’s web browser (e.g., Google Chrome or Microsoft Edge). Agents can enable their
+     browser’s spell-checker and add the required languages to receive highlighted spelling suggestions, but the
+     platform itself will not automatically replace or complete words.
+
+     If your organization requires a platform-level auto-correct feature, we can submit a Product Enhancement
+     Request (PER) to our Product Management team on your behalf. Please let us know if you would like us to
+     proceed and feel free to share any additional details about business impact or specific requirements so we can
+     include them in the request.
+
+     Best regards,
+
+
+about:blank                                                                                                                                   1/3
+9/14/26, 2:27 PM                                      #60254 - [PER] Auto Correct feature in chat and email
+
+     Links for reference:
+     https://help.brightpattern.com/latest:Agent-guide/Work/Chats
+     https://help.brightpattern.com/latest:Agent-guide/OverviewoftheEmailWorkingArea
+
+     Relevant Sources for Internal Review:
+     1. Zendesk KB ticket 60071 – "Auto Correct Text for the Chat" (conclusion: no native auto-correct; rely on browser
+     spell-check; PER required)
+     2. Zendesk KB ticket 60201 – "Auto Correct feature in chat and email" (same conclusion and sample reply)
+     3. Zendesk KB ticket 60145 – "[PER] Auto Complete feature in chat and email" (same conclusion and sample reply)
+
+     What do you think about this response?
+     Good! -> Click https://hia13.pl.bugfocus.com/aifeedback/z/bugfocus/t/60254/praise?a=KB_Searcher
+     Bad :( -> Click https://hia13.pl.bugfocus.com/aifeedback/z/bugfocus/t/60254/complaint?a=KB_Searcher
+
+
+     Andrey Stoychanov       August 26, 2026 at 3:47 PM                                                       Internal note
+
+     Sasha.
+     Use Case: The customer is aware of browser extension workarounds; however, internal InfoSec/Cybersecurity
+     policies strictly prohibit installing any third-party extensions.
+
+     Product Management         September 9, 2026 at 2:08 AM
+
+     Good day.
+
+     A few questions about this feature:
+
+          1. Do you mean highlighting of misspelled words to let the agent decide if they need to be corrected or
+             automatic replacement of misspelled words?
+          2. Is this just about spelling or also grammar?
+          3. Should it be controlled by an individual user or enforceable by an admin?
+          4. Do your agents currently use this feature in any other applications, and if so, could you please provide a
+             short video?
+
+
+     Thank you.
+     Sasha Volgin
+     Thank You,
+
+     Product Management
+
+     Join our BrightPattern community:
+     https://community.brightpattern.com/
+
+
+     Amr Khalil     September 9, 2026 at 8:54 AM
+
+     Hi Sasha,
+
+     Please find our clarification below regarding GOSI’s Auto Correct requirement:
+
+          1. We prefer automatic correction of clear spelling mistakes while the agent is typing. If possible, highlighting
+             or suggesting the correction before replacement would also be useful, especially when the system is not
+             fully confident.
+
+about:blank                                                                                                                   2/3
+9/14/26, 2:27 PM                                    #60254 - [PER] Auto Correct feature in chat and email
+
+          2. The requirement should cover both spelling and grammar. The main priority is spelling correction, but
+             grammar correction would provide additional value for both Arabic and English conversations.
+          3. We prefer this feature to be enforceable and configurable by the administrator to ensure a consistent
+             standard across all agents. The administrator should be able to enable or disable the feature globally, while
+             agents can use the correction suggestions during chat and email handling.
+          4. Agents currently use similar spelling and grammar correction features available in common applications
+             such as Konnect Insights but in Konnect its like a button .
+
+
+
+     Thank you,
+     Amr
+
+
+                                                Support software by Zendesk
+
+
+
+
+about:blank                                                                                                                  3/3
+
