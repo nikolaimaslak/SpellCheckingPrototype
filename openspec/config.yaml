@@ -29,12 +29,11 @@ context: |
       (accepted suggestions, auto-replacements) go through one transaction path so
       a single undo reverts them.
     - Managed fields set spellcheck="false" once our engine is ready.
-    - Licensing: no GPL/LGPL code or data may be linked or shipped. Hunspell is
-      used under its MPL 1.1 option, vendored at a pinned tag and compiled to WASM
-      by our own build (emsdk in Docker). English dictionary: SCOWL-derived
-      (dictionary-en, MIT AND BSD). Arabic dictionary licensing (AyaSpell) is an
-      OPEN LEGAL ITEM: it may be fetched for local evaluation only, gitignored,
-      never committed or bundled into a distributable build.
+    - Licensing: no GPL/LGPL terms may be taken. Hunspell (engine) and the
+      AyaSpell Arabic dictionary are both tri-licensed GPL/LGPL/MPL and are used
+      under the MPL 1.1 option; Hunspell is compiled to WASM by our own build
+      (emsdk in Docker), AyaSpell is vendored unmodified in dicts/ar/. English
+      dictionary: SCOWL-derived (dictionary-en, MIT AND BSD).
     - Arabic is first-class: RTL and mixed Arabic/English (bidi) text, per-token
       script detection, Arabic normalization (diacritics, tatweel, alef variants).
     - Exclusions: URLs, emails, case/reference numbers, tokens with digits, and

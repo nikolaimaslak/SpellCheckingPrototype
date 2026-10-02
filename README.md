@@ -11,7 +11,7 @@ Prototype of the Agent Desktop composer assistance layer: Arabic and English spe
 
 ```sh
 npm install
-npm run fetch-dicts   # English from npm; Arabic downloaded from a pinned commit (local evaluation only)
+npm run fetch-dicts   # English from npm, Arabic from dicts/ar (offline; also runs before dev/test/build)
 npm run dev           # http://localhost:5173
 ```
 
@@ -22,17 +22,17 @@ The demo page has a chat composer (Enter sends, Shift+Enter adds a new line) and
 | Script | Purpose |
 |---|---|
 | `npm run dev` | Dev server with the demo page |
-| `npm test` | Unit tests (Vitest). Arabic tests run only when the Arabic dictionary is provisioned |
+| `npm test` | Unit tests (Vitest) |
 | `npm run typecheck` | Type checking |
 | `npm run build` | Production build to `dist/` |
-| `npm run fetch-dicts` | Provision dictionaries (`--en-only` to skip the Arabic download) |
+| `npm run fetch-dicts` | Provision both dictionaries into `public/dicts/` (offline) |
 | `npm run build:wasm` | Recompile Hunspell to WASM in Docker (pinned tag and toolchain) |
 
 ## Licensing
 
 - **Hunspell** (v1.7.4) is compiled to WASM and used under its **MPL 1.1** option. See `src/spell/wasm/NOTICE` and `PROVENANCE.json`.
 - **English dictionary**: `dictionary-en` (SCOWL-derived), MIT AND BSD.
-- **Arabic dictionary** (AyaSpell): the license is **not yet cleared**. It is downloaded into the gitignored `.local-dicts/ar/` for local evaluation only, and production builds leave it out unless `INCLUDE_AR_DICT=1` is set (which prints a warning). Do not distribute builds that include it. See `dicts/MANIFEST.md`.
+- **Arabic dictionary** (AyaSpell): tri-licensed GPL-2+ / LGPL-2.1+ / MPL-1.1; this project elects **MPL 1.1**. Vendored unmodified in `dicts/ar/` with a `NOTICE`; hashes pinned. See `dicts/MANIFEST.md`.
 
 ## Planning
 

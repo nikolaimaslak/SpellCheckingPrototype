@@ -1,5 +1,6 @@
 import type { HunspellRuntime, SpellEngine } from './engine';
-import type { Lang, LoadResult, SpellReply, SpellRequest } from './protocol';
+import { stripMarks } from './arabic';
+import type { CheckResult, Lang, LoadResult, SpellReply, SpellRequest } from './protocol';
 
 export interface DictionaryFiles {
   aff: Uint8Array;
@@ -41,6 +42,27 @@ export function createHandler(
     return result;
   }
 
+  // Arabic: correct as written, or once diacritics and tatweel are removed.
+  function isCorrect(engine: SpellEngine, lang: Lang, word: string): boolean {
+    if (engine.spell(word)) return true;
+    if (lang !== 'ar') return false;
+    const bare = stripMarks(word);
+    return bare !== word && engine.spell(bare);
+  }
+
+  function check(words: Partial<Record<Lang, string[]>>): CheckResult {
+    const result: CheckResult = { misspelled: {}, unchecked: {} };
+    for (const [lang, list] of Object.entries(words) as [Lang, string[]][]) {
+      const engine = engines.get(lang);
+      if (!engine) {
+        result.unchecked[lang] = list;
+        continue;
+      }
+      result.misspelled[lang] = list.filter((word) => !isCorrect(engine, lang, word));
+    }
+    return result;
+  }
+
   function engineFor(lang: Lang): SpellEngine {
     const engine = engines.get(lang);
     if (!engine) throw new Error(`language not loaded: ${lang}`);
@@ -53,9 +75,13 @@ export function createHandler(
         case 'load':
           return { id: request.id, ok: true, result: await load(request.langs) };
         case 'spell':
-          return { id: request.id, ok: true, result: engineFor(request.lang).spell(request.word) };
-        case 'suggest':
-          return { id: request.id, ok: true, result: engineFor(request.lang).suggest(request.word) };
+          return { id: request.id, ok: true, result: isCorrect(engineFor(request.lang), request.lang, request.word) };
+        case 'suggest': {
+          const word = request.lang === 'ar' ? stripMarks(request.word) : request.word;
+          return { id: request.id, ok: true, result: engineFor(request.lang).suggest(word) };
+        }
+        case 'check':
+          return { id: request.id, ok: true, result: check(request.words) };
         case 'add':
           engineFor(request.lang).add(request.word);
           return { id: request.id, ok: true, result: null };

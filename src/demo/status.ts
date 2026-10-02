@@ -1,40 +1,25 @@
-import type { LoadResult } from '../spell/protocol';
-
-export type EngineStatus =
-  | { state: 'loading' }
-  | { state: 'ready'; result: LoadResult }
-  | { state: 'failed'; reason: string };
+import type { SpellServiceStatus } from '../spell/service';
 
 const NAMES: Record<string, string> = { en: 'English', ar: 'Arabic' };
+const name = (lang: string) => NAMES[lang] ?? lang;
 
-export function renderStatus(el: HTMLElement, status: EngineStatus): void {
+export function renderStatus(el: HTMLElement, status: SpellServiceStatus): void {
   el.dataset.state = status.state;
-  switch (status.state) {
-    case 'loading':
-      el.textContent = 'Spelling engine: loading…';
-      return;
-    case 'failed':
-      el.textContent = `Spelling engine: failed — ${status.reason}`;
-      return;
-    case 'ready': {
-      const loaded = status.result.loaded.map((l) => `${NAMES[l.lang] ?? l.lang} ✓ (${l.ms} ms)`);
-      const failed = status.result.failed.map((f) => `${NAMES[f.lang] ?? f.lang} unavailable`);
-      el.textContent = `Spelling engine: ready — ${[...loaded, ...failed].join(' · ')}`;
-      el.title = status.result.failed.map((f) => `${f.lang}: ${f.reason}`).join('\n');
-    }
-  }
+  const parts = [
+    ...status.loaded.map((l) => `${name(l.lang)} ✓ (${l.ms} ms)`),
+    ...status.pending.map((lang) => `${name(lang)} loading…`),
+    ...status.failed.map((f) => `${name(f.lang)} unavailable`),
+  ];
+  const label = { loading: 'loading', ready: 'ready', failed: 'failed' }[status.state];
+  el.textContent = `Spelling engine: ${label}${parts.length ? ` — ${parts.join(' · ')}` : ''}`;
+  el.title = status.failed.map((f) => `${f.lang}: ${f.reason}`).join('\n');
 }
 
-/** Loads the given languages and reflects progress in the status element. */
-export async function trackStatus(
+/** Keeps the status element in sync with the spell service. */
+export function trackStatus(
   el: HTMLElement,
-  load: () => Promise<LoadResult>,
-): Promise<void> {
-  renderStatus(el, { state: 'loading' });
-  try {
-    const result = await load();
-    renderStatus(el, result.loaded.length ? { state: 'ready', result } : { state: 'failed', reason: 'no dictionaries loaded' });
-  } catch (err) {
-    renderStatus(el, { state: 'failed', reason: (err as Error).message });
-  }
+  service: { status: SpellServiceStatus; onStatus(l: (s: SpellServiceStatus) => void): () => void },
+): () => void {
+  renderStatus(el, service.status);
+  return service.onStatus((s) => renderStatus(el, s));
 }

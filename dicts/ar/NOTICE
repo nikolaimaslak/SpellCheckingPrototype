@@ -1,0 +1,12 @@
+ar.aff / ar.dic — Arabic spelling dictionary from the Ayaspell project
+(http://ayaspell.sourceforge.net/), as packaged in LibreOffice dictionaries:
+https://github.com/LibreOffice/dictionaries/tree/32b006a2c22a4ac7e8ed3f03346f7b3d85a970a4/ar
+
+License: GPL-2.0-or-later OR LGPL-2.1-or-later OR MPL-1.1 (tri-license), as
+recorded in Debian's hunspell-ar copyright file (upstream author Mohamed
+Kebdani; https://sources.debian.org/src/hunspell-ar/latest/debian/copyright/).
+
+This project elects the Mozilla Public License 1.1. No GPL or LGPL terms are
+taken. The files are unmodified copies of the upstream commit above; their
+sha256 hashes are pinned in scripts/fetch-dicts.ts and listed in
+dicts/MANIFEST.md.

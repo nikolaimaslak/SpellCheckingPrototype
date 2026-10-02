@@ -52,3 +52,41 @@ describe('spelling worker handler', () => {
     expect(await handle({ id: 3, type: 'spell', lang: 'en', word: 'receive' })).toEqual({ id: 3, ok: true, result: true });
   });
 });
+
+const bothLanguages: DictionaryLoader = async (lang) =>
+  lang === 'en'
+    ? { aff: readFileSync('node_modules/dictionary-en/index.aff'), dic: readFileSync('node_modules/dictionary-en/index.dic') }
+    : { aff: readFileSync('dicts/ar/ar.aff'), dic: readFileSync('dicts/ar/ar.dic') };
+
+describe('batch check', () => {
+  it('flags only misspelled words in a mixed batch', async () => {
+    const handle = createHandler(runtime, bothLanguages);
+    await handle({ id: 1, type: 'load', langs: ['en', 'ar'] });
+    const reply = await handle({ id: 9, type: 'check', words: { en: ['receive', 'recieve'], ar: ['مرحبا'] } });
+    expect(reply).toEqual({ id: 9, ok: true, result: { misspelled: { en: ['recieve'], ar: [] }, unchecked: {} } });
+  });
+
+  it('reports words of an unloaded language as unchecked', async () => {
+    const handle = createHandler(runtime, englishOnly);
+    await handle({ id: 1, type: 'load', langs: ['en', 'ar'] });
+    const reply = await handle({ id: 2, type: 'check', words: { en: ['recieve'], ar: ['مرحبا'] } });
+    expect(reply).toEqual({ id: 2, ok: true, result: { misspelled: { en: ['recieve'] }, unchecked: { ar: ['مرحبا'] } } });
+  });
+
+  it('accepts vowelled and tatweel Arabic forms', async () => {
+    const handle = createHandler(runtime, bothLanguages);
+    await handle({ id: 1, type: 'load', langs: ['ar'] });
+    const reply = await handle({ id: 2, type: 'check', words: { ar: ['مَرْحَبًا', 'مرحـــبا'] } });
+    expect(reply.ok && reply.result).toEqual({ misspelled: { ar: [] }, unchecked: {} });
+  });
+
+  it('flags a hamza error and suggests the hamzated form', async () => {
+    // "اذا" (bare alef) is not in AyaSpell; the only suggestion is "إذا".
+    const handle = createHandler(runtime, bothLanguages);
+    await handle({ id: 1, type: 'load', langs: ['ar'] });
+    const check = await handle({ id: 2, type: 'check', words: { ar: ['اذا', 'إذا'] } });
+    expect(check.ok && check.result).toEqual({ misspelled: { ar: ['اذا'] }, unchecked: {} });
+    const suggest = await handle({ id: 3, type: 'suggest', lang: 'ar', word: 'اذا' });
+    expect(suggest.ok && suggest.result).toContain('إذا');
+  });
+});

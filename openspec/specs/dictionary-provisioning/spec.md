@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Defines how English and Arabic dictionaries reach the spelling engine, and the licensing guard that keeps the not-yet-cleared Arabic dictionary out of version control and out of distributable builds.
+Defines how the English and Arabic dictionaries reach the spelling engine offline, from pinned, verified, redistributable sources.
 
 ## Requirements
 
 ### Requirement: One setup command provisions dictionaries
-A single npm script SHALL put the English and Arabic affix/dictionary pairs in the static asset folder the app serves. Running it again MUST be safe and leave the same result.
+A single npm script SHALL put the English and Arabic affix/dictionary pairs in the static asset folder the app serves, using only files already in the repository or installed by `npm install`. It MUST work offline. Running it again MUST be safe and leave the same result.
 
 #### Scenario: First setup
-- **WHEN** a developer runs `npm run fetch-dicts` on a fresh clone with network access
+- **WHEN** a developer runs `npm run fetch-dicts` on a fresh clone after `npm install`, with or without network access
 - **THEN** English and Arabic `.aff`/`.dic` pairs exist under the served dictionary folder
 
 #### Scenario: Re-run is idempotent
@@ -22,33 +22,29 @@ The English dictionary SHALL come from a locked npm dependency with a permissive
 
 #### Scenario: Offline English
 - **WHEN** the script runs without network access after `npm install`
-- **THEN** the English dictionary is still provisioned, and the script reports that Arabic was skipped
-
-### Requirement: Arabic dictionary pinned and kept out of git
-The Arabic dictionary SHALL be downloaded from a pinned upstream commit, and its content hash MUST be checked. It MUST be stored in a gitignored location, and a download whose hash does not match MUST be rejected.
-
-#### Scenario: Not tracked by git
-- **WHEN** the Arabic files have been provisioned
-- **THEN** `git status` does not list them as untracked or changed
-
-#### Scenario: Hash mismatch
-- **WHEN** the downloaded Arabic files do not match the pinned hash
-- **THEN** the script fails with a message naming the file, and leaves no partial Arabic files in place
-
-### Requirement: Distributable builds exclude Arabic by default
-A production build SHALL leave out the Arabic dictionary unless the build is explicitly told to include it. Including it MUST print a warning that the license is not yet cleared.
-
-#### Scenario: Default production build
-- **WHEN** `npm run build` runs with no extra flags
-- **THEN** the build output contains no Arabic dictionary files
-
-#### Scenario: Explicit opt-in
-- **WHEN** the build runs with the Arabic opt-in set
-- **THEN** the Arabic files are included and the build prints a license warning
+- **THEN** the English dictionary is provisioned
 
 ### Requirement: Dictionary licenses are listed
-The repository SHALL hold a manifest listing each dictionary: its source, pinned version or commit, license, and whether it may be redistributed.
+The repository SHALL hold a manifest listing each dictionary: its source, pinned version or commit, content hash, license (including which option is elected for multi-licensed dictionaries), and whether it may be redistributed.
 
 #### Scenario: Manifest lists both languages
 - **WHEN** a reviewer opens the dictionary manifest
-- **THEN** it has entries for English (redistributable: yes) and Arabic (redistributable: pending legal review)
+- **THEN** it has entries for English (MIT AND BSD, redistributable: yes) and Arabic (GPL-2+ / LGPL-2.1+ / MPL-1.1 with MPL 1.1 elected, redistributable: yes)
+
+### Requirement: Arabic dictionary vendored under MPL 1.1
+The Arabic (AyaSpell) dictionary SHALL be committed to the repository from the pinned upstream commit, with a license notice stating the MPL 1.1 election and the upstream source. Provisioning MUST verify the committed files against their pinned sha256 hashes, and MUST fail, naming the file, on a mismatch.
+
+#### Scenario: Notice present
+- **WHEN** a reviewer opens the vendored Arabic dictionary folder
+- **THEN** it contains the `.aff`/`.dic` pair and a notice naming AyaSpell, the upstream commit, the tri-license and the MPL 1.1 election
+
+#### Scenario: Tampered file
+- **WHEN** a committed Arabic file no longer matches its pinned hash
+- **THEN** provisioning fails with a message naming the file, and does not copy it into the served folder
+
+### Requirement: Builds include both dictionaries
+A production build SHALL include the English and Arabic dictionaries with no extra flags.
+
+#### Scenario: Default production build
+- **WHEN** `npm run build` runs
+- **THEN** the build output contains both dictionary pairs

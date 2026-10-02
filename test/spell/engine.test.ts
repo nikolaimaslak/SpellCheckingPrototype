@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { loadHunspell, type HunspellRuntime, type SpellEngine } from '../../src/spell/engine';
 
@@ -38,13 +38,12 @@ describe('English engine', () => {
   });
 });
 
-// Arabic is local-evaluation only (license pending), so this runs only after
-// `npm run fetch-dicts` has provisioned .local-dicts/ar/.
-const arDir = '.local-dicts/ar/';
+// Vendored AyaSpell pair (MPL 1.1).
+const arDir = 'dicts/ar/';
 // Hunspell may suggest splitting into two words, so allow single spaces between Arabic runs.
 const ARABIC = /^\p{Script=Arabic}+( \p{Script=Arabic}+)*$/u;
 
-describe.skipIf(!existsSync(arDir + 'ar.dic'))('Arabic engine', () => {
+describe('Arabic engine', () => {
   let ar: SpellEngine;
   beforeAll(() => {
     ar = runtime.createEngine(readFileSync(arDir + 'ar.aff'), readFileSync(arDir + 'ar.dic'));

@@ -5,17 +5,18 @@
   "description": "Prototype of the Agent Desktop composer assistance layer (PER #60254, #60145)",
   "type": "module",
   "scripts": {
-    "predev": "node scripts/fetch-dicts.ts --en-only",
+    "predev": "node scripts/fetch-dicts.ts",
     "dev": "vite",
-    "prebuild": "node scripts/fetch-dicts.ts --en-only",
+    "prebuild": "node scripts/fetch-dicts.ts",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "pretest": "node scripts/fetch-dicts.ts --en-only",
+    "pretest": "node scripts/fetch-dicts.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "fetch-dicts": "node scripts/fetch-dicts.ts",
-    "build:wasm": "bash wasm/build.sh"
+    "build:wasm": "bash wasm/build.sh",
+    "ad-loader": "node dev/ad-loader/serve.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

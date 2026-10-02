@@ -17,8 +17,8 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run dev` | Demo page at http://localhost:5173 (provisions English first) |
 | `npm test` | Vitest (Node by default; DOM tests opt in with `// @vitest-environment jsdom`) |
 | `npm run typecheck` | `tsc --noEmit` |
-| `npm run build` | Typecheck + production build to `dist/` (no Arabic unless `INCLUDE_AR_DICT=1`) |
-| `npm run fetch-dicts` | Provision English (offline) and Arabic (pinned download, sha256-checked) |
+| `npm run build` | Typecheck + production build to `dist/` (both dictionaries) |
+| `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
 
 ## Layout
@@ -28,7 +28,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/demo/` + `index.html`: stand-in chat (`contenteditable="plaintext-only"`) and email (`contenteditable`) composers, plus the engine status indicator.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
 - `scripts/fetch-dicts.ts`: dictionary provisioning (run directly by Node, no build step).
-- `dicts/MANIFEST.md`: dictionary sources, pins, hashes, licenses.
+- `dicts/`: vendored Arabic dictionary (`ar/` with `NOTICE`) and `MANIFEST.md` (sources, pins, hashes, licenses).
 - `test/`: mirrors `src/` and `scripts/`.
 
 ## Hard constraints
@@ -36,7 +36,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - **No browser extensions.** Everything is page code.
 - **Tier 1 never touches the network.** Only same-origin static assets (WASM, dictionaries). Engine work stays in the worker, never on the page thread.
 - **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through one transaction path so a single undo reverts them.
-- **Licensing.** No GPL/LGPL code or data. Hunspell is used under MPL 1.1. The Arabic dictionary (AyaSpell) has **no cleared license**: it lives only in gitignored `.local-dicts/ar/`, never under `public/`, and is never committed.
+- **Licensing.** No GPL/LGPL terms. Hunspell and the AyaSpell Arabic dictionary are both tri-licensed and used under **MPL 1.1** (notices in `src/spell/wasm/NOTICE` and `dicts/ar/NOTICE`). Any new dependency needs its license checked first.
 - **Arabic is first-class.** Give every text-processing behavior Arabic and mixed Arabic/English test cases. Use `dir="auto"` / `unicode-bidi: plaintext` for direction.
 - Exclude URLs, emails, reference numbers, tokens with digits, and `$(substitution.fields)` from checking.
 
@@ -44,4 +44,4 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties), so `scripts/*.ts` run directly under Node.
 - Vanilla DOM, no UI framework, npm only.
-- Tests that need Arabic use `describe.skipIf(!existsSync('.local-dicts/ar/ar.dic'))`.
+- Tests read dictionaries from `node_modules/dictionary-en/` and `dicts/ar/` directly.

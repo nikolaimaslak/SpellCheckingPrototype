@@ -89,6 +89,13 @@ main {
 
 .email { min-height: 200px; }
 
+/* Matches the Agent Desktop chat composer: rich contenteditable, normal white-space. */
+.chat { white-space: normal; max-height: 262px; overflow-y: auto; }
+.chat.fidelity { direction: ltr; unicode-bidi: isolate; }
+.chat-controls { margin: 8px 0 0; }
+
+.settings { display: flex; gap: 16px; flex-wrap: wrap; margin: 0 0 16px; font-size: 0.875rem; }
+
 /* Each paragraph and list item resolves its own direction. */
 .email p, .email div, .email li { unicode-bidi: plaintext; margin: 0 0 0.5em; }
 

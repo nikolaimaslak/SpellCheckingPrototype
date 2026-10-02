@@ -6,11 +6,18 @@ export type SpellRequest =
   | { id: number; type: 'load'; langs: Lang[] }
   | { id: number; type: 'spell'; lang: Lang; word: string }
   | { id: number; type: 'suggest'; lang: Lang; word: string }
-  | { id: number; type: 'add'; lang: Lang; word: string };
+  | { id: number; type: 'add'; lang: Lang; word: string }
+  | { id: number; type: 'check'; words: Partial<Record<Lang, string[]>> };
 
 export interface LoadResult {
   loaded: { lang: Lang; ms: number }[];
   failed: { lang: Lang; reason: string }[];
+}
+
+export interface CheckResult {
+  misspelled: Partial<Record<Lang, string[]>>;
+  /** Words whose language is not loaded: neither correct nor misspelled. */
+  unchecked: Partial<Record<Lang, string[]>>;
 }
 
 export interface ResultByType {
@@ -18,6 +25,7 @@ export interface ResultByType {
   spell: boolean;
   suggest: string[];
   add: null;
+  check: CheckResult;
 }
 
 export type SpellReply =

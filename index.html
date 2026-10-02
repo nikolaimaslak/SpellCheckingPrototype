@@ -9,17 +9,26 @@
     <header>
       <h1>Composer assistance demo</h1>
       <p id="engine-status" class="status" role="status" aria-live="polite">Spelling engine: loading…</p>
+      <div class="settings">
+        <label><input type="checkbox" id="spell-toggle" checked /> Spell check</label>
+        <label><input type="checkbox" id="fidelity-toggle" /> Agent Desktop fidelity (chat: fixed LTR)</label>
+      </div>
     </header>
     <main>
       <section class="panel" aria-labelledby="chat-title">
         <h2 id="chat-title">Chat</h2>
         <ol id="chat-transcript" class="transcript" aria-label="Chat transcript"></ol>
-        <div id="chat-composer" class="composer" contenteditable="plaintext-only" dir="auto" role="textbox"
+        <div id="chat-composer" class="composer chat" contenteditable="true" dir="auto" role="textbox"
              aria-multiline="true" aria-label="Chat message" data-placeholder="Type a message — Enter sends, Shift+Enter for a new line"></div>
+        <div class="toolbar chat-controls" role="toolbar" aria-label="Chat controls">
+          <button type="button" data-insert="😊" aria-label="Insert Emoji">😊</button>
+          <button type="button" data-insert="Thank you for contacting GOSI. How can I help you today?" aria-label="Insert predefined message (English)">Predefined (EN)</button>
+          <button type="button" data-insert="شكراً لتواصلك مع التأمينات الاجتماعية. كيف يمكنني مساعدتك؟" aria-label="Insert predefined message (Arabic)">Predefined (AR)</button>
+        </div>
       </section>
       <section class="panel" aria-labelledby="email-title">
         <h2 id="email-title">Email</h2>
-        <div class="toolbar" role="toolbar" aria-label="Formatting">
+        <div class="toolbar email-toolbar" role="toolbar" aria-label="Formatting">
           <button type="button" data-command="bold" aria-label="Bold"><b>B</b></button>
           <button type="button" data-command="italic" aria-label="Italic"><i>I</i></button>
           <button type="button" data-command="insertUnorderedList" aria-label="Bulleted list">• List</button>
