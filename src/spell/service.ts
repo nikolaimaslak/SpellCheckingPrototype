@@ -1,3 +1,4 @@
+import { languageOf } from '../tokenizer/tokenize';
 import type { Lang, ResultByType, SpellCommand } from './protocol';
 
 /** Anything that can send worker commands (SpellClient, or a fake in tests). */
@@ -30,7 +31,14 @@ export interface SpellService {
   suggest(lang: Lang, word: string): Promise<string[]>;
 }
 
-export function createSpellService(requester: SpellRequester, languages: Lang[] = ['en', 'ar']): SpellService {
+export interface SpellServiceOptions {
+  languages?: Lang[];
+  /** Admin custom dictionary: added to the engine of the matching script at load. */
+  customWords?: string[];
+}
+
+export function createSpellService(requester: SpellRequester, options: SpellServiceOptions = {}): SpellService {
+  const { languages = ['en', 'ar'], customWords = [] } = options;
   let status: SpellServiceStatus = { state: 'loading', loaded: [], failed: [], pending: [...languages] };
   const listeners = new Set<(s: SpellServiceStatus) => void>();
   const cache = new Map<Lang, Map<string, boolean>>();
@@ -47,6 +55,11 @@ export function createSpellService(requester: SpellRequester, languages: Lang[] 
       let failed = status.failed;
       try {
         const result = await requester.request({ type: 'load', langs: [lang] });
+        if (result.loaded.length) {
+          // Before publishing the language as ready, so no check can miss a custom word.
+          const words = customWords.filter((w) => !/\s/.test(w) && languageOf(w) === lang);
+          await Promise.all(words.map((word) => requester.request({ type: 'add', lang, word })));
+        }
         loaded = [...loaded, ...result.loaded];
         failed = [...failed, ...result.failed];
       } catch (err) {

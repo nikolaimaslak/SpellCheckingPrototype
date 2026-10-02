@@ -1,9 +1,14 @@
-// One shared CSS Custom Highlight for every attached composer. Highlights paint
-// over text without touching the editable DOM, so underlines can never reach a
-// sent message or the host's undo history.
+// Named CSS Custom Highlights shared by every attached composer. Highlights
+// paint over text without touching the editable DOM, so underlines and
+// auto-correct flashes can never reach a sent message or the undo history.
 
 export const HIGHLIGHT_NAME = 'bp-spelling-error';
-const STYLE = `::highlight(${HIGHLIGHT_NAME}) { text-decoration: underline wavy #d93025; text-decoration-skip-ink: none; text-underline-offset: 2px; }`;
+export const AUTOCORRECT_HIGHLIGHT = 'bp-autocorrected';
+
+const STYLE = [
+  `::highlight(${HIGHLIGHT_NAME}) { text-decoration: underline wavy #d93025; text-decoration-skip-ink: none; text-underline-offset: 2px; }`,
+  `::highlight(${AUTOCORRECT_HIGHLIGHT}) { background-color: rgba(43, 108, 176, 0.18); }`,
+].join('\n');
 
 export interface HighlightLike {
   add(range: Range): unknown;
@@ -24,9 +29,10 @@ export function browserHighlightEnv(doc: Document = document): HighlightEnv {
   };
 }
 
+/** Per registry: one style element and one Highlight per name, ref-counted. */
 interface Shared {
-  highlight: HighlightLike;
   style: HTMLStyleElement;
+  highlights: Map<string, { highlight: HighlightLike; owners: number }>;
   owners: number;
 }
 
@@ -35,41 +41,50 @@ const sharedByRegistry = new WeakMap<object, Shared>();
 export interface HighlightOwner {
   /** Replaces this owner's ranges; other owners' ranges are untouched. */
   setRanges(ranges: Iterable<Range>): void;
-  /** Drops this owner's ranges; the last release removes the highlight and style. */
+  /** Drops this owner's ranges; the last release removes the highlight (and the style). */
   release(): void;
 }
 
-export function acquireHighlights(env: HighlightEnv): HighlightOwner {
+export function acquireHighlights(env: HighlightEnv, name: string = HIGHLIGHT_NAME): HighlightOwner {
   let shared = sharedByRegistry.get(env.registry);
   if (!shared) {
     const style = env.document.createElement('style');
     style.dataset.bpSpell = '';
     style.textContent = STYLE;
     env.document.head.append(style);
-    const highlight = env.createHighlight();
-    env.registry.set(HIGHLIGHT_NAME, highlight);
-    shared = { highlight, style, owners: 0 };
+    shared = { style, highlights: new Map(), owners: 0 };
     sharedByRegistry.set(env.registry, shared);
   }
+  let entry = shared.highlights.get(name);
+  if (!entry) {
+    entry = { highlight: env.createHighlight(), owners: 0 };
+    env.registry.set(name, entry.highlight);
+    shared.highlights.set(name, entry);
+  }
   shared.owners++;
+  entry.owners++;
   const s = shared;
+  const e = entry;
   let mine = new Set<Range>();
   let released = false;
 
   return {
     setRanges(ranges) {
       if (released) return;
-      for (const r of mine) s.highlight.delete(r);
+      for (const r of mine) e.highlight.delete(r);
       mine = new Set(ranges);
-      for (const r of mine) s.highlight.add(r);
+      for (const r of mine) e.highlight.add(r);
     },
     release() {
       if (released) return;
       released = true;
-      for (const r of mine) s.highlight.delete(r);
+      for (const r of mine) e.highlight.delete(r);
       mine.clear();
+      if (--e.owners === 0) {
+        env.registry.delete(name);
+        s.highlights.delete(name);
+      }
       if (--s.owners === 0) {
-        env.registry.delete(HIGHLIGHT_NAME);
         s.style.remove();
         sharedByRegistry.delete(env.registry);
       }

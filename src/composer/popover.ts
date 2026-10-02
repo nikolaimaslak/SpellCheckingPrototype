@@ -11,6 +11,8 @@ export interface PopoverOptions {
   font?: string;
   onPick(suggestion: string): void;
   onIgnore(): void;
+  /** Revert form for an auto-corrected word: offers only "Revert to <original>". */
+  revert?: { original: string; onRevert(): void };
   /** Called after any close; `restoreFocus` is true for Escape. */
   onClose(restoreFocus: boolean): void;
 }
@@ -60,20 +62,25 @@ export function openPopover(opts: PopoverOptions): PopoverHandle {
     items.push({ el, run });
   };
 
-  const suggestions = opts.suggestions.slice(0, MAX);
-  for (const s of suggestions) addItem(s, () => finish(() => opts.onPick(s)), { fontWeight: '600' });
-  if (!suggestions.length) {
-    const none = doc.createElement('div');
-    none.setAttribute('role', 'presentation');
-    none.textContent = 'No suggestions';
-    Object.assign(none.style, { padding: '4px 12px', color: '#5d6878', fontStyle: 'italic' });
-    box.append(none);
+  if (opts.revert) {
+    const { original, onRevert } = opts.revert;
+    addItem(`Revert to ${original}`, () => finish(onRevert));
+  } else {
+    const suggestions = opts.suggestions.slice(0, MAX);
+    for (const s of suggestions) addItem(s, () => finish(() => opts.onPick(s)), { fontWeight: '600' });
+    if (!suggestions.length) {
+      const none = doc.createElement('div');
+      none.setAttribute('role', 'presentation');
+      none.textContent = 'No suggestions';
+      Object.assign(none.style, { padding: '4px 12px', color: '#5d6878', fontStyle: 'italic' });
+      box.append(none);
+    }
+    const sep = doc.createElement('div');
+    sep.setAttribute('role', 'separator');
+    Object.assign(sep.style, { borderTop: '1px solid #e3e7ec', margin: '4px 0' });
+    box.append(sep);
+    addItem('Ignore', () => finish(opts.onIgnore));
   }
-  const sep = doc.createElement('div');
-  sep.setAttribute('role', 'separator');
-  Object.assign(sep.style, { borderTop: '1px solid #e3e7ec', margin: '4px 0' });
-  box.append(sep);
-  addItem('Ignore', () => finish(opts.onIgnore));
 
   let focused = 0;
   function focusItem(i: number) {

@@ -109,3 +109,13 @@ main {
   color: var(--text);
   cursor: pointer;
 }
+
+.assist-settings { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-start; margin-bottom: 16px; font-size: 0.875rem; }
+.assist-settings fieldset { border: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; min-width: min(100%, 260px); }
+.assist-settings legend { font-weight: 600; margin-bottom: 4px; }
+.assist-settings select, .assist-settings textarea, .assist-settings button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }
+.assist-settings textarea { width: 100%; box-sizing: border-box; }
+.assist-settings .langs { display: flex; gap: 10px; flex-wrap: wrap; }
+.assist-settings output { color: var(--muted); }
+.assist-settings .actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; align-self: flex-end; }
+.assist-settings .events { color: var(--muted); }

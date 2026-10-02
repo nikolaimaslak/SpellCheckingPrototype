@@ -18,7 +18,8 @@ const segmenter = new Intl.Segmenter('und', { granularity: 'word' });
 const ARABIC = /^\p{Script=Arabic}+$/u;
 const LATIN = /^\p{Script=Latin}+$/u;
 
-function languageOf(word: string): Lang | undefined {
+/** Arabic or English by script; undefined for mixed script or fewer than two letters. */
+export function languageOf(word: string): Lang | undefined {
   // Letters only: diacritics (\p{M}), tatweel and apostrophes don't decide script.
   const letters = word.replace(/[^\p{L}]/gu, '').replace(/ـ/g, '');
   if ([...letters].length < 2) return undefined;

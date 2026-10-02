@@ -89,3 +89,20 @@ export function rangeFor(map: TextMap, start: number, end: number): Range {
   range.setEnd(endSeg.node, end - endSeg.flatStart);
   return range;
 }
+
+/**
+ * The DOM point for a flat offset. A boundary between two segments resolves to
+ * the end of the earlier one (where typed text continues); offsets on a
+ * separator or past the end resolve to the nearest following segment start, or
+ * the end of the composer.
+ */
+export function pointAt(map: TextMap, offset: number): { node: Node; offset: number } {
+  for (const seg of map.segments) {
+    if (offset >= seg.flatStart && offset <= seg.flatStart + seg.length) {
+      return { node: seg.node, offset: offset - seg.flatStart };
+    }
+  }
+  const next = map.segments.find((s) => s.flatStart >= offset);
+  if (next) return { node: next.node, offset: 0 };
+  return { node: map.root, offset: map.root.childNodes.length };
+}

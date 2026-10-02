@@ -39,3 +39,34 @@ describe('buildTextMap', () => {
     expect(caretOffset(map, sel)).toBeUndefined();
   });
 });
+
+describe('pointAt', () => {
+  it('resolves offsets inside and across formatting, preferring the earlier segment at a boundary', async () => {
+    const { pointAt } = await import('../../src/tokenizer');
+    const root = el('<b>rec</b>eive it');
+    const map = buildTextMap(root);
+    const bold = root.firstChild!.firstChild!;
+    const tail = root.lastChild!;
+    expect(pointAt(map, 1)).toEqual({ node: bold, offset: 1 });
+    expect(pointAt(map, 3)).toEqual({ node: bold, offset: 3 }); // boundary → end of "rec"
+    expect(pointAt(map, 5)).toEqual({ node: tail, offset: 2 });
+    expect(pointAt(map, map.text.length)).toEqual({ node: tail, offset: tail.textContent!.length });
+  });
+
+  it('round-trips with flatOffsetOf', async () => {
+    const { pointAt } = await import('../../src/tokenizer');
+    const root = el('one <i>two</i> three');
+    const map = buildTextMap(root);
+    for (let i = 0; i <= map.text.length; i++) {
+      const p = pointAt(map, i);
+      expect(flatOffsetOf(map, p.node, p.offset)).toBe(i);
+    }
+  });
+
+  it('falls back to the composer end when there is no text', async () => {
+    const { pointAt } = await import('../../src/tokenizer');
+    const root = el('<br>');
+    const map = buildTextMap(root);
+    expect(pointAt(map, 1)).toEqual({ node: root, offset: 1 });
+  });
+});

@@ -63,15 +63,17 @@ describe('attachSpellCheck', () => {
     expect(hl.words()).toEqual([]);
   });
 
-  it('attaches nothing when disabled', async () => {
-    const el = composer('recieve ');
-    el.setAttribute('spellcheck', 'true');
-    const hl = fakeHighlightEnv();
-    const { service } = fakeService({ en: ['recieve'] });
-    const handle = attachSpellCheck(el, { service, enabled: false, env: { highlights: hl.env } });
+  it('suggest mode never changes text, even after a typed boundary', async () => {
+    const { el, hl, replace, handle } = setup('please seperate', { en: ['seperate'], ar: [] });
+    const text = el.firstChild as Text;
+    text.appendData(' ');
+    placeCaret(text, text.length);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: ' ' }));
+    await handle.settled();
     await handle.recheck();
-    expect(hl.registered.size).toBe(0);
-    expect(el.getAttribute('spellcheck')).toBe('true');
+    expect(el.textContent).toBe('please seperate ');
+    expect(replace).not.toHaveBeenCalled();
+    expect(hl.words()).toEqual(['seperate']);
   });
 
   it('respects the languages option', async () => {

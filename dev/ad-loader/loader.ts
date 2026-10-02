@@ -2,7 +2,9 @@
 // Desktop page for validation. In the tenant's DevTools console:
 //   import('http://localhost:5174/ad-spell.js?v=' + Date.now())
 // Undo everything with: __bpSpell.detachAll()
+// Optional, before importing: window.__bpSpellConfig = { mode: 'auto', customDictionary: ['GOSI'] }
 import { attachSpellCheck, type SpellCheckHandle } from '../../src/composer';
+import { parsePolicy, resolveMode } from '../../src/policy';
 import { SpellClient } from '../../src/spell/client';
 import { createSpellService } from '../../src/spell/service';
 
@@ -16,12 +18,26 @@ const bootstrap = new Blob([`importScripts(${JSON.stringify(`${__AD_ORIGIN__}/ad
   type: 'text/javascript',
 });
 const worker = new Worker(URL.createObjectURL(bootstrap));
-const service = createSpellService(new SpellClient(worker));
+const policy = parsePolicy((window as { __bpSpellConfig?: unknown }).__bpSpellConfig);
+const mode = resolveMode(policy);
+const service = createSpellService(new SpellClient(worker), { languages: policy.languages, customWords: policy.customDictionary });
 const handles = new Map<HTMLElement, SpellCheckHandle>();
 
 function sync() {
+  if (mode === 'off') return;
   for (const el of document.querySelectorAll<HTMLElement>(COMPOSERS)) {
-    if (!handles.has(el)) handles.set(el, attachSpellCheck(el, { service }));
+    if (!handles.has(el)) {
+      handles.set(
+        el,
+        attachSpellCheck(el, {
+          service,
+          mode,
+          languages: policy.languages,
+          customWords: policy.customDictionary,
+          onEvent: (e) => console.info('[bp-spell]', e.type, e.lang, e.original, e.replacement ?? ''),
+        }),
+      );
+    }
   }
   for (const [el, handle] of handles) {
     if (!el.isConnected) {
@@ -51,4 +67,4 @@ Object.assign(window, {
     },
   },
 });
-console.info(`[bp-spell] loader active; attached to ${handles.size} composer(s)`);
+console.info(`[bp-spell] loader active (mode: ${mode}); attached to ${handles.size} composer(s)`);

@@ -7,19 +7,19 @@ Adds suggest-only spell checking to a chat or email composer: misspelled Arabic 
 ## Requirements
 
 ### Requirement: Attach and detach
-The layer SHALL attach to any `contenteditable` composer with options for which languages to check and whether checking is enabled. `detach` MUST remove every effect it had on the host, returning the composer to its prior state.
+The layer SHALL attach to any `contenteditable` composer with options for which languages to check and the effective assistance mode (`suggest` or `auto`; `off` means the layer is not attached). `detach` MUST remove every effect it had on the host, returning the composer to its prior state.
 
 #### Scenario: Attach to the Agent Desktop chat composer
 - **WHEN** the layer attaches to a `<div contenteditable="true">` styled with normal white-space and LTR direction
 - **THEN** spell checking works without the host's markup, styles or event handlers being replaced
 
 #### Scenario: Disabled
-- **WHEN** the layer attaches with checking disabled
+- **WHEN** the effective mode is `off`, so the layer is not attached
 - **THEN** no underlines appear, and the composer's native spellcheck setting is left as it was
 
 #### Scenario: Detach restores the host
 - **WHEN** `detach` is called
-- **THEN** underlines, the popover, any injected style and the layer's listeners are removed, and the composer's original `spellcheck` attribute is restored
+- **THEN** underlines, flashes, the popover, any injected style and the layer's listeners are removed, and the composer's original `spellcheck` attribute is restored
 
 ### Requirement: Offline, off-thread checking
 All checking SHALL happen in the browser with no network access after the engine is ready. Engine work MUST stay off the page thread.
@@ -29,7 +29,7 @@ All checking SHALL happen in the browser with no network access after the engine
 - **THEN** underlines and suggestions keep working in both languages
 
 ### Requirement: Suggest-only underlines
-Each settled word that is misspelled in its language SHALL be underlined. The layer MUST NOT change composer text unless the agent explicitly accepts a suggestion. Underlines MUST NOT be written into the editable DOM, so they cannot reach the sent message or the host's undo history.
+Each settled word that is misspelled in its language SHALL be underlined. In `suggest` mode, the layer MUST NOT change composer text unless the agent explicitly accepts a suggestion. In `auto` mode, it MAY additionally change text, but only as the `auto-correct` capability allows. Underlines MUST NOT be written into the editable DOM, so they cannot reach the sent message or the host's undo history.
 
 #### Scenario: English misspelling
 - **WHEN** the agent types "I will recieve it " in the chat composer
@@ -59,6 +59,10 @@ Each settled word that is misspelled in its language SHALL be underlined. The la
 - **WHEN** the agent fixes an underlined word by hand
 - **THEN** its underline disappears at the next check, and underlines on other words stay on the right words even if text before them changed
 
+#### Scenario: Suggest mode never changes text
+- **WHEN** the mode is `suggest` and the agent types "please seperate "
+- **THEN** the text is unchanged and "seperate" is underlined
+
 ### Requirement: Valid Arabic forms are never flagged
 An Arabic word SHALL be treated as correct if it is correct as written, or after diacritics (tashkeel) and tatweel are removed. Hamza and alef variants MUST NOT be folded when deciding correctness, so a wrong hamza is still flagged.
 
@@ -75,7 +79,7 @@ An Arabic word SHALL be treated as correct if it is correct as written, or after
 - **THEN** it is underlined, and the correctly hamzated form is offered as a suggestion
 
 ### Requirement: Suggestion popover
-The agent SHALL be able to open suggestions for an underlined word by clicking it, or by keyboard when the caret is in it. The popover MUST list the engine's suggestions in order (at most five), plus "Ignore". It MUST be dismissible with Escape (focus stays in the composer) or by clicking elsewhere (focus goes where the agent clicked), and MUST lay out right to left for Arabic words.
+The agent SHALL be able to open suggestions for an underlined word by clicking it, or by keyboard when the caret is in it. The popover MUST list the engine's suggestions in order (at most five), plus "Ignore". For a word that was auto-corrected and is still unchanged, the popover MUST instead offer "Revert to *original*". It MUST be dismissible with Escape (focus stays in the composer) or by clicking elsewhere (focus goes where the agent clicked), and MUST lay out right to left for Arabic words.
 
 #### Scenario: Open by click
 - **WHEN** the agent clicks an underlined word
@@ -92,6 +96,10 @@ The agent SHALL be able to open suggestions for an underlined word by clicking i
 #### Scenario: No suggestions
 - **WHEN** the engine has no suggestions for the word
 - **THEN** the popover says there are no suggestions and still offers "Ignore"
+
+#### Scenario: Auto-corrected word
+- **WHEN** the agent clicks a word that was just auto-corrected from "seperate" to "separate"
+- **THEN** the popover offers "Revert to seperate"
 
 #### Scenario: Dismiss with Escape
 - **WHEN** the agent presses Escape while the popover is open

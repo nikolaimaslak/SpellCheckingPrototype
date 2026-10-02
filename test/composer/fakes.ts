@@ -16,6 +16,16 @@ export function fakeHighlightEnv() {
   return { env, registered, ranges, words: () => ranges().map((r) => r.toString()) };
 }
 
+const SUGGESTIONS: Record<string, string[]> = {
+  recieve: ['receive', 'relieve'],
+  seperate: ['separate', 'desperate'],
+  Seperate: ['separate'],
+  paymnet: ['payment'],
+  النضام: ['النظام'],
+  اذا: ['إذا'],
+  التامينات: ['التأمينات', 'التضمينات'],
+};
+
 /** In-memory SpellService: words listed in `bad` are misspelled. */
 export function fakeService(bad: Record<string, string[]>, ready: Lang[] = ['en', 'ar']) {
   const listeners = new Set<(s: SpellServiceStatus) => void>();
@@ -46,7 +56,7 @@ export function fakeService(bad: Record<string, string[]>, ready: Lang[] = ['en'
         for (const w of list) known.set(`${lang}:${w}`, (bad[lang] ?? []).includes(w));
       }
     },
-    suggest: async (lang, word) => (word === 'recieve' ? ['receive', 'relieve'] : lang === 'ar' ? ['إذا'] : []),
+    suggest: async (lang, word) => SUGGESTIONS[word] ?? (lang === 'ar' ? ['إذا'] : []),
   };
   return {
     service,
@@ -76,4 +86,32 @@ export function composer(html = '') {
 
 export function placeCaret(node: Node, offset: number) {
   document.getSelection()!.collapse(node, offset);
+}
+
+/**
+ * Stand-in for execCommand('insertText') over a range inside one text node:
+ * really edits the text (so live Ranges move), leaves the caret after the
+ * insertion, and fires the input event a browser would.
+ */
+export function textReplace(el: HTMLElement) {
+  return (range: Range, text: string) => {
+    const node = range.startContainer as Text;
+    node.replaceData(range.startOffset, range.endOffset - range.startOffset, text);
+    document.getSelection()!.collapse(node, range.startOffset + text.length);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: text }));
+  };
+}
+
+/** Types `chars` at the end of the composer's last text node, one input event per character. */
+export function typeChars(el: HTMLElement, chars: string) {
+  for (const ch of chars) {
+    let node = el.lastChild as Text | null;
+    if (!node || node.nodeType !== Node.TEXT_NODE) {
+      node = document.createTextNode('');
+      el.append(node);
+    }
+    node.appendData(ch);
+    document.getSelection()!.collapse(node, node.length);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: ch }));
+  }
 }

@@ -5,6 +5,7 @@ Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spe
 - `docs/requirements/60254-auto-correct.txt`, `docs/requirements/60145-auto-complete.txt`: the customer tickets
 - `docs/architecture/composer-assistance-architecture.txt`: the architecture draft (tiers, components, phases)
 - `openspec/config.yaml`: project context and constraints for all planning
+- `docs/known-issues.md`: deferred issues to address (check before touching auto-correct)
 
 ## Workflow
 

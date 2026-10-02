@@ -10,9 +10,44 @@
       <h1>Composer assistance demo</h1>
       <p id="engine-status" class="status" role="status" aria-live="polite">Spelling engine: loading…</p>
       <div class="settings">
-        <label><input type="checkbox" id="spell-toggle" checked /> Spell check</label>
         <label><input type="checkbox" id="fidelity-toggle" /> Agent Desktop fidelity (chat: fixed LTR)</label>
       </div>
+      <form id="assist-settings" class="panel assist-settings" aria-label="Assistance settings">
+        <fieldset>
+          <legend>Admin policy <small>(stand-in for Contact Center Administrator)</small></legend>
+          <label>Mode
+            <select name="mode">
+              <option value="off">Off</option>
+              <option value="suggest">Suggest only</option>
+              <option value="auto">Auto-replace and suggest</option>
+            </select>
+          </label>
+          <span class="langs">Languages
+            <label><input type="checkbox" name="lang" value="en" /> English</label>
+            <label><input type="checkbox" name="lang" value="ar" /> Arabic</label>
+          </span>
+          <label><input type="checkbox" name="agentMayLower" /> Agents may choose a less aggressive mode</label>
+          <label class="dict">Custom dictionary <small>(one word per line)</small>
+            <textarea name="customDictionary" rows="3" dir="auto" spellcheck="false"></textarea>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Agent</legend>
+          <label>My preference
+            <select name="agentMode">
+              <option value="">Use admin setting</option>
+              <option value="off">Off</option>
+              <option value="suggest">Suggest only</option>
+              <option value="auto">Auto-replace and suggest</option>
+            </select>
+          </label>
+          <output name="effective" aria-live="polite"></output>
+        </fieldset>
+        <div class="actions">
+          <button type="submit">Apply</button>
+          <span id="assist-events" class="events" aria-live="polite"></span>
+        </div>
+      </form>
     </header>
     <main>
       <section class="panel" aria-labelledby="chat-title">

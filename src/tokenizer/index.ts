@@ -1,3 +1,3 @@
-export { buildTextMap, caretOffset, flatOffsetOf, rangeFor, type TextMap, type TextSegment } from './textmap';
+export { buildTextMap, caretOffset, flatOffsetOf, pointAt, rangeFor, type TextMap, type TextSegment } from './textmap';
 export { maskExclusions } from './exclusions';
-export { tokenize, type Token } from './tokenize';
+export { languageOf, tokenize, type Token } from './tokenize';

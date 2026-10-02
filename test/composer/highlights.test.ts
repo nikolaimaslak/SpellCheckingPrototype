@@ -39,3 +39,23 @@ describe('shared highlights', () => {
     expect(document.querySelectorAll('style[data-bp-spell]')).toHaveLength(0);
   });
 });
+
+describe('named highlights', () => {
+  it('keeps names separate and shares one ref-counted style element', () => {
+    const { env, registered } = fakeHighlightEnv();
+    const spelling = acquireHighlights(env, 'bp-spelling-error');
+    const flash = acquireHighlights(env, 'bp-autocorrected');
+    const r = rangeOver('word');
+    flash.setRanges([r]);
+    expect([...(registered.get('bp-autocorrected') ?? [])]).toEqual([r]);
+    expect([...(registered.get('bp-spelling-error') ?? [])]).toEqual([]);
+    expect(document.querySelectorAll('style[data-bp-spell]')).toHaveLength(1);
+    expect(document.querySelector('style[data-bp-spell]')!.textContent).toContain('::highlight(bp-autocorrected)');
+    spelling.release();
+    expect(registered.has('bp-spelling-error')).toBe(false);
+    expect(document.querySelectorAll('style[data-bp-spell]')).toHaveLength(1);
+    flash.release();
+    expect(registered.size).toBe(0);
+    expect(document.querySelectorAll('style[data-bp-spell]')).toHaveLength(0);
+  });
+});

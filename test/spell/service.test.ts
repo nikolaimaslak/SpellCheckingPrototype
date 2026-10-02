@@ -83,3 +83,29 @@ describe('spell service', () => {
     expect(service.misspelled('ar', 'اذا')).toBeUndefined();
   });
 });
+
+describe('custom dictionary', () => {
+  it('adds custom words to the matching engine before publishing each language as ready', async () => {
+    const { requester, sent, releaseArabic } = fakeRequester();
+    const service = createSpellService(requester, { customWords: ['GOSI', 'التأمينات', 'two words', 'Absher'] });
+    const order: string[] = [];
+    service.onStatus((s) => order.push(`ready:${s.loaded.map((l) => l.lang).join(',')}`));
+    await flush();
+    releaseArabic();
+    await flush();
+    const adds = sent.filter((c) => c.type === 'add').map((c) => c.type === 'add' && `${c.lang}:${c.word}`);
+    expect(adds).toEqual(['en:GOSI', 'en:Absher', 'ar:التأمينات']);
+    // each add precedes the ready event of its language
+    const enReadyIdx = sent.findIndex((c) => c.type === 'load' && c.langs[0] === 'ar'); // ar load is sent after en is published
+    expect(sent.findIndex((c) => c.type === 'add' && c.word === 'GOSI')).toBeLessThan(enReadyIdx);
+    expect(order).toEqual(['ready:en', 'ready:en,ar']);
+  });
+
+  it('skips words with whitespace', async () => {
+    const { requester, sent, releaseArabic } = fakeRequester();
+    releaseArabic();
+    createSpellService(requester, { customWords: ['two words'] });
+    await flush();
+    expect(sent.some((c) => c.type === 'add')).toBe(false);
+  });
+});
