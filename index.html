@@ -42,7 +42,17 @@
           <span class="langs">Completion context
             <label><input type="checkbox" name="sourceTranscript" /> Conversation</label>
             <label><input type="checkbox" name="sourceCanned" /> Canned responses</label>
+            <label><input type="checkbox" name="sourceKb" /> Knowledge base</label>
           </span>
+          <label>Grammar polish
+            <select name="grammarEnabled">
+              <option value="off">Off</option>
+              <option value="all">Everyone</option>
+              <option value="listed">Listed teams and users</option>
+            </select>
+          </label>
+          <label>Polish teams <small>(comma-separated)</small> <input name="grammarTeams" /></label>
+          <label>Polish users <small>(comma-separated)</small> <input name="grammarUsers" /></label>
         </fieldset>
         <fieldset>
           <legend>Agent</legend>
@@ -57,6 +67,7 @@
             </select>
           </label>
           <label><input type="checkbox" name="agentCompletion" /> Use inline completion</label>
+          <label><input type="checkbox" name="agentGrammar" /> Use grammar polish</label>
           <output name="effective" aria-live="polite"></output>
         </fieldset>
         <div class="actions">

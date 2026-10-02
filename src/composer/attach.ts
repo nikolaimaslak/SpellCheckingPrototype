@@ -311,6 +311,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   }
 
   function openForCaret(): boolean {
+    if (doc.querySelector('[data-bp-polish-panel]')) return false; // never two panels at once
     const c = correctionAtCaret();
     if (c) {
       openAt(c.range, c.lang, { revert: { original: c.original, onRevert: () => revert(c) } });

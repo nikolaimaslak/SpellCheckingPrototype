@@ -60,6 +60,7 @@ describe('inline completion controller', () => {
     const [body] = fetcher.mock.calls[0];
     expect(body.prefix).toBe('Thank you, your request');
     expect(body.transcript).toEqual([{ role: 'customer', text: 'when will it be processed?' }]);
+    expect(body.sources).toEqual({ transcript: true, canned: true, kb: true });
     expect(ghostText()).toBe(' will be processed within 3 working days.');
     expect(el.innerHTML).toBe('Thank you, your request');
     expect(events).toEqual([{ type: 'completion-shown', lang: 'en', latencyMs: expect.any(Number), shownLength: 41 }]);

@@ -11,20 +11,30 @@ export interface AdminPolicy {
   /** Product names, GOSI terminology, transliterations: never flagged or corrected. */
   customDictionary: string[];
   completion: CompletionPolicy;
+  grammar: GrammarPolicy;
 }
 
 /** Inline completion sends text to a hosted model, so it is opt-in per tenant, team or user. */
-export interface CompletionPolicy {
+/** Who gets a feature: nobody, everyone, or only the listed teams and users. */
+export interface Enablement {
   enabled: 'off' | 'all' | 'listed';
   teams: string[];
   users: string[];
-  sources: { transcript: boolean; canned: boolean };
 }
+
+export interface CompletionPolicy extends Enablement {
+  sources: { transcript: boolean; canned: boolean; kb: boolean };
+}
+
+/** On-demand grammar polish sends the draft to a hosted model, so it is opt-in too. */
+export type GrammarPolicy = Enablement;
 
 export interface AgentPreference {
   mode?: AssistMode;
   /** false turns completion off for this agent (only honored when the admin allows agent choice). */
   completion?: boolean;
+  /** false turns grammar polish off for this agent (only honored when the admin allows agent choice). */
+  grammar?: boolean;
 }
 
 export interface AgentIdentity {
@@ -38,7 +48,8 @@ export const DEFAULT_POLICY: AdminPolicy = {
   languages: ['en', 'ar'],
   agentMayLower: true,
   customDictionary: [],
-  completion: { enabled: 'off', teams: [], users: [], sources: { transcript: true, canned: true } },
+  completion: { enabled: 'off', teams: [], users: [], sources: { transcript: true, canned: true, kb: true } },
+  grammar: { enabled: 'off', teams: [], users: [] },
 };
 
 const RANK: Record<AssistMode, number> = { off: 0, suggest: 1, auto: 2 };
@@ -51,12 +62,17 @@ export function resolveMode(policy: AdminPolicy, pref: AgentPreference = {}): As
   return policy.mode;
 }
 
+const enabledFor = (e: Enablement, agent: AgentIdentity) =>
+  e.enabled === 'all' || (e.enabled === 'listed' && (e.teams.includes(agent.team) || e.users.includes(agent.user)));
+
 /** Completion is effective if the admin enables it for this agent and the agent (when allowed) hasn't opted out. */
 export function resolveCompletion(policy: AdminPolicy, pref: AgentPreference, agent: AgentIdentity): boolean {
-  const c = policy.completion;
-  const enabledForAgent = c.enabled === 'all' || (c.enabled === 'listed' && (c.teams.includes(agent.team) || c.users.includes(agent.user)));
-  if (!enabledForAgent) return false;
-  return !(policy.agentMayLower && pref.completion === false);
+  return enabledFor(policy.completion, agent) && !(policy.agentMayLower && pref.completion === false);
+}
+
+/** Grammar polish follows the same rule as completion. */
+export function resolveGrammar(policy: AdminPolicy, pref: AgentPreference, agent: AgentIdentity): boolean {
+  return enabledFor(policy.grammar, agent) && !(policy.agentMayLower && pref.grammar === false);
 }
 
 const isMode = (v: unknown): v is AssistMode => typeof v === 'string' && (MODES as string[]).includes(v);
@@ -74,23 +90,33 @@ export function parsePolicy(input: unknown): AdminPolicy {
     agentMayLower: typeof o.agentMayLower === 'boolean' ? o.agentMayLower : DEFAULT_POLICY.agentMayLower,
     customDictionary: words ?? [],
     completion: parseCompletion(o.completion),
+    grammar: parseEnablement(o.grammar),
   };
 }
 
 const strings = (v: unknown) =>
   Array.isArray(v) ? [...new Set(v.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter(Boolean))] : [];
 
+function parseEnablement(input: unknown): Enablement {
+  const o = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
+  return {
+    enabled: o.enabled === 'all' || o.enabled === 'listed' || o.enabled === 'off' ? o.enabled : 'off',
+    teams: strings(o.teams),
+    users: strings(o.users),
+  };
+}
+
 function parseCompletion(input: unknown): CompletionPolicy {
   const d = DEFAULT_POLICY.completion;
   const o = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const src = (o.sources && typeof o.sources === 'object' ? o.sources : {}) as Record<string, unknown>;
+  const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
   return {
-    enabled: o.enabled === 'all' || o.enabled === 'listed' || o.enabled === 'off' ? o.enabled : d.enabled,
-    teams: strings(o.teams),
-    users: strings(o.users),
+    ...parseEnablement(o),
     sources: {
-      transcript: typeof src.transcript === 'boolean' ? src.transcript : d.sources.transcript,
-      canned: typeof src.canned === 'boolean' ? src.canned : d.sources.canned,
+      transcript: bool(src.transcript, d.sources.transcript),
+      canned: bool(src.canned, d.sources.canned),
+      kb: bool(src.kb, d.sources.kb),
     },
   };
 }
@@ -100,5 +126,6 @@ export function parsePreference(input: unknown): AgentPreference {
   return {
     ...(isMode(o.mode) ? { mode: o.mode } : {}),
     ...(typeof o.completion === 'boolean' ? { completion: o.completion } : {}),
+    ...(typeof o.grammar === 'boolean' ? { grammar: o.grammar } : {}),
   };
 }

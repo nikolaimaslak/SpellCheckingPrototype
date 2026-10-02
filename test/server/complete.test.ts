@@ -59,3 +59,47 @@ describe('POST /v1/complete', () => {
     expect((await complete({ transcript: [] }, { model: createFakeModel(), library })).status).toBe(400);
   });
 });
+
+import { kbPassages, type KbArticle } from '../../server/retrieval';
+const kb = kbPassages((JSON.parse(readFileSync('server/data/kb.json', 'utf8')) as { articles: KbArticle[] }).articles);
+
+describe('knowledge base grounding', () => {
+  const spyModel = () => {
+    const seen: string[] = [];
+    const model: CompletionModel = { name: 'spy', complete: async (_s, user) => (seen.push(user), ' will be reviewed within 10 working days.') };
+    return { seen, model };
+  };
+  const ask = (customer: string, kbOn = true) => ({
+    prefix: 'Your early retirement application',
+    transcript: [{ role: 'customer', text: customer }],
+    sources: { transcript: true, canned: true, kb: kbOn },
+  });
+
+  it('adds passages and lists kb ids on a strong match', async () => {
+    const { seen, model } = spyModel();
+    const res = await complete(ask('Am I eligible for early retirement? I have 26 years of contributions.'), { model, library, kb });
+    expect((res.body as { sources: string[] }).sources.some((s) => s.startsWith('kb:en-early-retirement'))).toBe(true);
+    expect(seen[0]).toContain('Knowledge base:');
+  });
+
+  it('adds nothing on a weak match', async () => {
+    const { seen, model } = spyModel();
+    const res = await complete(ask('Hello, good morning'), { model, library, kb });
+    expect((res.body as { sources: string[] }).sources.some((s) => s.startsWith('kb:'))).toBe(false);
+    expect(seen[0]).not.toContain('Knowledge base:');
+  });
+
+  it('adds nothing when the kb source is off', async () => {
+    const { seen, model } = spyModel();
+    await complete(ask('Am I eligible for early retirement? I have 26 years of contributions.', false), { model, library, kb });
+    expect(seen[0]).not.toContain('Knowledge base:');
+  });
+
+  it('the fake model falls back to a knowledge base passage when no canned response matches', async () => {
+    const res = await complete(
+      { prefix: 'Early retirement is', transcript: [{ role: 'customer', text: 'Am I eligible for early retirement? I have 26 years of contributions.' }], sources: { transcript: true, canned: false, kb: true } },
+      { model: createFakeModel(), library, kb },
+    );
+    expect((res.body as { completion: string }).completion).toMatch(/available to members/);
+  });
+});

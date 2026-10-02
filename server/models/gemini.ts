@@ -17,7 +17,7 @@ export interface GeminiOptions {
 export function createGeminiModel({ apiKey, model = GEMINI_MODEL, fetch: doFetch = fetch }: GeminiOptions): CompletionModel {
   return {
     name: model,
-    async complete(system, user, signal) {
+    async complete(system, user, signal, opts = {}) {
       const res = await doFetch(`${ENDPOINT}/${model}:generateContent`, {
         method: 'POST',
         signal,
@@ -27,8 +27,9 @@ export function createGeminiModel({ apiKey, model = GEMINI_MODEL, fetch: doFetch
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
             temperature: 0.2,
-            maxOutputTokens: 48,
-            stopSequences: ['\n'],
+            // Completion defaults: one short line. Polish passes its own.
+            maxOutputTokens: opts.maxOutputTokens ?? 48,
+            stopSequences: opts.stopSequences ?? ['\n'],
             thinkingConfig: { thinkingLevel: 'minimal' },
           },
         }),

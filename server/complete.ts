@@ -1,11 +1,12 @@
 import { postprocess } from './postprocess.ts';
 import { buildUserContent, SYSTEM_INSTRUCTION } from './prompt.ts';
-import { retrieve } from './retrieval.ts';
+import { retrieve, retrieveKb, type KbPassage } from './retrieval.ts';
 import { scriptOf, type CannedResponse, type CompleteReply, type CompleteRequest, type CompletionModel, type Turn } from './types.ts';
 
 export interface CompleteDeps {
   model: CompletionModel | null;
   library: CannedResponse[];
+  kb?: KbPassage[];
   timeoutMs?: number;
 }
 
@@ -27,7 +28,7 @@ function parseRequest(input: unknown): CompleteRequest | string {
   return {
     prefix: o.prefix,
     transcript,
-    sources: { transcript: s.transcript !== false, canned: s.canned !== false },
+    sources: { transcript: s.transcript !== false, canned: s.canned !== false, kb: s.kb !== false },
   };
 }
 
@@ -40,7 +41,9 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
 
   const lastCustomer = [...req.transcript].reverse().find((t) => t.role === 'customer')?.text ?? '';
   const sources = req.sources.canned ? retrieve(deps.library, lastCustomer, req.prefix) : [];
-  const user = buildUserContent(req.prefix, req.sources.transcript ? req.transcript : null, sources);
+  // Knowledge base only on a strong match with the customer's last message.
+  const kb = req.sources.kb && deps.kb ? retrieveKb(deps.kb, lastCustomer) : [];
+  const user = buildUserContent(req.prefix, req.sources.transcript ? req.transcript : null, sources, kb);
 
   let raw: string;
   try {
@@ -59,7 +62,7 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
       lang: scriptOf(req.prefix),
       latencyMs: Math.round(performance.now() - started),
       model: deps.model.name,
-      sources: sources.map((s) => s.id),
+      sources: [...sources.map((s) => s.id), ...kb.map((p) => p.id)],
     },
   };
 }

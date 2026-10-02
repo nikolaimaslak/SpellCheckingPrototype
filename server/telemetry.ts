@@ -3,7 +3,8 @@ import { dirname } from 'node:path';
 
 const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed'] as const;
 const SPELLING = ['autocorrect', 'revert', 'accept', 'ignore'] as const;
-type EventType = (typeof COMPLETION)[number] | (typeof SPELLING)[number];
+const POLISH = ['polish-shown', 'polish-accepted', 'polish-dismissed', 'polish-reverted'] as const;
+type EventType = (typeof COMPLETION)[number] | (typeof SPELLING)[number] | (typeof POLISH)[number];
 
 export interface StoredEvent {
   type: EventType;
@@ -15,12 +16,14 @@ export interface StoredEvent {
   acceptedLength?: number;
   original?: string;
   replacement?: string;
+  changes?: number;
 }
 
 const COMMON = ['type', 'ts', 'lang', 'session'] as const;
-const EXTRA: Record<'completion' | 'spelling', readonly string[]> = {
+const EXTRA: Record<'completion' | 'spelling' | 'polish', readonly string[]> = {
   completion: ['latencyMs', 'shownLength', 'acceptedLength'],
   spelling: ['original', 'replacement'],
+  polish: ['latencyMs', 'changes'],
 };
 
 /**
@@ -30,7 +33,13 @@ const EXTRA: Record<'completion' | 'spelling', readonly string[]> = {
 export function sanitize(input: unknown): StoredEvent | null {
   const o = (input && typeof input === 'object' ? input : {}) as Record<string, unknown>;
   const type = o.type as EventType;
-  const kind = (COMPLETION as readonly string[]).includes(type) ? 'completion' : (SPELLING as readonly string[]).includes(type) ? 'spelling' : null;
+  const kind = (COMPLETION as readonly string[]).includes(type)
+    ? 'completion'
+    : (SPELLING as readonly string[]).includes(type)
+      ? 'spelling'
+      : (POLISH as readonly string[]).includes(type)
+        ? 'polish'
+        : null;
   if (!kind) return null;
   const out: Record<string, unknown> = {};
   for (const k of [...COMMON, ...EXTRA[kind]]) {
@@ -77,6 +86,11 @@ export function summarize(events: StoredEvent[]) {
     .filter((e) => e.type === 'completion-shown' && typeof e.latencyMs === 'number')
     .map((e) => e.latencyMs!)
     .sort((a, b) => a - b);
+  const polishShown = events.filter((e) => e.type === 'polish-shown' && (e.changes ?? 0) > 0).length;
+  const polishLatencies = events
+    .filter((e) => e.type === 'polish-shown' && typeof e.latencyMs === 'number')
+    .map((e) => e.latencyMs!)
+    .sort((a, b) => a - b);
   const tally = (key: 'type' | 'lang') =>
     events.reduce<Record<string, number>>((acc, e) => ((acc[e[key] ?? '—'] = (acc[e[key] ?? '—'] ?? 0) + 1), acc), {});
   return {
@@ -90,6 +104,12 @@ export function summarize(events: StoredEvent[]) {
       latencyP95: percentile(latencies, 95),
     },
     autocorrect: { count: autocorrects, reverts, revertRate: autocorrects ? reverts / autocorrects : null },
+    polish: {
+      shownWithChanges: polishShown,
+      accepted: count('polish-accepted'),
+      acceptanceRate: polishShown ? count('polish-accepted') / polishShown : null,
+      latencyP50: percentile(polishLatencies, 50),
+    },
     byType: tally('type'),
     byLang: tally('lang'),
   };
@@ -112,6 +132,7 @@ export function renderSummary(s: ReturnType<typeof summarize>): string {
 <div>Completion acceptance<div class="k">${pct(s.completion.acceptanceRate)}</div>${s.completion.accepted} of ${s.completion.shown} shown</div>
 <div>Completion latency<div class="k">${ms(s.completion.latencyP50)}</div>p50 · p95 ${ms(s.completion.latencyP95)}</div>
 <div>Auto-correct revert rate<div class="k">${pct(s.autocorrect.revertRate)}</div>${s.autocorrect.reverts} of ${s.autocorrect.count}</div>
+<div>Polish acceptance<div class="k">${pct(s.polish.acceptanceRate)}</div>${s.polish.accepted} of ${s.polish.shownWithChanges} previews · p50 ${ms(s.polish.latencyP50)}</div>
 </div>
 <h2>By event type</h2><table><tr><th>Type</th><th>Count</th></tr>${rows(s.byType)}</table>
 <h2>By language</h2><table><tr><th>Language</th><th>Count</th></tr>${rows(s.byLang)}</table>

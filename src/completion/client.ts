@@ -6,7 +6,7 @@ export interface Turn {
 export interface CompletionRequest {
   prefix: string;
   transcript: Turn[];
-  sources: { transcript: boolean; canned: boolean };
+  sources: { transcript: boolean; canned: boolean; kb: boolean };
 }
 
 export interface CompletionReply {

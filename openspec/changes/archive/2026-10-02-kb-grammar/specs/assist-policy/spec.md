@@ -1,0 +1,60 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Admin policy
+An admin policy SHALL define:
+- the assistance mode: `off`, `suggest` or `auto`;
+- the enabled languages (any of English and Arabic);
+- whether agents may choose a less aggressive mode;
+- a custom dictionary of words;
+- inline completion enablement: `off`, `all` (everyone), or `listed` (only the listed teams and users);
+- the completion context sources: transcript, canned responses and knowledge base, each on or off;
+- grammar polish enablement: `off`, `all`, or `listed` (only the listed teams and users).
+
+#### Scenario: Off
+- **WHEN** the admin mode is `off`
+- **THEN** no assistance is attached to any composer, and native browser spellcheck is left as the host set it
+
+#### Scenario: Languages limited
+- **WHEN** the policy enables only Arabic
+- **THEN** English words are neither underlined nor corrected
+
+#### Scenario: Completion for listed teams
+- **WHEN** completion is `listed` with team "Pensions", and the current agent is on team "Pensions"
+- **THEN** completion is enabled for that agent, and disabled for an agent on another team who isn't listed by user
+
+#### Scenario: Completion for a listed user
+- **WHEN** completion is `listed` with user "agent.42", and the current agent is "agent.42" on an unlisted team
+- **THEN** completion is enabled for that agent
+
+#### Scenario: Grammar polish for everyone
+- **WHEN** grammar polish is `all`
+- **THEN** every agent gets the Polish button
+
+### Requirement: Admin settings take precedence
+The effective mode SHALL be the admin mode, unless the admin allows agent choice and the agent has chosen a mode that is less aggressive (`off` < `suggest` < `auto`). An agent preference MUST NOT raise the mode above the admin's. Likewise, inline completion and grammar polish SHALL each be effective only if the admin enables it for the agent and, when the admin allows agent choice, the agent hasn't turned it off. An agent MUST NOT be able to enable completion or grammar polish the admin hasn't enabled for them.
+
+#### Scenario: Agent lowers auto to suggest
+- **WHEN** the admin mode is `auto`, agent choice is allowed, and the agent prefers `suggest`
+- **THEN** the effective mode is `suggest`
+
+#### Scenario: Agent cannot raise
+- **WHEN** the admin mode is `suggest` and the agent prefers `auto`
+- **THEN** the effective mode is `suggest`
+
+#### Scenario: Agent choice not allowed
+- **WHEN** the admin mode is `auto`, agent choice is not allowed, and the agent prefers `off`
+- **THEN** the effective mode is `auto`
+
+#### Scenario: Agent turns completion off
+- **WHEN** completion is enabled for the agent, agent choice is allowed, and the agent turns completion off
+- **THEN** completion is not effective for that agent
+
+#### Scenario: Agent cannot turn completion on
+- **WHEN** completion is `off` in the admin policy and the agent's preference says on
+- **THEN** completion is not effective
+
+#### Scenario: Agent turns grammar polish off
+- **WHEN** grammar polish is enabled for the agent, agent choice is allowed, and the agent turns it off
+- **THEN** grammar polish is not effective for that agent

@@ -166,6 +166,18 @@ describe('suggestions and acceptance', () => {
     expect(popover()!.dir).toBe('rtl');
   });
 
+  it('does not open while the polish panel is open', async () => {
+    const { el, handle } = setup('I will recieve it ');
+    await handle.recheck();
+    const panel = document.createElement('div');
+    panel.dataset.bpPolishPanel = '';
+    document.body.append(panel);
+    placeCaret(el.firstChild!, 9);
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await new Promise((r) => setTimeout(r, 10));
+    expect(popover()).toBeNull();
+  });
+
   it('does nothing on click outside flagged words', async () => {
     const { el, handle } = setup('I will recieve it ');
     await handle.recheck();

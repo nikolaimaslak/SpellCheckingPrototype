@@ -3,6 +3,7 @@ import {
   parsePolicy,
   parsePreference,
   resolveCompletion,
+  resolveGrammar,
   resolveMode,
   type AdminPolicy,
   type AgentIdentity,
@@ -57,6 +58,11 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
   const users = field<HTMLInputElement>('completionUsers');
   const sourceTranscript = field<HTMLInputElement>('sourceTranscript');
   const sourceCanned = field<HTMLInputElement>('sourceCanned');
+  const sourceKb = field<HTMLInputElement>('sourceKb');
+  const grammarEnabled = field<HTMLSelectElement>('grammarEnabled');
+  const grammarTeams = field<HTMLInputElement>('grammarTeams');
+  const grammarUsers = field<HTMLInputElement>('grammarUsers');
+  const agentGrammar = field<HTMLInputElement>('agentGrammar');
   const agentMode = field<HTMLSelectElement>('agentMode');
   const agentCompletion = field<HTMLInputElement>('agentCompletion');
   const agentUser = field<HTMLInputElement>('agentUser');
@@ -73,6 +79,11 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
   users.value = policy.completion.users.join(', ');
   sourceTranscript.checked = policy.completion.sources.transcript;
   sourceCanned.checked = policy.completion.sources.canned;
+  sourceKb.checked = policy.completion.sources.kb;
+  grammarEnabled.value = policy.grammar.enabled;
+  grammarTeams.value = policy.grammar.teams.join(', ');
+  grammarUsers.value = policy.grammar.users.join(', ');
+  agentGrammar.checked = preference.grammar !== false;
   agentMode.value = preference.mode ?? '';
   agentCompletion.checked = preference.completion !== false;
   agentUser.value = agent.user;
@@ -88,10 +99,15 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
         enabled: completionEnabled.value,
         teams: list(teams.value),
         users: list(users.value),
-        sources: { transcript: sourceTranscript.checked, canned: sourceCanned.checked },
+        sources: { transcript: sourceTranscript.checked, canned: sourceCanned.checked, kb: sourceKb.checked },
       },
+      grammar: { enabled: grammarEnabled.value, teams: list(grammarTeams.value), users: list(grammarUsers.value) },
     }),
-    preference: parsePreference({ mode: agentMode.value, ...(agentCompletion.checked ? {} : { completion: false }) }),
+    preference: parsePreference({
+      mode: agentMode.value,
+      ...(agentCompletion.checked ? {} : { completion: false }),
+      ...(agentGrammar.checked ? {} : { grammar: false }),
+    }),
     agent: parseAgent({ user: agentUser.value, team: agentTeam.value }),
   });
 
@@ -99,8 +115,10 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
     const s = read();
     agentMode.disabled = !s.policy.agentMayLower;
     agentCompletion.disabled = !s.policy.agentMayLower;
+    agentGrammar.disabled = !s.policy.agentMayLower;
     const completion = resolveCompletion(s.policy, s.preference, s.agent) ? 'on' : 'off';
-    effective.value = `Effective: ${MODE_LABEL[resolveMode(s.policy, s.preference)]} · completion ${completion}`;
+    const polish = resolveGrammar(s.policy, s.preference, s.agent) ? 'on' : 'off';
+    effective.value = `Effective: ${MODE_LABEL[resolveMode(s.policy, s.preference)]} · completion ${completion} · polish ${polish}`;
   };
   form.addEventListener('input', sync);
   form.addEventListener('change', sync);
@@ -111,7 +129,7 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
   sync();
 }
 
-const COUNTED = ['autocorrect', 'revert', 'accept', 'ignore', 'completion-shown', 'completion-accepted'] as const;
+const COUNTED = ['autocorrect', 'revert', 'accept', 'ignore', 'completion-shown', 'completion-accepted', 'polish-shown', 'polish-accepted'] as const;
 
 /** Running counts of assistance events for the session. */
 export function mountEventCounter(el: HTMLElement): (event: { type: string }) => void {
@@ -119,7 +137,8 @@ export function mountEventCounter(el: HTMLElement): (event: { type: string }) =>
   const render = () => {
     el.textContent =
       `Auto-corrected ${counts.autocorrect} · Reverted ${counts.revert} · Accepted ${counts.accept} · Ignored ${counts.ignore}` +
-      ` · Completions ${counts['completion-accepted']}/${counts['completion-shown']}`;
+      ` · Completions ${counts['completion-accepted']}/${counts['completion-shown']}` +
+      ` · Polish ${counts['polish-accepted']}/${counts['polish-shown']}`;
   };
   render();
   return (event) => {

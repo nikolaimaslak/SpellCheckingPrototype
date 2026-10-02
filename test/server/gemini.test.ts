@@ -45,3 +45,15 @@ describe('Gemini client', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 });
+
+describe('Gemini generation options', () => {
+  it('overrides output limits and stop sequences per request, keeping defaults otherwise', async () => {
+    const fetch = vi.fn(async () => ok('x'));
+    const model = createGeminiModel({ apiKey: KEY, fetch: fetch as unknown as typeof globalThis.fetch });
+    await model.complete('s', 'u', new AbortController().signal, { maxOutputTokens: 512, stopSequences: [] });
+    await model.complete('s', 'u', new AbortController().signal);
+    const [withOpts, defaults] = fetch.mock.calls.map((c) => JSON.parse(((c as unknown as [string, RequestInit])[1].body as string)).generationConfig);
+    expect(withOpts).toMatchObject({ maxOutputTokens: 512, stopSequences: [], temperature: 0.2, thinkingConfig: { thinkingLevel: 'minimal' } });
+    expect(defaults).toMatchObject({ maxOutputTokens: 48, stopSequences: ['\n'] });
+  });
+});

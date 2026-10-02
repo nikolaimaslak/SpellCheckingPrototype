@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createCompletionClient } from '../../src/completion/client';
 
-const body = { prefix: 'Thank you for contacting', transcript: [], sources: { transcript: true, canned: true } };
+const body = { prefix: 'Thank you for contacting', transcript: [], sources: { transcript: true, canned: true, kb: true } };
 const reply = { completion: ' us.', lang: 'en', latencyMs: 5, model: 'fake', sources: [] };
 
 describe('completion client', () => {

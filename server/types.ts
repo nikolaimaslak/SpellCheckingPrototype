@@ -14,7 +14,7 @@ export interface CannedResponse {
 export interface CompleteRequest {
   prefix: string;
   transcript: Turn[];
-  sources: { transcript: boolean; canned: boolean };
+  sources: { transcript: boolean; canned: boolean; kb: boolean };
 }
 
 export interface CompleteReply {
@@ -25,10 +25,15 @@ export interface CompleteReply {
   sources: string[];
 }
 
-/** Model-agnostic completion backend (Gemini in dev, a fake in tests). */
+export interface GenerationOptions {
+  maxOutputTokens?: number;
+  stopSequences?: string[];
+}
+
+/** Model-agnostic text backend (Gemini in dev, a fake in tests); used by completion and polish. */
 export interface CompletionModel {
   name: string;
-  complete(system: string, user: string, signal: AbortSignal): Promise<string>;
+  complete(system: string, user: string, signal: AbortSignal, opts?: GenerationOptions): Promise<string>;
 }
 
 /** Script of the last word: decides the reply language and the post-processing script check. */

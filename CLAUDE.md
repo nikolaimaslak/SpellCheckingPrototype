@@ -31,10 +31,11 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/composer/`: spell check and auto-correct attached to any `contenteditable` (highlights, popover, revert). See its README.
 - `src/autocorrect/`: confidence rule, edit distance, typed-boundary trigger.
 - `src/completion/`: inline completion client (trigger, ghost overlay, controller).
+- `src/polish/`: grammar polish client (word diff, apply/revert, button and preview panel, controller).
 - `src/policy/`: admin policy and agent preference (`resolveMode`, `resolveCompletion`).
 - `src/telemetry/`: batching client for assistance events.
 - `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
-- `server/`: Tier 2 dev stand-in (completion endpoint, retrieval over the synthetic `server/data/canned.json`, Gemini client, telemetry log and `/summary`). TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
+- `server/`: Tier 2 dev stand-in: completion (`/v1/complete`, retrieval over the synthetic `server/data/canned.json` and the synthetic knowledge base `server/data/kb.json`), grammar polish (`/v1/polish` with protected-content, length and line-break checks), Gemini client, telemetry log and `/summary`. TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
 - `dev/ad-loader/`: dev-only loader for a live Agent Desktop tenant; never part of the build.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
 - `scripts/fetch-dicts.ts`: dictionary provisioning (run directly by Node, no build step).

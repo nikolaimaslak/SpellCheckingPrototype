@@ -1,6 +1,6 @@
 # SpellCheckingPrototype
 
-Prototype of the Agent Desktop composer assistance layer: Arabic and English spell checking and auto-correct (PER #60254), and Smart Compose-style inline completion (PER #60145). Spelling runs entirely in the browser (Hunspell compiled to WebAssembly, in a Web Worker, no network calls). Completion is server-side: a dev server stands in for the Intelligence Engine and calls a hosted model (Gemini in dev).
+Prototype of the Agent Desktop composer assistance layer: Arabic and English spell checking and auto-correct (PER #60254), Smart Compose-style inline completion grounded in the conversation, canned responses and a knowledge base (PER #60145), and an on-demand grammar polish button (PER #60254). Spelling runs entirely in the browser (Hunspell compiled to WebAssembly, in a Web Worker, no network calls). Completion is server-side: a dev server stands in for the Intelligence Engine and calls a hosted model (Gemini in dev).
 
 ## Prerequisites
 
@@ -27,9 +27,10 @@ COMPLETION_MODEL=fake npm run server    # offline, deterministic test double (no
 The demo page has a chat composer (Enter sends, Shift+Enter adds a new line, like Agent Desktop) and a rich-text email composer.
 - **Settings panel:** stands in for the admin and agent settings (spelling mode, custom dictionary, completion for everyone or listed teams and users).
 - **Customer conversation:** a scripted customer side, in English or Arabic, gives completions context.
-- **Telemetry summary:** the link (`/api/summary`) shows completion acceptance, latency and auto-correct revert rate.
+- **Grammar polish:** the Polish button by each composer previews grammar and spelling fixes. Accept applies only the changed words; within formatting, a "Revert polish" button undoes all of them in one click.
+- **Telemetry summary:** the link (`/api/summary`) shows completion and polish acceptance, latency and auto-correct revert rate.
 
-**Data handling:** completion requests (recent conversation, canned snippets, the agent's sentence) go to the hosted model. Use synthetic text only. Telemetry records no conversation or completion text.
+**Data handling:** completion requests (recent conversation, canned and knowledge base snippets, the agent's sentence) and polish requests (the whole draft) go to the hosted model. Use synthetic text only. The canned responses and knowledge base are synthetic demo data. Telemetry records no conversation, completion, draft or corrected text.
 
 ## Scripts
 

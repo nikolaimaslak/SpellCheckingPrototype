@@ -22,23 +22,35 @@ describe('settings panel', () => {
     mountSettings(form, settings({ policy: { ...DEFAULT_POLICY, mode: 'auto', agentMayLower: false }, preference: { mode: 'off', completion: false } }), () => {});
     expect(field<HTMLSelectElement>('agentMode').disabled).toBe(true);
     expect(field<HTMLInputElement>('agentCompletion').disabled).toBe(true);
-    expect(effective()).toBe('Effective: Auto-replace and suggest · completion off');
+    expect(effective()).toBe('Effective: Auto-replace and suggest · completion off · polish off');
   });
 
   it('follows resolveMode as the agent changes the preference', () => {
     mountSettings(form, settings({ policy: { ...DEFAULT_POLICY, mode: 'auto' } }), () => {});
     field<HTMLSelectElement>('agentMode').value = 'suggest';
     change(field('agentMode'));
-    expect(effective()).toBe('Effective: Suggest only · completion off');
+    expect(effective()).toBe('Effective: Suggest only · completion off · polish off');
   });
 
   it('flips completion when the current agent moves off a listed team', () => {
     const policy = parsePolicy({ completion: { enabled: 'listed', teams: ['Pensions'] } });
     mountSettings(form, settings({ policy }), () => {});
-    expect(effective()).toMatch(/completion on$/);
+    expect(effective()).toMatch(/completion on ·/);
     field<HTMLInputElement>('agentTeam').value = 'Registration';
     change(field('agentTeam'));
-    expect(effective()).toMatch(/completion off$/);
+    expect(effective()).toMatch(/completion off ·/);
+  });
+
+  it('shows polish on for everyone, and honors the agent opt-out only when allowed', () => {
+    mountSettings(form, settings({ policy: parsePolicy({ grammar: { enabled: 'all' } }) }), () => {});
+    expect(effective()).toMatch(/polish on$/);
+    field<HTMLInputElement>('agentGrammar').checked = false;
+    change(field('agentGrammar'));
+    expect(effective()).toMatch(/polish off$/);
+    field<HTMLInputElement>('agentMayLower').checked = false;
+    change(field('agentMayLower'));
+    expect(field<HTMLInputElement>('agentGrammar').disabled).toBe(true);
+    expect(effective()).toMatch(/polish on$/);
   });
 
   it('applies the edited settings on submit', () => {
@@ -50,6 +62,7 @@ describe('settings panel', () => {
     field<HTMLSelectElement>('completionEnabled').value = 'listed';
     field<HTMLInputElement>('completionTeams').value = 'Pensions, Registration ,';
     field<HTMLInputElement>('sourceCanned').checked = false;
+    field<HTMLInputElement>('sourceKb').checked = false;
     field<HTMLInputElement>('agentCompletion').checked = false;
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     expect(onApply).toHaveBeenCalledWith({
@@ -58,7 +71,8 @@ describe('settings panel', () => {
         languages: ['ar'],
         agentMayLower: true,
         customDictionary: ['GOSI', 'التأمينات'],
-        completion: { enabled: 'listed', teams: ['Pensions', 'Registration'], users: [], sources: { transcript: true, canned: false } },
+        completion: { enabled: 'listed', teams: ['Pensions', 'Registration'], users: [], sources: { transcript: true, canned: false, kb: false } },
+        grammar: { enabled: 'off', teams: [], users: [] },
       },
       preference: { completion: false },
       agent: DEFAULT_AGENT,
@@ -78,6 +92,13 @@ describe('settings storage', () => {
     const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
     saveSettings(storage, s);
     expect(loadSettings(storage)).toEqual(s);
+  });
+
+  it('loads stored Phase 3 settings (no grammar, no kb source)', () => {
+    const phase3 = JSON.stringify({ policy: { mode: 'suggest', completion: { enabled: 'all', sources: { transcript: true, canned: true } } }, preference: {}, agent: { user: 'a', team: 'b' } });
+    const loaded = loadSettings({ getItem: () => phase3 });
+    expect(loaded.policy.grammar.enabled).toBe('off');
+    expect(loaded.policy.completion.sources.kb).toBe(true);
   });
 
   it('loads stored Phase 2 settings (no completion, no agent)', () => {
@@ -114,6 +135,6 @@ describe('event counter', () => {
     record({ type: 'completion-shown' });
     record({ type: 'completion-shown' });
     record({ type: 'completion-accepted' });
-    expect(el.textContent).toBe('Auto-corrected 1 · Reverted 1 · Accepted 0 · Ignored 0 · Completions 1/2');
+    expect(el.textContent).toBe('Auto-corrected 1 · Reverted 1 · Accepted 0 · Ignored 0 · Completions 1/2 · Polish 0/0');
   });
 });

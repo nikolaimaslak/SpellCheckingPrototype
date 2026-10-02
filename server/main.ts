@@ -6,8 +6,10 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { complete } from './complete.ts';
 import { createFakeModel } from './models/fake.ts';
+import { polish } from './polish.ts';
 import { createGeminiModel } from './models/gemini.ts';
 import { appendEvents, readEvents, renderSummary, summarize } from './telemetry.ts';
+import { kbPassages, type KbArticle } from './retrieval.ts';
 import type { CannedResponse, CompletionModel } from './types.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -25,6 +27,7 @@ const PORT = Number(process.env.PORT ?? 5175);
 const MODE = process.env.COMPLETION_MODEL ?? 'gemini';
 const EVENTS = join(ROOT, 'telemetry/events.jsonl');
 const library = (JSON.parse(readFileSync(join(ROOT, 'server/data/canned.json'), 'utf8')) as { responses: CannedResponse[] }).responses;
+const kb = kbPassages((JSON.parse(readFileSync(join(ROOT, 'server/data/kb.json'), 'utf8')) as { articles: KbArticle[] }).articles);
 
 let model: CompletionModel | null = null;
 if (MODE === 'fake') model = createFakeModel();
@@ -55,7 +58,11 @@ createServer(async (req, res) => {
   const path = (req.url ?? '').split('?')[0];
   try {
     if (req.method === 'POST' && path === '/v1/complete') {
-      const result = await complete(await readJson(req), { model, library });
+      const result = await complete(await readJson(req), { model, library, kb });
+      return send(res, result.status, result.body);
+    }
+    if (req.method === 'POST' && path === '/v1/polish') {
+      const result = await polish(await readJson(req), { model });
       return send(res, result.status, result.body);
     }
     if (req.method === 'POST' && path === '/v1/events') {

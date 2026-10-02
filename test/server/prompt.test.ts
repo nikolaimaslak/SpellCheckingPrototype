@@ -37,3 +37,20 @@ describe('prompt', () => {
     expect(SYSTEM_INSTRUCTION).toMatch(/same language/);
   });
 });
+
+describe('prompt with knowledge base', () => {
+  it('places knowledge base passages after approved responses and before the conversation', () => {
+    const kb = [{ id: 'kb:x#0', text: 'Early retirement eligibility: available after 25 years.' }];
+    const user = buildUserContent('You are', transcript, canned, kb);
+    const a = user.indexOf('Approved responses:');
+    const k = user.indexOf('Knowledge base:');
+    const c = user.indexOf('Conversation:');
+    expect(a).toBeLessThan(k);
+    expect(k).toBeLessThan(c);
+    expect(user.endsWith('You are')).toBe(true);
+  });
+
+  it('tells the model not to invent facts beyond the provided sources', () => {
+    expect(SYSTEM_INSTRUCTION).toMatch(/knowledge base/);
+  });
+});

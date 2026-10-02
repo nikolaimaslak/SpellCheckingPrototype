@@ -20,7 +20,7 @@ export interface CompletionEnv {
 
 export interface CompletionOptions {
   fetcher: CompletionFetcher;
-  sources?: { transcript: boolean; canned: boolean };
+  sources?: { transcript: boolean; canned: boolean; kb: boolean };
   /** The live conversation, oldest first. */
   transcript?: () => Turn[];
   /** Receives events without any completion or composer text. */
@@ -31,11 +31,15 @@ export interface CompletionOptions {
 
 export interface CompletionHandle {
   detach(): void;
+  /** Hides any ghost text and cancels a pending request (e.g. when Polish opens). */
+  dismiss(): void;
   /** Runs the pause check now (tests, demos). */
   requestNow(): Promise<void>;
 }
 
 const MAX_PREFIX = 600;
+/** While the spelling popover or the polish panel is open, completion stays quiet. */
+const OVERLAYS = '[data-bp-spell-popover], [data-bp-polish-panel]';
 const NAV_KEYS = new Set(['Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
 
 const langOf = (text: string): 'en' | 'ar' => {
@@ -50,7 +54,7 @@ const langOf = (text: string): 'en' | 'ar' => {
  * else dismisses it.
  */
 export function attachCompletion(el: HTMLElement, options: CompletionOptions): CompletionHandle {
-  const { fetcher, sources = { transcript: true, canned: true }, debounceMs = 400 } = options;
+  const { fetcher, sources = { transcript: true, canned: true, kb: true }, debounceMs = 400 } = options;
   const doc = el.ownerDocument;
   const win = doc.defaultView!;
   const env: CompletionEnv = {
@@ -111,7 +115,7 @@ export function attachCompletion(el: HTMLElement, options: CompletionOptions): C
     if (caret === undefined) return;
     const before = map.text.slice(0, caret);
     const after = map.text.slice(caret).split('\n')[0];
-    const popoverOpen = !!doc.querySelector('[data-bp-spell-popover]');
+    const popoverOpen = !!doc.querySelector(OVERLAYS);
     if (!shouldRequest({ before, after, composing, popoverOpen, enabled: true })) return;
 
     const mine = ++generation;
@@ -123,7 +127,7 @@ export function attachCompletion(el: HTMLElement, options: CompletionOptions): C
     if (mine !== generation || detached || !reply?.completion) return;
     // Only show if nothing moved while waiting.
     const now = caretState();
-    if (now.caret !== caret || now.map.text !== map.text || doc.querySelector('[data-bp-spell-popover]')) return;
+    if (now.caret !== caret || now.map.text !== map.text || doc.querySelector(OVERLAYS)) return;
 
     const lang = langOf(prefix);
     ghost.show(reply.completion, lang === 'ar' ? 'rtl' : 'ltr');
@@ -225,6 +229,10 @@ export function attachCompletion(el: HTMLElement, options: CompletionOptions): C
 
   return {
     requestNow,
+    dismiss() {
+      cancelPending();
+      dismiss();
+    },
     detach() {
       if (detached) return;
       detached = true;

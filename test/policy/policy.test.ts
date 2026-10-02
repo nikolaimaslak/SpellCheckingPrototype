@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_POLICY, parsePolicy, parsePreference, resolveCompletion, resolveMode, type AdminPolicy, type AssistMode } from '../../src/policy';
+import { DEFAULT_POLICY, parsePolicy, parsePreference, resolveCompletion, resolveGrammar, resolveMode, type AdminPolicy, type AssistMode } from '../../src/policy';
 
 const policy = (mode: AssistMode, agentMayLower: boolean): AdminPolicy => ({ ...DEFAULT_POLICY, mode, agentMayLower });
 
@@ -42,7 +42,7 @@ describe('parsePolicy', () => {
   });
 
   it('round-trips a valid policy', () => {
-    const p: AdminPolicy = { mode: 'off', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'], completion: { enabled: 'listed', teams: ['Pensions'], users: [], sources: { transcript: true, canned: false } } };
+    const p: AdminPolicy = { mode: 'off', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'], completion: { enabled: 'listed', teams: ['Pensions'], users: [], sources: { transcript: true, canned: false, kb: true } }, grammar: { enabled: 'all', teams: [], users: [] } };
     expect(parsePolicy(JSON.parse(JSON.stringify(p)))).toEqual(p);
   });
 });
@@ -96,11 +96,45 @@ describe('parsePolicy completion', () => {
       enabled: 'listed',
       teams: ['Pensions'],
       users: [],
-      sources: { transcript: true, canned: false },
+      sources: { transcript: true, canned: false, kb: true },
     });
   });
 
   it('parses the agent completion preference', () => {
     expect(parsePreference({ mode: 'suggest', completion: false })).toEqual({ mode: 'suggest', completion: false });
+  });
+});
+
+describe('resolveGrammar', () => {
+  const agent = { user: 'agent.42', team: 'Pensions' };
+  const withGrammar = (enabled: 'off' | 'all' | 'listed', extra: Partial<AdminPolicy['grammar']> = {}, agentMayLower = true): AdminPolicy => ({
+    ...DEFAULT_POLICY,
+    agentMayLower,
+    grammar: { ...DEFAULT_POLICY.grammar, enabled, ...extra },
+  });
+
+  it('is off by default and on for everyone with all', () => {
+    expect(resolveGrammar(DEFAULT_POLICY, {}, agent)).toBe(false);
+    expect(resolveGrammar(withGrammar('all'), {}, agent)).toBe(true);
+  });
+
+  it('listed enables by team or user', () => {
+    expect(resolveGrammar(withGrammar('listed', { teams: ['Pensions'] }), {}, agent)).toBe(true);
+    expect(resolveGrammar(withGrammar('listed', { users: ['agent.42'] }), {}, { user: 'agent.42', team: 'X' })).toBe(true);
+    expect(resolveGrammar(withGrammar('listed', { teams: ['Pensions'] }), {}, { user: 'x', team: 'X' })).toBe(false);
+  });
+
+  it('agent opt-out only when allowed; agent cannot enable', () => {
+    expect(resolveGrammar(withGrammar('all'), { grammar: false }, agent)).toBe(false);
+    expect(resolveGrammar(withGrammar('all', {}, false), { grammar: false }, agent)).toBe(true);
+    expect(resolveGrammar(withGrammar('off'), { grammar: true }, agent)).toBe(false);
+  });
+
+  it('stored Phase 3 settings parse with grammar off and the kb source on', () => {
+    const phase3 = { mode: 'auto', completion: { enabled: 'all', sources: { transcript: true, canned: false } } };
+    const p = parsePolicy(phase3);
+    expect(p.grammar).toEqual({ enabled: 'off', teams: [], users: [] });
+    expect(p.completion.sources).toEqual({ transcript: true, canned: false, kb: true });
+    expect(parsePreference({ grammar: false })).toEqual({ grammar: false });
   });
 });

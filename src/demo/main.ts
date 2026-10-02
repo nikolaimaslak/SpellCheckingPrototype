@@ -1,7 +1,8 @@
 import './style.css';
 import { createCompletionClient, attachCompletion, type CompletionHandle } from '../completion';
 import { attachSpellCheck, type SpellCheckHandle } from '../composer';
-import { resolveCompletion, resolveMode } from '../policy';
+import { resolveCompletion, resolveGrammar, resolveMode } from '../policy';
+import { attachPolish, createPolishClient, type PolishHandle } from '../polish';
 import { startSpellWorker, type SpellClient } from '../spell/client';
 import { createSpellService } from '../spell/service';
 import { createTelemetry } from '../telemetry';
@@ -36,10 +37,12 @@ const record = (event: { type: string; lang?: string }) => {
   telemetry.record(event);
 };
 const fetcher = createCompletionClient('/api');
+const polishFetcher = createPolishClient('/api');
 
 let client: SpellClient | undefined;
 let handles: SpellCheckHandle[] = [];
 let completions: CompletionHandle[] = [];
+let polishes: PolishHandle[] = [];
 let stopStatus = () => {};
 let current: ReturnType<typeof createSpellService> | undefined;
 
@@ -47,6 +50,7 @@ let current: ReturnType<typeof createSpellService> | undefined;
 function apply({ policy, preference, agent }: DemoSettings) {
   handles.forEach((h) => h.detach());
   completions.forEach((h) => h.detach());
+  polishes.forEach((h) => h.detach());
   stopStatus();
   client?.terminate();
   client = startSpellWorker();
@@ -62,6 +66,12 @@ function apply({ policy, preference, agent }: DemoSettings) {
   completions = resolveCompletion(policy, preference, agent)
     ? [chat, email].map((el) =>
         attachCompletion(el, { fetcher, sources: policy.completion.sources, transcript: () => readTranscript(transcript), onEvent: record }),
+      )
+    : [];
+  polishes = resolveGrammar(policy, preference, agent)
+    ? [chat, email].map((el, i) =>
+        // Pressing Polish dismisses that composer's ghost text.
+        attachPolish(el, { fetcher: polishFetcher, onEvent: record, onOpen: () => completions[i]?.dismiss() }),
       )
     : [];
 }
@@ -80,6 +90,7 @@ if (import.meta.env.DEV) {
       get service() { return current; },
       get handles() { return handles; },
       get completions() { return completions; },
+      get polishes() { return polishes; },
       telemetry,
     },
   });

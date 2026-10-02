@@ -39,3 +39,23 @@ describe('telemetry', () => {
     expect(html).toContain('20%');
   });
 });
+
+describe('polish telemetry', () => {
+  it('keeps only latency and change count for polish events', () => {
+    expect(sanitize({ type: 'polish-shown', ts: 1, lang: 'ar', latencyMs: 900, changes: 2, draft: 'secret', polished: 'secret' })).toEqual({
+      type: 'polish-shown', ts: 1, lang: 'ar', latencyMs: 900, changes: 2,
+    });
+    expect(sanitize({ type: 'polish-reverted', ts: 1, text: 'x' })).toEqual({ type: 'polish-reverted', ts: 1 });
+  });
+
+  it('computes polish acceptance over previews with changes', () => {
+    const events: StoredEvent[] = [
+      ...Array.from({ length: 4 }, (_, i) => ({ type: 'polish-shown' as const, ts: i, changes: 2, latencyMs: 800 + i * 100 })),
+      { type: 'polish-shown', ts: 9, changes: 0, latencyMs: 700 },
+      ...Array.from({ length: 3 }, (_, i) => ({ type: 'polish-accepted' as const, ts: i })),
+    ];
+    const s = summarize(events);
+    expect(s.polish.acceptanceRate).toBeCloseTo(0.75);
+    expect(renderSummary(s)).toContain('75%');
+  });
+});
