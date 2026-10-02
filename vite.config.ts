@@ -2,6 +2,10 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  server: {
+    // Completion service (npm run server); the page calls same-origin /api/...
+    proxy: { '/api': { target: 'http://localhost:5175', rewrite: (path) => path.replace(/^\/api/, '') } },
+  },
   worker: {
     format: 'es',
   },

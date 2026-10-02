@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "fetch-dicts": "node scripts/fetch-dicts.ts",
     "build:wasm": "bash wasm/build.sh",
-    "ad-loader": "node dev/ad-loader/serve.ts"
+    "ad-loader": "node dev/ad-loader/serve.ts",
+    "server": "node server/main.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

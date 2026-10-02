@@ -2,7 +2,9 @@
 // Desktop page for validation. In the tenant's DevTools console:
 //   import('http://localhost:5174/ad-spell.js?v=' + Date.now())
 // Undo everything with: __bpSpell.detachAll()
-// Optional, before importing: window.__bpSpellConfig = { mode: 'auto', customDictionary: ['GOSI'] }
+// Optional, before importing: window.__bpSpellConfig = { mode: 'auto', customDictionary: ['GOSI'], completion: true }
+// completion: true sends composer text to the completion server's hosted model: synthetic text only.
+import { attachCompletion, createCompletionClient, type CompletionHandle } from '../../src/completion';
 import { attachSpellCheck, type SpellCheckHandle } from '../../src/composer';
 import { parsePolicy, resolveMode } from '../../src/policy';
 import { SpellClient } from '../../src/spell/client';
@@ -18,12 +20,29 @@ const bootstrap = new Blob([`importScripts(${JSON.stringify(`${__AD_ORIGIN__}/ad
   type: 'text/javascript',
 });
 const worker = new Worker(URL.createObjectURL(bootstrap));
-const policy = parsePolicy((window as { __bpSpellConfig?: unknown }).__bpSpellConfig);
+const config = ((window as { __bpSpellConfig?: Record<string, unknown> }).__bpSpellConfig ?? {}) as Record<string, unknown>;
+const policy = parsePolicy(config);
+const completionOn = config.completion === true;
+if (completionOn) {
+  console.warn('[bp-spell] inline completion ON: composer text is sent to the completion server and its hosted model. Use synthetic text only.');
+}
+const fetcher = createCompletionClient('http://localhost:5175');
+const completions = new Map<HTMLElement, CompletionHandle>();
 const mode = resolveMode(policy);
 const service = createSpellService(new SpellClient(worker), { languages: policy.languages, customWords: policy.customDictionary });
 const handles = new Map<HTMLElement, SpellCheckHandle>();
 
 function sync() {
+  for (const el of document.querySelectorAll<HTMLElement>(COMPOSERS)) {
+    // Prefix-only context: Agent Desktop's transcript DOM uses build-specific class names.
+    if (completionOn && !completions.has(el)) completions.set(el, attachCompletion(el, { fetcher, sources: { transcript: false, canned: true } }));
+  }
+  for (const [el, handle] of completions) {
+    if (!el.isConnected) {
+      handle.detach();
+      completions.delete(el);
+    }
+  }
   if (mode === 'off') return;
   for (const el of document.querySelectorAll<HTMLElement>(COMPOSERS)) {
     if (!handles.has(el)) {
@@ -58,13 +77,16 @@ Object.assign(window, {
   __bpSpell: {
     service,
     handles,
+    completions,
     detachAll() {
       observer.disconnect();
       handles.forEach((h) => h.detach());
       handles.clear();
+      completions.forEach((h) => h.detach());
+      completions.clear();
       worker.terminate();
       console.info('[bp-spell] detached');
     },
   },
 });
-console.info(`[bp-spell] loader active (mode: ${mode}); attached to ${handles.size} composer(s)`);
+console.info(`[bp-spell] loader active (mode: ${mode}, completion: ${completionOn ? 'on' : 'off'}); attached to ${handles.size} composer(s)`);

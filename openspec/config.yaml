@@ -22,8 +22,10 @@ context: |
       composer integration, tokenizer + exclusion rules, Hunspell spelling engine
       (WASM in a Web Worker), auto-correct confidence layer.
     - Tier 2 (model-driven: inline completion, grammar polish) is server-side and
-      only invoked on typing pause or explicit action. Out of scope until Phase 3;
-      the prototype may mock it behind an interface.
+      only invoked on typing pause or explicit action. In scope from Phase 3: a dev
+      Node server (server/) stands in for the Intelligence Engine; the hosted model
+      key (GEMINI_API_KEY) lives only in the server environment, never in the
+      browser or the repo. Hosted-model traffic is for synthetic demo data only.
     - Never write decorations into the editable DOM: underlines via the CSS Custom
       Highlight API, ghost text in an overlay/decoration layer. Text changes
       (accepted suggestions, auto-replacements) go through one transaction path so

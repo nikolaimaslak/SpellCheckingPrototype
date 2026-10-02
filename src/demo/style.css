@@ -62,6 +62,7 @@ main {
 
 .transcript li {
   white-space: pre-wrap;
+  max-width: 85%;
   padding: 6px 10px;
   margin-bottom: 6px;
   border-radius: 6px;
@@ -119,3 +120,11 @@ main {
 .assist-settings output { color: var(--muted); }
 .assist-settings .actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; align-self: flex-end; }
 .assist-settings .events { color: var(--muted); }
+
+.transcript li[data-role='customer'] { background: color-mix(in srgb, var(--muted) 16%, transparent); }
+.transcript li[data-role='agent'] { margin-inline-start: auto; }
+.transcript li::before { content: attr(data-label); display: block; font-size: 0.75rem; color: var(--muted); }
+.customer-controls { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 0.875rem; }
+.customer-controls form { display: flex; gap: 6px; flex: 1 1 220px; }
+.customer-controls input { flex: 1; min-width: 0; }
+.customer-controls select, .customer-controls input, .customer-controls button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }

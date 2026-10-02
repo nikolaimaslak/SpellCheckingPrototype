@@ -1,0 +1,17 @@
+{
+  "_note": "SYNTHETIC DEMO DATA written for this prototype. Not real GOSI content, policies or figures; do not present it as such.",
+  "responses": [
+    { "id": "en-contrib-status", "lang": "en", "text": "Your contribution records are up to date, and the latest payment has been registered on your account." },
+    { "id": "en-request-processing", "lang": "en", "text": "Your request has been received and will be processed within 3 working days; you will be notified by SMS once it is complete." },
+    { "id": "en-documents", "lang": "en", "text": "To complete your request, please upload a copy of your national ID and the employer's salary certificate through the online portal." },
+    { "id": "en-pension-eligibility", "lang": "en", "text": "Pension eligibility depends on your total contribution period and age; I can check your current eligibility if you share your registration number." },
+    { "id": "en-update-details", "lang": "en", "text": "You can update your bank account details from your profile page; changes take effect from the next payment cycle." },
+    { "id": "en-thanks", "lang": "en", "text": "Thank you for contacting us; is there anything else I can help you with today?" },
+    { "id": "ar-contrib-status", "lang": "ar", "text": "سجل الاشتراكات الخاص بك محدث، وتم تسجيل آخر دفعة في حسابك." },
+    { "id": "ar-request-processing", "lang": "ar", "text": "تم استلام طلبك وسيتم معالجته خلال ثلاثة أيام عمل، وستصلك رسالة نصية عند الانتهاء." },
+    { "id": "ar-documents", "lang": "ar", "text": "لإكمال طلبك، يرجى رفع صورة من الهوية الوطنية وتعريف الراتب من جهة العمل عبر البوابة الإلكترونية." },
+    { "id": "ar-pension-eligibility", "lang": "ar", "text": "تعتمد أهلية المعاش على مدة الإشتراك الإجمالية والعمر، ويمكنني التحقق من أهليتك إذا زودتني برقم التسجيل." },
+    { "id": "ar-update-details", "lang": "ar", "text": "يمكنك تحديث بيانات الحساب البنكي من صفحة الملف الشخصي، وتسري التغييرات من دورة الصرف القادمة." },
+    { "id": "ar-thanks", "lang": "ar", "text": "شكراً لتواصلك معنا، هل هناك أي شيء آخر يمكنني مساعدتك به اليوم؟" }
+  ]
+}

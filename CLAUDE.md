@@ -21,21 +21,31 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run build` | Typecheck + production build to `dist/` (both dictionaries) |
 | `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
+| `npm run server` | Completion and telemetry server on :5175 (`COMPLETION_MODEL=gemini` with `GEMINI_API_KEY`, or `fake` offline); the demo reaches it via the Vite `/api` proxy |
+| `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout
 
 - `src/spell/`: Tier 1 spelling engine. `engine.ts` wraps the WASM module; `handler.ts` is the pure request handler (tested in Node); `spell.worker.ts` is the worker shell; `client.ts` is the page-side client; `protocol.ts` holds the message types; `wasm/` holds the **committed** build output, with `PROVENANCE.json` and `NOTICE`.
-- `src/composer/`, `src/tokenizer/`, `src/autocorrect/`: Tier 1 components, empty until Phase 1/2 (see each README).
-- `src/demo/` + `index.html`: stand-in chat (`contenteditable="plaintext-only"`) and email (`contenteditable`) composers, plus the engine status indicator.
+- `src/tokenizer/`: words with live DOM ranges, exclusions, script routing, settledness.
+- `src/composer/`: spell check and auto-correct attached to any `contenteditable` (highlights, popover, revert). See its README.
+- `src/autocorrect/`: confidence rule, edit distance, typed-boundary trigger.
+- `src/completion/`: inline completion client (trigger, ghost overlay, controller).
+- `src/policy/`: admin policy and agent preference (`resolveMode`, `resolveCompletion`).
+- `src/telemetry/`: batching client for assistance events.
+- `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
+- `server/`: Tier 2 dev stand-in (completion endpoint, retrieval over the synthetic `server/data/canned.json`, Gemini client, telemetry log and `/summary`). TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
+- `dev/ad-loader/`: dev-only loader for a live Agent Desktop tenant; never part of the build.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
 - `scripts/fetch-dicts.ts`: dictionary provisioning (run directly by Node, no build step).
 - `dicts/`: vendored Arabic dictionary (`ar/` with `NOTICE`) and `MANIFEST.md` (sources, pins, hashes, licenses).
-- `test/`: mirrors `src/` and `scripts/`.
+- `test/`: mirrors `src/`, `server/` and `scripts/`. Test files run serially (`fileParallelism: false`; see KI-1).
 
 ## Hard constraints
 
 - **No browser extensions.** Everything is page code.
-- **Tier 1 never touches the network.** Only same-origin static assets (WASM, dictionaries). Engine work stays in the worker, never on the page thread.
+- **Tier 1 never touches the network.** Only same-origin static assets (WASM, dictionaries). Engine work stays in the worker, never on the page thread. Completion (Tier 2) is the exception, and only to our own service.
+- **Secrets stay server-side.** `GEMINI_API_KEY` only in the server environment or gitignored `.env`. Hosted-model traffic is for synthetic demo data only. Telemetry never stores completion, transcript or composer text (server allowlist).
 - **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through one transaction path so a single undo reverts them.
 - **Licensing.** No GPL/LGPL terms. Hunspell and the AyaSpell Arabic dictionary are both tri-licensed and used under **MPL 1.1** (notices in `src/spell/wasm/NOTICE` and `dicts/ar/NOTICE`). Any new dependency needs its license checked first.
 - **Arabic is first-class.** Give every text-processing behavior Arabic and mixed Arabic/English test cases. Use `dir="auto"` / `unicode-bidi: plaintext` for direction.

@@ -1,14 +1,16 @@
 // @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_POLICY } from '../../src/policy';
-import { loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from '../../src/demo/settings';
+import { DEFAULT_POLICY, parsePolicy } from '../../src/policy';
+import { DEFAULT_AGENT, loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from '../../src/demo/settings';
 
 // The real form markup from index.html.
 const formHtml = readFileSync('index.html', 'utf8').match(/<form id="assist-settings"[\s\S]*?<\/form>/)![0];
 let form: HTMLFormElement;
-const field = <T extends Element>(sel: string) => form.querySelector<T>(sel)!;
-const effective = () => field<HTMLOutputElement>('output[name="effective"]').value;
+const field = <T extends Element>(name: string) => form.querySelector<T>(`[name="${name}"]`)!;
+const effective = () => field<HTMLOutputElement>('effective').value;
+const settings = (over: Partial<DemoSettings> = {}): DemoSettings => ({ policy: { ...DEFAULT_POLICY }, preference: {}, agent: { ...DEFAULT_AGENT }, ...over });
+const change = (el: Element) => el.dispatchEvent(new Event('change', { bubbles: true }));
 
 beforeEach(() => {
   document.body.innerHTML = formHtml;
@@ -16,46 +18,74 @@ beforeEach(() => {
 });
 
 describe('settings panel', () => {
-  it('locks the agent preference when agent choice is not allowed, and shows the admin mode', () => {
-    mountSettings(form, { policy: { ...DEFAULT_POLICY, mode: 'auto', agentMayLower: false }, preference: { mode: 'off' } }, () => {});
-    expect(field<HTMLSelectElement>('select[name="agentMode"]').disabled).toBe(true);
-    expect(effective()).toBe('Effective mode: Auto-replace and suggest');
+  it('locks the agent controls when agent choice is not allowed, and shows the admin settings', () => {
+    mountSettings(form, settings({ policy: { ...DEFAULT_POLICY, mode: 'auto', agentMayLower: false }, preference: { mode: 'off', completion: false } }), () => {});
+    expect(field<HTMLSelectElement>('agentMode').disabled).toBe(true);
+    expect(field<HTMLInputElement>('agentCompletion').disabled).toBe(true);
+    expect(effective()).toBe('Effective: Auto-replace and suggest · completion off');
   });
 
   it('follows resolveMode as the agent changes the preference', () => {
-    mountSettings(form, { policy: { ...DEFAULT_POLICY, mode: 'auto' }, preference: {} }, () => {});
-    const pref = field<HTMLSelectElement>('select[name="agentMode"]');
-    expect(pref.disabled).toBe(false);
-    pref.value = 'suggest';
-    pref.dispatchEvent(new Event('change', { bubbles: true }));
-    expect(effective()).toBe('Effective mode: Suggest only');
+    mountSettings(form, settings({ policy: { ...DEFAULT_POLICY, mode: 'auto' } }), () => {});
+    field<HTMLSelectElement>('agentMode').value = 'suggest';
+    change(field('agentMode'));
+    expect(effective()).toBe('Effective: Suggest only · completion off');
   });
 
-  it('applies the edited policy on submit', () => {
+  it('flips completion when the current agent moves off a listed team', () => {
+    const policy = parsePolicy({ completion: { enabled: 'listed', teams: ['Pensions'] } });
+    mountSettings(form, settings({ policy }), () => {});
+    expect(effective()).toMatch(/completion on$/);
+    field<HTMLInputElement>('agentTeam').value = 'Registration';
+    change(field('agentTeam'));
+    expect(effective()).toMatch(/completion off$/);
+  });
+
+  it('applies the edited settings on submit', () => {
     const onApply = vi.fn();
-    mountSettings(form, { policy: { ...DEFAULT_POLICY }, preference: {} }, onApply);
-    field<HTMLSelectElement>('select[name="mode"]').value = 'auto';
-    field<HTMLInputElement>('input[name="lang"][value="en"]').checked = false;
-    field<HTMLTextAreaElement>('textarea[name="customDictionary"]').value = 'GOSI\n\n التأمينات \nGOSI';
+    mountSettings(form, settings(), onApply);
+    field<HTMLSelectElement>('mode').value = 'auto';
+    form.querySelector<HTMLInputElement>('input[name="lang"][value="en"]')!.checked = false;
+    field<HTMLTextAreaElement>('customDictionary').value = 'GOSI\n\n التأمينات \nGOSI';
+    field<HTMLSelectElement>('completionEnabled').value = 'listed';
+    field<HTMLInputElement>('completionTeams').value = 'Pensions, Registration ,';
+    field<HTMLInputElement>('sourceCanned').checked = false;
+    field<HTMLInputElement>('agentCompletion').checked = false;
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     expect(onApply).toHaveBeenCalledWith({
-      policy: { mode: 'auto', languages: ['ar'], agentMayLower: true, customDictionary: ['GOSI', 'التأمينات'] },
-      preference: {},
+      policy: {
+        mode: 'auto',
+        languages: ['ar'],
+        agentMayLower: true,
+        customDictionary: ['GOSI', 'التأمينات'],
+        completion: { enabled: 'listed', teams: ['Pensions', 'Registration'], users: [], sources: { transcript: true, canned: false } },
+      },
+      preference: { completion: false },
+      agent: DEFAULT_AGENT,
     });
   });
 });
 
 describe('settings storage', () => {
-  const settings: DemoSettings = {
-    policy: { mode: 'auto', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'] },
+  const s: DemoSettings = {
+    policy: parsePolicy({ mode: 'auto', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'], completion: { enabled: 'all' } }),
     preference: { mode: 'suggest' },
+    agent: { user: 'agent.7', team: 'Registration' },
   };
 
   it('round-trips through storage', () => {
     const store = new Map<string, string>();
     const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
-    saveSettings(storage, settings);
-    expect(loadSettings(storage)).toEqual(settings);
+    saveSettings(storage, s);
+    expect(loadSettings(storage)).toEqual(s);
+  });
+
+  it('loads stored Phase 2 settings (no completion, no agent)', () => {
+    const phase2 = JSON.stringify({ policy: { mode: 'auto', languages: ['en'], agentMayLower: true, customDictionary: [] }, preference: {} });
+    const loaded = loadSettings({ getItem: () => phase2 });
+    expect(loaded.policy.mode).toBe('auto');
+    expect(loaded.policy.completion).toEqual(DEFAULT_POLICY.completion);
+    expect(loaded.agent).toEqual(DEFAULT_AGENT);
   });
 
   it('survives storage that throws, or holds garbage', () => {
@@ -67,21 +97,23 @@ describe('settings storage', () => {
         throw new Error('QuotaExceeded');
       },
     };
-    expect(() => saveSettings(throwing, settings)).not.toThrow();
-    expect(loadSettings(throwing)).toEqual({ policy: DEFAULT_POLICY, preference: {} });
-    expect(loadSettings({ getItem: () => '{not json' })).toEqual({ policy: DEFAULT_POLICY, preference: {} });
-    expect(loadSettings(undefined)).toEqual({ policy: DEFAULT_POLICY, preference: {} });
+    const defaults = { policy: DEFAULT_POLICY, preference: {}, agent: DEFAULT_AGENT };
+    expect(() => saveSettings(throwing, s)).not.toThrow();
+    expect(loadSettings(throwing)).toEqual(defaults);
+    expect(loadSettings({ getItem: () => '{not json' })).toEqual(defaults);
+    expect(loadSettings(undefined)).toEqual(defaults);
   });
 });
 
 describe('event counter', () => {
-  it('counts events by type', () => {
+  it('counts spelling and completion events', () => {
     const el = document.createElement('span');
     const record = mountEventCounter(el);
-    expect(el.textContent).toBe('Auto-corrected 0 · Reverted 0 · Accepted 0 · Ignored 0');
-    record({ type: 'autocorrect', lang: 'en', original: 'seperate', replacement: 'separate' });
-    record({ type: 'revert', lang: 'en', original: 'seperate', replacement: 'separate' });
-    record({ type: 'accept', lang: 'ar', original: 'اذا', replacement: 'إذا' });
-    expect(el.textContent).toBe('Auto-corrected 1 · Reverted 1 · Accepted 1 · Ignored 0');
+    record({ type: 'autocorrect' });
+    record({ type: 'revert' });
+    record({ type: 'completion-shown' });
+    record({ type: 'completion-shown' });
+    record({ type: 'completion-accepted' });
+    expect(el.textContent).toBe('Auto-corrected 1 · Reverted 1 · Accepted 0 · Ignored 0 · Completions 1/2');
   });
 });

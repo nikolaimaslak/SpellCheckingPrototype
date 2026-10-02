@@ -12,3 +12,7 @@ wasm/.build/
 .DS_Store
 *.log
 .vite/
+
+# Completion server: secrets and local telemetry log
+.env
+/telemetry/
