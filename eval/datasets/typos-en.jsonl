@@ -1,0 +1,155 @@
+{"id":"typos-en-5","text":"Please seperate the two documents before uploading them.","labels":[{"start":7,"word":"seperate","gold":"misspelled","intended":"separate"}]}
+{"id":"typos-en-6","text":"We will definately look into this for you.","labels":[{"start":8,"word":"definately","gold":"misspelled","intended":"definitely"}]}
+{"id":"typos-en-7","text":"The error occured while the page was loading.","labels":[{"start":10,"word":"occured","gold":"misspelled","intended":"occurred"}]}
+{"id":"typos-en-8","text":"Please wait untill you receive the confirmation message.","labels":[{"start":12,"word":"untill","gold":"misspelled","intended":"until"}]}
+{"id":"typos-en-9","text":"Could you tell me wich document you uploaded?","labels":[{"start":18,"word":"wich","gold":"misspelled","intended":"which"}]}
+{"id":"typos-en-10","text":"You will recieve a text message shortly.","labels":[{"start":9,"word":"recieve","gold":"misspelled","intended":"receive"}]}
+{"id":"typos-en-11","text":"I beleive the issue has been resolved.","labels":[{"start":2,"word":"beleive","gold":"misspelled","intended":"believe"}]}
+{"id":"typos-en-12","text":"Please update thier contact details in the portal.","labels":[{"start":14,"word":"thier","gold":"misspelled","intended":"their"}]}
+{"id":"typos-en-13","text":"We are happy to accomodate your request.","labels":[{"start":16,"word":"accomodate","gold":"misspelled","intended":"accommodate"}]}
+{"id":"typos-en-14","text":"Your appointment is tommorow morning.","labels":[{"start":20,"word":"tommorow","gold":"misspelled","intended":"tomorrow"}]}
+{"id":"typos-en-15","text":"The goverment portal is available at all times.","labels":[{"start":4,"word":"goverment","gold":"misspelled","intended":"government"}]}
+{"id":"typos-en-16","text":"You can ask a freind or relative to help you.","labels":[{"start":14,"word":"freind","gold":"misspelled","intended":"friend"}]}
+{"id":"typos-en-17","text":"That error message is wierd, let me check it.","labels":[{"start":22,"word":"wierd","gold":"misspelled","intended":"weird"}]}
+{"id":"typos-en-18","text":"This happened becuase the session expired.","labels":[{"start":14,"word":"becuase","gold":"misspelled","intended":"because"}]}
+{"id":"typos-en-19","text":"Please check the calender for available appointments.","labels":[{"start":17,"word":"calender","gold":"misspelled","intended":"calendar"}]}
+{"id":"typos-en-20","text":"Our working enviroment is busy today.","labels":[{"start":12,"word":"enviroment","gold":"misspelled","intended":"environment"}]}
+{"id":"typos-en-21","text":"It is not necesary to visit the branch.","labels":[{"start":10,"word":"necesary","gold":"misspelled","intended":"necessary"}]}
+{"id":"typos-en-22","text":"The update was a sucess.","labels":[{"start":17,"word":"sucess","gold":"misspelled","intended":"success"}]}
+{"id":"typos-en-23","text":"Pleae confirm your national ID number.","labels":[{"start":0,"word":"Pleae","gold":"misspelled","intended":"Please"}]}
+{"id":"typos-en-24","text":"Thnak you for your patience.","labels":[{"start":0,"word":"Thnak","gold":"misspelled","intended":"Thank"}]}
+{"id":"typos-en-25","text":"Your reqeust has been received.","labels":[{"start":5,"word":"reqeust","gold":"misspelled","intended":"request"}]}
+{"id":"typos-en-26","text":"We need more informaton about the issue.","labels":[{"start":13,"word":"informaton","gold":"misspelled","intended":"information"}]}
+{"id":"typos-en-27","text":"Please sign in to your acount first.","labels":[{"start":23,"word":"acount","gold":"misspelled","intended":"account"}]}
+{"id":"typos-en-28","text":"The paymnet was transferred yesterday.","labels":[{"start":4,"word":"paymnet","gold":"misspelled","intended":"payment"}]}
+{"id":"typos-en-29","text":"Your registraiton is now complete.","labels":[{"start":5,"word":"registraiton","gold":"misspelled","intended":"registration"}]}
+{"id":"typos-en-30","text":"Your pensoin will be paid on the usual date.","labels":[{"start":5,"word":"pensoin","gold":"misspelled","intended":"pension"}]}
+{"id":"typos-en-31","text":"The contributon records are up to date.","labels":[{"start":4,"word":"contributon","gold":"misspelled","intended":"contribution"}]}
+{"id":"typos-en-32","text":"I apologise for the inconvenience.","labels":[{"start":2,"word":"apologise","gold":"misspelled","intended":"apologize"}]}
+{"id":"typos-en-33","text":"Thank you for contaction us today.","labels":[{"start":14,"word":"contaction","gold":"misspelled","intended":"contacting"}]}
+{"id":"typos-en-34","text":"How can I hlep you today?","labels":[{"start":10,"word":"hlep","gold":"misspelled","intended":"help"}]}
+{"id":"typos-en-35","text":"I will chekc the status for you.","labels":[{"start":7,"word":"chekc","gold":"misspelled","intended":"check"}]}
+{"id":"typos-en-36","text":"Please confrim the mobile number on your file.","labels":[{"start":7,"word":"confrim","gold":"misspelled","intended":"confirm"}]}
+{"id":"typos-en-37","text":"Your applicaton is under review.","labels":[{"start":5,"word":"applicaton","gold":"misspelled","intended":"application"}]}
+{"id":"typos-en-38","text":"The employr must register you within the required period.","labels":[{"start":4,"word":"employr","gold":"misspelled","intended":"employer"}]}
+{"id":"typos-en-39","text":"Your employeer has updated your wage.","labels":[{"start":5,"word":"employeer","gold":"misspelled","intended":"employer"}]}
+{"id":"typos-en-40","text":"Please upload the documnet again.","labels":[{"start":18,"word":"documnet","gold":"misspelled","intended":"document"}]}
+{"id":"typos-en-41","text":"The docuemnts were received.","labels":[{"start":4,"word":"docuemnts","gold":"misspelled","intended":"documents"}]}
+{"id":"typos-en-42","text":"Your certifcate is ready to download.","labels":[{"start":5,"word":"certifcate","gold":"misspelled","intended":"certificate"}]}
+{"id":"typos-en-43","text":"The certificat lists all your employers.","labels":[{"start":4,"word":"certificat","gold":"misspelled","intended":"certificate"}]}
+{"id":"typos-en-44","text":"We have recieved your complaint.","labels":[{"start":8,"word":"recieved","gold":"misspelled","intended":"received"}]}
+{"id":"typos-en-45","text":"The beneficary list was updated.","labels":[{"start":4,"word":"beneficary","gold":"misspelled","intended":"beneficiary"}]}
+{"id":"typos-en-46","text":"All benificiaries must submit the form.","labels":[{"start":4,"word":"benificiaries","gold":"misspelled","intended":"beneficiaries"}]}
+{"id":"typos-en-47","text":"Your eligiblity has been confirmed.","labels":[{"start":5,"word":"eligiblity","gold":"misspelled","intended":"eligibility"}]}
+{"id":"typos-en-48","text":"You are eligable for early retirement.","labels":[{"start":8,"word":"eligable","gold":"misspelled","intended":"eligible"}]}
+{"id":"typos-en-49","text":"The retirment application was submitted.","labels":[{"start":4,"word":"retirment","gold":"misspelled","intended":"retirement"}]}
+{"id":"typos-en-50","text":"Your retiremnet date has been recorded.","labels":[{"start":5,"word":"retiremnet","gold":"misspelled","intended":"retirement"}]}
+{"id":"typos-en-51","text":"The compensaton will be paid next month.","labels":[{"start":4,"word":"compensaton","gold":"misspelled","intended":"compensation"}]}
+{"id":"typos-en-52","text":"The insurence coverage starts this month.","labels":[{"start":4,"word":"insurence","gold":"misspelled","intended":"insurance"}]}
+{"id":"typos-en-53","text":"Your unemployement benefit was approved.","labels":[{"start":5,"word":"unemployement","gold":"misspelled","intended":"unemployment"}]}
+{"id":"typos-en-54","text":"The establisment account is active.","labels":[{"start":4,"word":"establisment","gold":"misspelled","intended":"establishment"}]}
+{"id":"typos-en-55","text":"Please contact the branh for this service.","labels":[{"start":19,"word":"branh","gold":"misspelled","intended":"branch"}]}
+{"id":"typos-en-56","text":"Our branchs are open from Sunday to Thursday.","labels":[{"start":4,"word":"branchs","gold":"misspelled","intended":"branches"}]}
+{"id":"typos-en-57","text":"The appointmnet is confirmed.","labels":[{"start":4,"word":"appointmnet","gold":"misspelled","intended":"appointment"}]}
+{"id":"typos-en-58","text":"Please bring your identifcation document.","labels":[{"start":18,"word":"identifcation","gold":"misspelled","intended":"identification"}]}
+{"id":"typos-en-59","text":"The verificaton code was sent.","labels":[{"start":4,"word":"verificaton","gold":"misspelled","intended":"verification"}]}
+{"id":"typos-en-60","text":"Your pasword must be changed every year.","labels":[{"start":5,"word":"pasword","gold":"misspelled","intended":"password"}]}
+{"id":"typos-en-61","text":"Please do not share your passowrd with anyone.","labels":[{"start":25,"word":"passowrd","gold":"misspelled","intended":"password"}]}
+{"id":"typos-en-62","text":"You can downlaod the statement from the portal.","labels":[{"start":8,"word":"downlaod","gold":"misspelled","intended":"download"}]}
+{"id":"typos-en-63","text":"Please uplaod a clearer copy.","labels":[{"start":7,"word":"uplaod","gold":"misspelled","intended":"upload"}]}
+{"id":"typos-en-64","text":"The file is attatched to this message.","labels":[{"start":12,"word":"attatched","gold":"misspelled","intended":"attached"}]}
+{"id":"typos-en-65","text":"Please find the attachement below.","labels":[{"start":16,"word":"attachement","gold":"misspelled","intended":"attachment"}]}
+{"id":"typos-en-66","text":"The adress on your file is incomplete.","labels":[{"start":4,"word":"adress","gold":"misspelled","intended":"address"}]}
+{"id":"typos-en-67","text":"Your addres has been updated.","labels":[{"start":5,"word":"addres","gold":"misspelled","intended":"address"}]}
+{"id":"typos-en-68","text":"Please update your emial address.","labels":[{"start":19,"word":"emial","gold":"misspelled","intended":"email"}]}
+{"id":"typos-en-69","text":"I have sent you an emal with the details.","labels":[{"start":19,"word":"emal","gold":"misspelled","intended":"email"}]}
+{"id":"typos-en-70","text":"The mesage was sent to your phone.","labels":[{"start":4,"word":"mesage","gold":"misspelled","intended":"message"}]}
+{"id":"typos-en-71","text":"Thank you for your messsage.","labels":[{"start":19,"word":"messsage","gold":"misspelled","intended":"message"}]}
+{"id":"typos-en-72","text":"Please check your phnoe for the code.","labels":[{"start":18,"word":"phnoe","gold":"misspelled","intended":"phone"}]}
+{"id":"typos-en-73","text":"The numebr you entered is not correct.","labels":[{"start":4,"word":"numebr","gold":"misspelled","intended":"number"}]}
+{"id":"typos-en-74","text":"The amout will be transferred soon.","labels":[{"start":4,"word":"amout","gold":"misspelled","intended":"amount"}]}
+{"id":"typos-en-75","text":"The ammount is shown on your statement.","labels":[{"start":4,"word":"ammount","gold":"misspelled","intended":"amount"}]}
+{"id":"typos-en-76","text":"Your statment is now available.","labels":[{"start":5,"word":"statment","gold":"misspelled","intended":"statement"}]}
+{"id":"typos-en-77","text":"The monthy wage was updated.","labels":[{"start":4,"word":"monthy","gold":"misspelled","intended":"monthly"}]}
+{"id":"typos-en-78","text":"The salery certificate does not match.","labels":[{"start":4,"word":"salery","gold":"misspelled","intended":"salary"}]}
+{"id":"typos-en-79","text":"The sallary shown is correct.","labels":[{"start":4,"word":"sallary","gold":"misspelled","intended":"salary"}]}
+{"id":"typos-en-80","text":"Your recrod has been corrected.","labels":[{"start":5,"word":"recrod","gold":"misspelled","intended":"record"}]}
+{"id":"typos-en-81","text":"Our recods show two employers.","labels":[{"start":4,"word":"recods","gold":"misspelled","intended":"records"}]}
+{"id":"typos-en-82","text":"The histroy of your account is complete.","labels":[{"start":4,"word":"histroy","gold":"misspelled","intended":"history"}]}
+{"id":"typos-en-83","text":"I have escalted your case.","labels":[{"start":7,"word":"escalted","gold":"misspelled","intended":"escalated"}]}
+{"id":"typos-en-84","text":"The complant was forwarded.","labels":[{"start":4,"word":"complant","gold":"misspelled","intended":"complaint"}]}
+{"id":"typos-en-85","text":"Your complaitn has been closed.","labels":[{"start":5,"word":"complaitn","gold":"misspelled","intended":"complaint"}]}
+{"id":"typos-en-86","text":"The departmnet will reply soon.","labels":[{"start":4,"word":"departmnet","gold":"misspelled","intended":"department"}]}
+{"id":"typos-en-87","text":"The specialst team will contact you.","labels":[{"start":4,"word":"specialst","gold":"misspelled","intended":"specialist"}]}
+{"id":"typos-en-88","text":"We appreciat your patience.","labels":[{"start":3,"word":"appreciat","gold":"misspelled","intended":"appreciate"}]}
+{"id":"typos-en-89","text":"We apreciate your feedback.","labels":[{"start":3,"word":"apreciate","gold":"misspelled","intended":"appreciate"}]}
+{"id":"typos-en-90","text":"Thank you for your patiance.","labels":[{"start":19,"word":"patiance","gold":"misspelled","intended":"patience"}]}
+{"id":"typos-en-91","text":"Thank you for your pateince.","labels":[{"start":19,"word":"pateince","gold":"misspelled","intended":"patience"}]}
+{"id":"typos-en-92","text":"Thank you for your undrestanding.","labels":[{"start":19,"word":"undrestanding","gold":"misspelled","intended":"understanding"}]}
+{"id":"typos-en-93","text":"I undersatnd your concern.","labels":[{"start":2,"word":"undersatnd","gold":"misspelled","intended":"understand"}]}
+{"id":"typos-en-94","text":"We apologiez for the delay.","labels":[{"start":3,"word":"apologiez","gold":"misspelled","intended":"apologize"}]}
+{"id":"typos-en-95","text":"Sorry for the incovenience.","labels":[{"start":14,"word":"incovenience","gold":"misspelled","intended":"inconvenience"}]}
+{"id":"typos-en-96","text":"The inconvinience is regretted.","labels":[{"start":4,"word":"inconvinience","gold":"misspelled","intended":"inconvenience"}]}
+{"id":"typos-en-97","text":"The page is temporarly unavailable.","labels":[{"start":12,"word":"temporarly","gold":"misspelled","intended":"temporarily"}]}
+{"id":"typos-en-98","text":"The maintainance will finish tonight.","labels":[{"start":4,"word":"maintainance","gold":"misspelled","intended":"maintenance"}]}
+{"id":"typos-en-99","text":"The maintenence window is short.","labels":[{"start":4,"word":"maintenence","gold":"misspelled","intended":"maintenance"}]}
+{"id":"typos-en-100","text":"Please try again latr today.","labels":[{"start":17,"word":"latr","gold":"misspelled","intended":"later"}]}
+{"id":"typos-en-101","text":"The sytem is working again.","labels":[{"start":4,"word":"sytem","gold":"misspelled","intended":"system"}]}
+{"id":"typos-en-102","text":"The systme was updated last night.","labels":[{"start":4,"word":"systme","gold":"misspelled","intended":"system"}]}
+{"id":"typos-en-103","text":"The servcie is available online.","labels":[{"start":4,"word":"servcie","gold":"misspelled","intended":"service"}]}
+{"id":"typos-en-104","text":"This sevice is free of charge.","labels":[{"start":5,"word":"sevice","gold":"misspelled","intended":"service"}]}
+{"id":"typos-en-105","text":"The portla is available in Arabic and English.","labels":[{"start":4,"word":"portla","gold":"misspelled","intended":"portal"}]}
+{"id":"typos-en-106","text":"Please sign in to the protal.","labels":[{"start":22,"word":"protal","gold":"misspelled","intended":"portal"}]}
+{"id":"typos-en-107","text":"The websit has a guide.","labels":[{"start":4,"word":"websit","gold":"misspelled","intended":"website"}]}
+{"id":"typos-en-108","text":"The webiste was updated.","labels":[{"start":4,"word":"webiste","gold":"misspelled","intended":"website"}]}
+{"id":"typos-en-109","text":"The applicaiton is available for phones.","labels":[{"start":4,"word":"applicaiton","gold":"misspelled","intended":"application"}]}
+{"id":"typos-en-110","text":"Your profle page shows your details.","labels":[{"start":5,"word":"profle","gold":"misspelled","intended":"profile"}]}
+{"id":"typos-en-111","text":"Please complte the form.","labels":[{"start":7,"word":"complte","gold":"misspelled","intended":"complete"}]}
+{"id":"typos-en-112","text":"The request is now compelte.","labels":[{"start":19,"word":"compelte","gold":"misspelled","intended":"complete"}]}
+{"id":"typos-en-113","text":"The issue is resloved.","labels":[{"start":13,"word":"resloved","gold":"misspelled","intended":"resolved"}]}
+{"id":"typos-en-114","text":"The problem was reslved this morning.","labels":[{"start":16,"word":"reslved","gold":"misspelled","intended":"resolved"}]}
+{"id":"typos-en-115","text":"Please submti the request again.","labels":[{"start":7,"word":"submti","gold":"misspelled","intended":"submit"}]}
+{"id":"typos-en-116","text":"The form was submited successfully.","labels":[{"start":13,"word":"submited","gold":"misspelled","intended":"submitted"}]}
+{"id":"typos-en-117","text":"The request was approvd.","labels":[{"start":16,"word":"approvd","gold":"misspelled","intended":"approved"}]}
+{"id":"typos-en-118","text":"Your objection was accpeted.","labels":[{"start":19,"word":"accpeted","gold":"misspelled","intended":"accepted"}]}
+{"id":"typos-en-119","text":"Your request was rejectd.","labels":[{"start":17,"word":"rejectd","gold":"misspelled","intended":"rejected"}]}
+{"id":"typos-en-120","text":"The desicion was sent by email.","labels":[{"start":4,"word":"desicion","gold":"misspelled","intended":"decision"}]}
+{"id":"typos-en-121","text":"The comittee will review your file.","labels":[{"start":4,"word":"comittee","gold":"misspelled","intended":"committee"}]}
+{"id":"typos-en-122","text":"The commitee meets every week.","labels":[{"start":4,"word":"commitee","gold":"misspelled","intended":"committee"}]}
+{"id":"typos-en-123","text":"The medcial report is missing.","labels":[{"start":4,"word":"medcial","gold":"misspelled","intended":"medical"}]}
+{"id":"typos-en-124","text":"The hosptial must stamp the report.","labels":[{"start":4,"word":"hosptial","gold":"misspelled","intended":"hospital"}]}
+{"id":"typos-en-125","text":"The injurey was reported.","labels":[{"start":4,"word":"injurey","gold":"misspelled","intended":"injury"}]}
+{"id":"typos-en-126","text":"The disabilty was assessed.","labels":[{"start":4,"word":"disabilty","gold":"misspelled","intended":"disability"}]}
+{"id":"typos-en-127","text":"The paymnets will resume next month.","labels":[{"start":4,"word":"paymnets","gold":"misspelled","intended":"payments"}]}
+{"id":"typos-en-128","text":"The transfered amount is shown.","labels":[{"start":4,"word":"transfered","gold":"misspelled","intended":"transferred"}]}
+{"id":"typos-en-129","text":"The tranfer takes two days.","labels":[{"start":4,"word":"tranfer","gold":"misspelled","intended":"transfer"}]}
+{"id":"typos-en-130","text":"Your bank acount was verified.","labels":[{"start":10,"word":"acount","gold":"misspelled","intended":"account"}]}
+{"id":"typos-en-131","text":"The ballance is correct.","labels":[{"start":4,"word":"ballance","gold":"misspelled","intended":"balance"}]}
+{"id":"typos-en-132","text":"The invocie is paid.","labels":[{"start":4,"word":"invocie","gold":"misspelled","intended":"invoice"}]}
+{"id":"typos-en-133","text":"The penalty was waived. Please check the penalities page.","labels":[{"start":41,"word":"penalities","gold":"misspelled","intended":"penalties"}]}
+{"id":"typos-en-134","text":"The deadlien is approaching.","labels":[{"start":4,"word":"deadlien","gold":"misspelled","intended":"deadline"}]}
+{"id":"typos-en-135","text":"The schedual is on the website.","labels":[{"start":4,"word":"schedual","gold":"misspelled","intended":"schedule"}]}
+{"id":"typos-en-136","text":"The availble appointments are listed.","labels":[{"start":4,"word":"availble","gold":"misspelled","intended":"available"}]}
+{"id":"typos-en-137","text":"The service is avaiable now.","labels":[{"start":15,"word":"avaiable","gold":"misspelled","intended":"available"}]}
+{"id":"typos-en-138","text":"Unfortunatly, the request was not approved.","labels":[{"start":0,"word":"Unfortunatly","gold":"misspelled","intended":"Unfortunately"}]}
+{"id":"typos-en-139","text":"Unfortunetly, the file is not readable.","labels":[{"start":0,"word":"Unfortunetly","gold":"misspelled","intended":"Unfortunately"}]}
+{"id":"typos-en-140","text":"Additonal documents are required.","labels":[{"start":0,"word":"Additonal","gold":"misspelled","intended":"Additional"}]}
+{"id":"typos-en-141","text":"Recieving the code may take a minute.","labels":[{"start":0,"word":"Recieving","gold":"misspelled","intended":"Receiving"}]}
+{"id":"typos-en-142","text":"The begining of the month is the due date.","labels":[{"start":4,"word":"begining","gold":"misspelled","intended":"beginning"}]}
+{"id":"typos-en-143","text":"The amount is paid immediatly.","labels":[{"start":19,"word":"immediatly","gold":"misspelled","intended":"immediately"}]}
+{"id":"typos-en-144","text":"Please respond immediatley.","labels":[{"start":15,"word":"immediatley","gold":"misspelled","intended":"immediately"}]}
+{"id":"typos-en-145","text":"We will contact you shorlty.","labels":[{"start":20,"word":"shorlty","gold":"misspelled","intended":"shortly"}]}
+{"id":"typos-en-146","text":"Please keep the refrence number.","labels":[{"start":16,"word":"refrence","gold":"misspelled","intended":"reference"}]}
+{"id":"typos-en-147","text":"The referance number is on the letter.","labels":[{"start":4,"word":"referance","gold":"misspelled","intended":"reference"}]}
+{"id":"typos-en-148","text":"We recomend updating the application.","labels":[{"start":3,"word":"recomend","gold":"misspelled","intended":"recommend"}]}
+{"id":"typos-en-149","text":"We reccommend paying before the due date.","labels":[{"start":3,"word":"reccommend","gold":"misspelled","intended":"recommend"}]}
+{"id":"typos-en-150","text":"The responsability lies with the employer.","labels":[{"start":4,"word":"responsability","gold":"misspelled","intended":"responsibility"}]}
+{"id":"typos-en-151","text":"The occassion of the holiday changes our hours.","labels":[{"start":4,"word":"occassion","gold":"misspelled","intended":"occasion"}]}
+{"id":"typos-en-152","text":"The publically available guide explains the steps.","labels":[{"start":4,"word":"publically","gold":"misspelled","intended":"publicly"}]}
+{"id":"typos-en-153","text":"Your file was succesfully updated.","labels":[{"start":14,"word":"succesfully","gold":"misspelled","intended":"successfully"}]}
+{"id":"typos-en-154","text":"The request was sucessfully submitted.","labels":[{"start":16,"word":"sucessfully","gold":"misspelled","intended":"successfully"}]}
+{"id":"typos-en-155","text":"The knowlege base has the answer.","labels":[{"start":4,"word":"knowlege","gold":"misspelled","intended":"knowledge"}]}
+{"id":"typos-en-156","text":"Please recieve my apologies.","labels":[{"start":7,"word":"recieve","gold":"misspelled","intended":"receive"}]}
+{"id":"typos-en-157","text":"Our team will folow up with you.","labels":[{"start":14,"word":"folow","gold":"misspelled","intended":"follow"}]}
+{"id":"typos-en-158","text":"Please contcat us again if needed.","labels":[{"start":7,"word":"contcat","gold":"misspelled","intended":"contact"}]}
+{"id":"typos-en-159","text":"Have a wonderfull day.","labels":[{"start":7,"word":"wonderfull","gold":"misspelled","intended":"wonderful"}]}

@@ -8,6 +8,7 @@ Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spe
 - `docs/architecture/composer-assistance-architecture.txt`: the architecture draft (tiers, components, phases)
 - `openspec/config.yaml`: project context and constraints for all planning
 - `docs/known-issues.md`: deferred issues to address (check before touching auto-correct)
+- `docs/EVALUATION.md`: how spelling quality is measured (criteria, datasets, error types, field metrics)
 - `docs/TESTING.md`: the external tester guide. Keep its scenarios and expected results in sync with behavior changes. Report template: `docs/TEST-REPORT-TEMPLATE.md`, mirrored in `.github/ISSUE_TEMPLATE/`
 
 ## Workflow
@@ -26,6 +27,8 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
 | `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. The demo reaches it via the Vite `/api` proxy |
+| `npm run eval` | Spelling benchmark (offline, a few minutes): detection, correction, auto-replace, error types; writes `eval/reports/latest.md`. `eval:check` gates against `eval/baseline.json`, `eval:baseline` rewrites it. See `docs/EVALUATION.md` |
+| `npm run eval:inject` / `eval:words` / `eval:build` / `eval:manifest` | Insert typed misspellings, build word lists, compile hand-marked dataset sources, re-hash the dataset manifest |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout
@@ -40,11 +43,12 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/telemetry/`: batching client for assistance events.
 - `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
 - `server/`: Tier 2 dev stand-in: completion (`/v1/complete`, retrieval over the synthetic `server/data/canned.json` and the synthetic knowledge base `server/data/kb.json`), grammar polish (`/v1/polish` with protected-content, length and line-break checks), Gemini client, telemetry log and `/summary`. TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
+- `eval/`: spelling evaluation tooling, run by Node through `eval/register.ts` (resolves `src/`'s extensionless imports). `pipeline.ts` mirrors the composer in typing order; `error-types.ts` is the shared error taxonomy and classifier (also imported by `server/telemetry.ts`); `datasets/` holds the manifest-checked synthetic datasets (`private/` is gitignored); `criteria.json` and `baseline.json` drive the gate. Run `npm run eval:check` before and after any change to auto-correct.
 - `dev/ad-loader/`: dev-only loader for a live Agent Desktop tenant; never part of the build.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
 - `scripts/fetch-dicts.ts`: dictionary provisioning (run directly by Node, no build step).
 - `dicts/`: vendored Arabic dictionary (`ar/` with `NOTICE`) and `MANIFEST.md` (sources, pins, hashes, licenses).
-- `test/`: mirrors `src/`, `server/` and `scripts/`. Test files run serially (`fileParallelism: false`; see KI-1).
+- `test/`: mirrors `src/`, `server/`, `scripts/` and `eval/`. Test files run serially (`fileParallelism: false`; see KI-1).
 
 ## Hard constraints
 

@@ -1,0 +1,187 @@
+{
+  "build": {
+    "version": "0.1.0",
+    "commit": "d09914b",
+    "date": "2026-10-03T08:18:40.131Z"
+  },
+  "criteria": {
+    "corruption-en": 11.474469305794607,
+    "corruption-ar": 1.9952114924181965,
+    "autoreplace-precision-en": 0.9356223175965666,
+    "autoreplace-precision-ar": 0.8354430379746836,
+    "detection-recall-en": 1,
+    "detection-recall-ar": 1,
+    "false-flag-en": 0.003251099636641805,
+    "false-flag-ar": 0.0011971268954509178,
+    "correction-at5-en": 0.9111498257839721,
+    "correction-at5-ar": 0.6856540084388185,
+    "correction-at1-en": 0.6759581881533101,
+    "correction-at1-ar": 0.36075949367088606,
+    "exclusion-leaks-all": 17,
+    "instability-en": 0,
+    "instability-ar": 8,
+    "check-latency-en": 0.012721999999484979,
+    "check-latency-ar": 0.02290799999900628,
+    "suggest-latency-en": 26.2518799999998,
+    "suggest-latency-ar": 125.94674499999746
+  },
+  "counts": {
+    "en": {
+      "corruption": 12,
+      "wrongFix": 3
+    },
+    "ar": {
+      "corruption": 2,
+      "wrongFix": 11
+    }
+  },
+  "exclusionLeaks": 17,
+  "identities": {
+    "en": {
+      "corruptions": [
+        "clean-en clean-en-138 \"Fatimah\" → \"Fatima\"",
+        "clean-en clean-en-157 \"cancelled\" → \"canceled\"",
+        "clean-en clean-en-188 \"Noura\" → \"Nora\"",
+        "clean-en clean-en-217 \"Harbi\" → \"Harbin\"",
+        "clean-en clean-en-244 \"labour\" → \"labor\"",
+        "clean-en clean-en-244 \"labour\" → \"labor\"",
+        "injected-en clean-en-138 \"Fatimah\" → \"Fatima\"",
+        "injected-en clean-en-157 \"cancelled\" → \"canceled\"",
+        "injected-en clean-en-188 \"Noura\" → \"Nora\"",
+        "injected-en clean-en-217 \"Harbi\" → \"Harbin\"",
+        "injected-en clean-en-244 \"labour\" → \"labor\"",
+        "injected-en clean-en-244 \"labour\" → \"labor\""
+      ],
+      "wrongFixes": [
+        "typos-en typos-en-33 \"contaction\" → \"contraction\"",
+        "injected-en clean-en-228 \"dOcument\" → \"documents\"",
+        "injected-en clean-en-238 \"oNly\" → \"oily\""
+      ]
+    },
+    "ar": {
+      "corruptions": [
+        "clean-ar clean-ar-23 \"ميجابايت\" → \"ميغابايت\"",
+        "injected-ar clean-ar-23 \"ميجابايت\" → \"ميغابايت\""
+      ],
+      "wrongFixes": [
+        "typos-ar typos-ar-34 \"الشكوه\" → \"الشكوة\"",
+        "typos-ar typos-ar-92 \"ارقاف\" → \"القاف\"",
+        "typos-ar typos-ar-93 \"عليى\" → \"عليي\"",
+        "injected-ar clean-ar-26 \"بتمنى\" → \"بتمني\"",
+        "injected-ar clean-ar-196 \"برجى\" → \"برجي\"",
+        "injected-ar clean-ar-227 \"هلى\" → \"هلي\"",
+        "injected-ar clean-ar-257 \"إبلغ\" → \"ابلغ\"",
+        "injected-ar clean-ar-346 \"قفإن\" → \"قفان\"",
+        "injected-ar clean-ar-379 \"صاحإ\" → \"صاحا\"",
+        "injected-ar clean-ar-388 \"عإد\" → \"عاد\"",
+        "injected-ar clean-ar-408 \"حيى\" → \"حيي\""
+      ]
+    }
+  },
+  "byType": {
+    "en": {
+      "substitute": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.4492753623188406,
+        "autoReplaceCoverage": 0.391304347826087
+      },
+      "undouble": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.68,
+        "autoReplaceCoverage": 0.64
+      },
+      "double": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.8026315789473685,
+        "autoReplaceCoverage": 0.4868421052631579
+      },
+      "delete": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.5,
+        "autoReplaceCoverage": 0.3829787234042553
+      },
+      "transpose": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.9158878504672897,
+        "autoReplaceCoverage": 0.4953271028037383
+      },
+      "multi": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.5714285714285714,
+        "autoReplaceCoverage": 0
+      },
+      "keyboard-sub": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.5084745762711864,
+        "autoReplaceCoverage": 0.2711864406779661
+      },
+      "insert": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.7941176470588235,
+        "autoReplaceCoverage": 0.4852941176470588
+      },
+      "case": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.6666666666666666,
+        "autoReplaceCoverage": 0
+      }
+    },
+    "ar": {
+      "hamza": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.6363636363636364,
+        "autoReplaceCoverage": 0.21818181818181817
+      },
+      "insert": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.379746835443038,
+        "autoReplaceCoverage": 0.20253164556962025
+      },
+      "ta-marbuta": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.9523809523809523,
+        "autoReplaceCoverage": 0.7619047619047619
+      },
+      "dots": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.47058823529411764,
+        "autoReplaceCoverage": 0.029411764705882353
+      },
+      "delete": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.025,
+        "autoReplaceCoverage": 0.025
+      },
+      "emphatic": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.36666666666666664,
+        "autoReplaceCoverage": 0.3333333333333333
+      },
+      "substitute": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.016129032258064516,
+        "autoReplaceCoverage": 0.016129032258064516
+      },
+      "multi": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.42857142857142855,
+        "autoReplaceCoverage": 0
+      },
+      "transpose": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.46511627906976744,
+        "autoReplaceCoverage": 0.046511627906976744
+      },
+      "keyboard-sub": {
+        "detectionRecall": 1,
+        "correctionAt1": 0.22727272727272727,
+        "autoReplaceCoverage": 0.06060606060606061
+      },
+      "alef-maqsura": {
+        "detectionRecall": 1,
+        "correctionAt1": 1,
+        "autoReplaceCoverage": 0.6666666666666666
+      }
+    }
+  }
+}

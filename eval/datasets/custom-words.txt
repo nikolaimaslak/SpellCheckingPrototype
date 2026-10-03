@@ -1,0 +1,16 @@
+# Custom dictionary for the evaluation datasets: product names, GOSI
+# terminology and transliterations an admin would add. Synthetic demo data.
+GOSI
+Absher
+Musaned
+Nafath
+Qiwa
+Tawakkalna
+Mada
+SADAD
+Iqama
+التأمينات
+أبشر
+مساند
+نفاذ
+قوى

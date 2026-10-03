@@ -58,4 +58,42 @@ describe('polish telemetry', () => {
     expect(s.polish.acceptanceRate).toBeCloseTo(0.75);
     expect(renderSummary(s)).toContain('75%');
   });
+
+  it('reports revert rates per language (spec: Revert rate per language)', () => {
+    const ac = (lang: string, original: string, replacement: string) => ({ type: 'autocorrect' as const, ts: 0, lang, original, replacement });
+    const events: StoredEvent[] = [
+      ...['seperate', 'paymnet', 'reqeust', 'pensoin'].map((w) => ac('en', w, 'x')),
+      ...['النضام', 'اذا', 'الطلبب', 'التسجبل'].map((w) => ac('ar', w, 'y')),
+      { type: 'revert', ts: 1, lang: 'ar', original: 'النضام', replacement: 'y' },
+      { type: 'revert', ts: 2, lang: 'ar', original: 'اذا', replacement: 'y' },
+    ];
+    const s = summarize(events);
+    expect(s.spelling.en!.revertRate).toBe(0);
+    expect(s.spelling.ar!.revertRate).toBe(0.5);
+    expect(s.autocorrect.revertRate).toBe(0.25);
+  });
+
+  it('reports the ignore share as the field proxy for false flags (spec: Ignore share)', () => {
+    const events: StoredEvent[] = [
+      ...Array.from({ length: 6 }, (_, i) => ({ type: 'accept' as const, ts: i, lang: 'ar', original: 'اذا', replacement: 'إذا' })),
+      ...Array.from({ length: 2 }, (_, i) => ({ type: 'ignore' as const, ts: i, lang: 'ar', original: 'عبدالله' })),
+    ];
+    const s = summarize(events);
+    expect(s.spelling.ar!.ignoreShare).toBe(0.25);
+    expect(renderSummary(s)).toMatch(/ignore share approximates the false-flag rate/);
+  });
+
+  it('classifies field corrections with the benchmark taxonomy (spec: Field error types)', () => {
+    const events: StoredEvent[] = [
+      { type: 'accept', ts: 0, lang: 'ar', original: 'اذا', replacement: 'إذا' },
+      { type: 'accept', ts: 1, lang: 'ar', original: 'المساعده', replacement: 'المساعدة' },
+      { type: 'autocorrect', ts: 2, lang: 'ar', original: 'النضام', replacement: 'النظام' },
+      { type: 'revert', ts: 3, lang: 'ar', original: 'النضام', replacement: 'النظام' },
+    ];
+    const ar = summarize(events).spelling.ar!;
+    expect(ar.errorTypes).toEqual({ hamza: 1, 'ta-marbuta': 1, emphatic: 1 });
+    expect(ar.revertsByType.emphatic).toEqual({ autocorrects: 1, reverts: 1, revertRate: 1 });
+    expect(renderSummary(summarize(events))).toContain('ar: error types in the field');
+  });
 });
+

@@ -1,0 +1,298 @@
+{"id":"clean-en-5","text":"Good morning, and thank you for contacting us. How can I help you today?"}
+{"id":"clean-en-6","text":"Hello $(user.firstName), thank you for reaching out. I will be happy to look into this for you.","labels":[{"start":6,"word":"$(user.firstName)","gold":"excluded"}]}
+{"id":"clean-en-7","text":"Thank you for your patience while I review your account details."}
+{"id":"clean-en-8","text":"Could you please confirm your national ID number so I can locate your record?"}
+{"id":"clean-en-9","text":"I can see your registration was completed successfully, and your account is now active."}
+{"id":"clean-en-10","text":"Your contribution records are up to date, and the latest payment has been registered on your account."}
+{"id":"clean-en-11","text":"Your request has been received and will be processed shortly. You will be notified by text message once it is complete."}
+{"id":"clean-en-12","text":"I understand your concern, and I apologize for the inconvenience this has caused."}
+{"id":"clean-en-13","text":"Let me check the status of your request. This will only take a moment."}
+{"id":"clean-en-14","text":"I have escalated your case to the specialist team, and they will contact you directly."}
+{"id":"clean-en-15","text":"Your case number is CS-104233. Please keep it for future reference.","labels":[{"start":20,"word":"CS-104233","gold":"excluded"}]}
+{"id":"clean-en-16","text":"You can follow the progress of your request at any time through the online portal."}
+{"id":"clean-en-17","text":"For security reasons, I cannot share these details over chat. Please sign in through Absher to view them."}
+{"id":"clean-en-18","text":"The employer is responsible for registering employees within the required period after they join."}
+{"id":"clean-en-19","text":"Your employer has updated your monthly wage, and the new amount will appear on your next statement."}
+{"id":"clean-en-20","text":"If the wage shown on your record is incorrect, please ask your employer to submit a correction."}
+{"id":"clean-en-21","text":"We have received the documents you uploaded, and they are now under review."}
+{"id":"clean-en-22","text":"Unfortunately, the document you attached is not readable. Could you please upload a clearer copy?"}
+{"id":"clean-en-23","text":"Please make sure the file is in PDF format and smaller than 5 MB.","labels":[{"start":60,"word":"5","gold":"excluded"}]}
+{"id":"clean-en-24","text":"I have forwarded your complaint to the relevant department, and you should receive a response within 5 working days.","labels":[{"start":101,"word":"5","gold":"excluded"}]}
+{"id":"clean-en-25","text":"Is there anything else I can help you with today?"}
+{"id":"clean-en-26","text":"Thank you for contacting GOSI. Have a wonderful day."}
+{"id":"clean-en-27","text":"Your pension will be paid on the usual date this month."}
+{"id":"clean-en-28","text":"The pension amount is calculated based on your average salary and the number of years of contributions."}
+{"id":"clean-en-29","text":"To apply for early retirement, you will need to submit the application through the online services."}
+{"id":"clean-en-30","text":"Before submitting the application, please make sure that your bank details are correct."}
+{"id":"clean-en-31","text":"Your bank account was verified successfully, and future payments will be transferred to it."}
+{"id":"clean-en-32","text":"I noticed that the bank details on your file belong to another person. Please update them to an account in your own name."}
+{"id":"clean-en-33","text":"You can update your contact information from the profile page after signing in."}
+{"id":"clean-en-34","text":"We sent a verification code to the mobile number registered with us."}
+{"id":"clean-en-35","text":"If you did not receive the code, please wait a few minutes and request it again."}
+{"id":"clean-en-36","text":"I am sorry, but I am not able to change your date of birth through chat. This requires an official document."}
+{"id":"clean-en-37","text":"Please visit the nearest branch with your original identification document to complete the update."}
+{"id":"clean-en-38","text":"You can book an appointment at the branch through the website to avoid waiting."}
+{"id":"clean-en-39","text":"Our branches are open from Sunday to Thursday during official working hours."}
+{"id":"clean-en-40","text":"The service is temporarily unavailable due to scheduled maintenance. Please try again later."}
+{"id":"clean-en-41","text":"We apologize for the delay. Our systems are experiencing a high volume of requests today."}
+{"id":"clean-en-42","text":"Your certificate of contributions is ready, and you can download it from your account."}
+{"id":"clean-en-43","text":"The certificate includes all periods of registration and the wages reported by your employers."}
+{"id":"clean-en-44","text":"If a period is missing from the certificate, please contact your previous employer first."}
+{"id":"clean-en-45","text":"Your request for a refund has been approved, and the amount will be transferred within 10 working days.","labels":[{"start":87,"word":"10","gold":"excluded"}]}
+{"id":"clean-en-46","text":"I can confirm that no additional fees are required for this service."}
+{"id":"clean-en-47","text":"The unemployment benefit is available to insured members who lose their job for reasons beyond their control."}
+{"id":"clean-en-48","text":"To be eligible, you must have contributed for a minimum period before the end of your employment."}
+{"id":"clean-en-49","text":"Please submit your application within the required period after your contract ends."}
+{"id":"clean-en-50","text":"Your application for unemployment benefit is currently being reviewed by the committee."}
+{"id":"clean-en-51","text":"I have checked your file, and your application meets the eligibility conditions."}
+{"id":"clean-en-52","text":"Unfortunately, your application was not approved because the minimum contribution period was not met."}
+{"id":"clean-en-53","text":"You have the right to appeal this decision through the online portal."}
+{"id":"clean-en-54","text":"Occupational hazard coverage protects you against work injuries and occupational diseases."}
+{"id":"clean-en-55","text":"If you were injured at work, your employer must report the injury as soon as possible."}
+{"id":"clean-en-56","text":"The medical committee will review your report and decide on the compensation."}
+{"id":"clean-en-57","text":"Your employer reported the work injury, and your file has been sent to the medical committee."}
+{"id":"clean-en-58","text":"Please attend the medical examination at the scheduled time and bring all your medical reports."}
+{"id":"clean-en-59","text":"Compensation for temporary disability is paid for the period you are unable to work."}
+{"id":"clean-en-60","text":"I understand that this is a difficult time, and we are here to support you."}
+{"id":"clean-en-61","text":"Could you please describe what happened when you tried to submit the form?"}
+{"id":"clean-en-62","text":"Which browser are you using? Some features work best with the latest version."}
+{"id":"clean-en-63","text":"Please clear your browser cache and try signing in again."}
+{"id":"clean-en-64","text":"If the problem continues, please send us a screenshot of the error message."}
+{"id":"clean-en-65","text":"Thank you for the screenshot. I can see the issue, and I am reporting it to our technical team."}
+{"id":"clean-en-66","text":"The technical team has resolved the issue. Could you please try again now?"}
+{"id":"clean-en-67","text":"I am glad to hear that everything is working now."}
+{"id":"clean-en-68","text":"You can find more information on our website at https://www.gosi.gov.sa.","labels":[{"start":48,"word":"https://www.gosi.gov.sa","gold":"excluded"}]}
+{"id":"clean-en-69","text":"For employer services, please visit https://www.gosi.gov.sa/en/employers and sign in with your establishment account.","labels":[{"start":36,"word":"https://www.gosi.gov.sa/en/employers","gold":"excluded"}]}
+{"id":"clean-en-70","text":"You can also email us at info@gosi.gov.sa with your request and supporting documents.","labels":[{"start":25,"word":"info@gosi.gov.sa","gold":"excluded"}]}
+{"id":"clean-en-71","text":"Please do not share your password or verification code with anyone, including our staff."}
+{"id":"clean-en-72","text":"We will never ask for your password by phone, chat or email."}
+{"id":"clean-en-73","text":"If you suspect that someone has accessed your account, please change your password immediately."}
+{"id":"clean-en-74","text":"Your account has been locked after several unsuccessful attempts. It will be unlocked automatically after one hour."}
+{"id":"clean-en-75","text":"I have reset your access, and you should be able to sign in now."}
+{"id":"clean-en-76","text":"The establishment must pay the contributions by the fifteenth day of the following month."}
+{"id":"clean-en-77","text":"Late payment results in a penalty, so we recommend paying before the due date."}
+{"id":"clean-en-78","text":"You can pay the contributions through SADAD using the invoice number shown on the portal."}
+{"id":"clean-en-79","text":"The invoice number is 7731045, and the amount due is shown on the payment page.","labels":[{"start":22,"word":"7731045","gold":"excluded"}]}
+{"id":"clean-en-80","text":"Your payment was received, and the invoice is now marked as paid."}
+{"id":"clean-en-81","text":"If you paid twice by mistake, you can request a refund of the extra amount."}
+{"id":"clean-en-82","text":"To register a new employee, please enter the national ID number and the start date of the contract."}
+{"id":"clean-en-83","text":"Non-Saudi employees are registered using their Iqama number."}
+{"id":"clean-en-84","text":"The employee will receive a text message confirming the registration."}
+{"id":"clean-en-85","text":"If an employee leaves your establishment, please register the end of service promptly."}
+{"id":"clean-en-86","text":"The end of service date cannot be earlier than the last month for which contributions were paid."}
+{"id":"clean-en-87","text":"I can see that the employee is still registered with your establishment."}
+{"id":"clean-en-88","text":"Would you like me to explain how to register the end of service?"}
+{"id":"clean-en-89","text":"Domestic workers are registered through the Musaned platform."}
+{"id":"clean-en-90","text":"Your question has been noted, and I will make sure it reaches the right team."}
+{"id":"clean-en-91","text":"I am transferring you to a colleague who specializes in pension matters. Please stay with us."}
+{"id":"clean-en-92","text":"Thank you for waiting. My colleague will continue the conversation with you."}
+{"id":"clean-en-93","text":"Hello, my name is Sara, and I will be assisting you from now on."}
+{"id":"clean-en-94","text":"I have read the previous messages, so you do not need to repeat your question."}
+{"id":"clean-en-95","text":"Dear $(user.firstName), your request REQ-55210 has been completed.","labels":[{"start":5,"word":"$(user.firstName)","gold":"excluded"},{"start":37,"word":"REQ-55210","gold":"excluded"}]}
+{"id":"clean-en-96","text":"Dear customer, we would like to inform you that your annual statement is now available."}
+{"id":"clean-en-97","text":"The annual statement shows your contributions, wages and periods of registration for the past year."}
+{"id":"clean-en-98","text":"Please review your statement carefully and let us know if anything is incorrect."}
+{"id":"clean-en-99","text":"We value your feedback. You may receive a short survey after this conversation."}
+{"id":"clean-en-100","text":"Thank you for your kind words. I am happy that I could help."}
+{"id":"clean-en-101","text":"I understand your frustration, and I will do my best to resolve this quickly."}
+{"id":"clean-en-102","text":"I am afraid I need a little more information before I can proceed."}
+{"id":"clean-en-103","text":"Could you please tell me the name of your current employer?"}
+{"id":"clean-en-104","text":"Could you please confirm the month in which you started working there?"}
+{"id":"clean-en-105","text":"According to our records, your current employer registered you last year."}
+{"id":"clean-en-106","text":"The registration date on your record matches the date in your employment contract."}
+{"id":"clean-en-107","text":"If your employer did not register you, you can submit a complaint through the portal."}
+{"id":"clean-en-108","text":"We will contact the employer and ask them to correct the registration."}
+{"id":"clean-en-109","text":"The investigation may take some time, but we will keep you informed of any progress."}
+{"id":"clean-en-110","text":"Your complaint has been closed after the employer corrected your record."}
+{"id":"clean-en-111","text":"Please note that the inspection team may visit the establishment to verify the information."}
+{"id":"clean-en-112","text":"Your pension has been suspended because we have not received the annual proof of life."}
+{"id":"clean-en-113","text":"To reactivate your pension, please confirm your status through the online service."}
+{"id":"clean-en-114","text":"Once the confirmation is received, the suspended payments will be released."}
+{"id":"clean-en-115","text":"The beneficiaries of a deceased member may be entitled to a survivors' pension."}
+{"id":"clean-en-116","text":"To apply, the beneficiaries need to provide the death certificate and proof of relationship."}
+{"id":"clean-en-117","text":"I am very sorry for your loss. Please let me guide you through the required steps."}
+{"id":"clean-en-118","text":"The survivors' pension is divided among the eligible family members according to the regulations."}
+{"id":"clean-en-119","text":"Your daughter will continue to receive her share until she marries or starts working."}
+{"id":"clean-en-120","text":"We have updated the list of beneficiaries on the file."}
+{"id":"clean-en-121","text":"Your request to add a beneficiary is pending the approval of the supervisor."}
+{"id":"clean-en-122","text":"Please allow up to 3 working days for the supervisor to review the request.","labels":[{"start":19,"word":"3","gold":"excluded"}]}
+{"id":"clean-en-123","text":"I have added a note to your file so that any colleague can see what we discussed today."}
+{"id":"clean-en-124","text":"You will receive a confirmation email at m.alqahtani@example.com shortly.","labels":[{"start":41,"word":"m.alqahtani@example.com","gold":"excluded"}]}
+{"id":"clean-en-125","text":"Please check your spam folder if you cannot find the email."}
+{"id":"clean-en-126","text":"The link in the email is valid for twenty-four hours."}
+{"id":"clean-en-127","text":"If the link has expired, you can request a new one from the sign-in page."}
+{"id":"clean-en-128","text":"We are unable to process requests submitted on behalf of another person without a valid power of attorney."}
+{"id":"clean-en-129","text":"Please upload the power of attorney together with the identification documents of both parties."}
+{"id":"clean-en-130","text":"The agent who submitted the request must have an active account on the portal."}
+{"id":"clean-en-131","text":"Your appointment is confirmed for Tuesday morning at the Riyadh branch."}
+{"id":"clean-en-132","text":"Please arrive ten minutes early and bring your national ID card."}
+{"id":"clean-en-133","text":"If you need to cancel the appointment, please do so at least one day in advance."}
+{"id":"clean-en-134","text":"We have extended our working hours during the holiday season to serve you better."}
+{"id":"clean-en-135","text":"Our chat service is available every day, including weekends."}
+{"id":"clean-en-136","text":"Due to the public holiday, responses may take slightly longer than usual."}
+{"id":"clean-en-137","text":"Mr. Abdullah, thank you for your patience. Your issue has been resolved."}
+{"id":"clean-en-138","text":"Ms. Fatimah, I have sent you the form you asked for."}
+{"id":"clean-en-139","text":"I have spoken with the pensions team, and they confirmed that your calculation is correct."}
+{"id":"clean-en-140","text":"The difference in the amount is due to the deduction of the annual adjustment."}
+{"id":"clean-en-141","text":"The adjustment was applied because of a change in the reported wage last year."}
+{"id":"clean-en-142","text":"If you disagree with the calculation, you can request a review."}
+{"id":"clean-en-143","text":"The review will be carried out by an independent committee."}
+{"id":"clean-en-144","text":"You will be notified of the result by text message and email."}
+{"id":"clean-en-145","text":"Please make sure your mobile number is up to date so you do not miss any notifications."}
+{"id":"clean-en-146","text":"You can now sign in with Nafath using your national ID number."}
+{"id":"clean-en-147","text":"The Nafath application will ask you to choose the number shown on the screen."}
+{"id":"clean-en-148","text":"If you have trouble with Nafath, please contact their support team directly."}
+{"id":"clean-en-149","text":"Your establishment account is linked to the commercial registration number 1010456789.","labels":[{"start":75,"word":"1010456789","gold":"excluded"}]}
+{"id":"clean-en-150","text":"The establishment owner can add other users and assign them permissions."}
+{"id":"clean-en-151","text":"Each user should have their own account, and sharing credentials is not allowed."}
+{"id":"clean-en-152","text":"I can see that the user permissions were updated this morning."}
+{"id":"clean-en-153","text":"The changes will take effect the next time the user signs in."}
+{"id":"clean-en-154","text":"Thank you for contacting us again. I can see that your previous request is still open."}
+{"id":"clean-en-155","text":"I will add your new message to the same request so that everything is in one place."}
+{"id":"clean-en-156","text":"We kindly ask you not to submit the same request more than once, as this may delay processing."}
+{"id":"clean-en-157","text":"Your duplicate request has been cancelled, and the original request remains active."}
+{"id":"clean-en-158","text":"The salary certificate you uploaded does not match the wage reported by your employer."}
+{"id":"clean-en-159","text":"Please ask your employer to confirm the correct wage in writing."}
+{"id":"clean-en-160","text":"Once we receive the confirmation, we will update your record accordingly."}
+{"id":"clean-en-161","text":"Thank you for providing the information. Everything is now in order."}
+{"id":"clean-en-162","text":"I hope this answers your question. Please let me know if anything is unclear."}
+{"id":"clean-en-163","text":"Is there anything else you would like to know about your pension?"}
+{"id":"clean-en-164","text":"Thank you for your time, and have a pleasant evening."}
+{"id":"clean-en-165","text":"Good afternoon. I see that you contacted us earlier about your registration."}
+{"id":"clean-en-166","text":"The registration issue was caused by a mismatch between your name in Arabic and in English."}
+{"id":"clean-en-167","text":"We have corrected the spelling of your name to match your passport."}
+{"id":"clean-en-168","text":"From now on, all documents will show the corrected name."}
+{"id":"clean-en-169","text":"Unfortunately, we cannot accept photographs of documents taken at an angle."}
+{"id":"clean-en-170","text":"Please scan the document or take a photograph from directly above it in good light."}
+{"id":"clean-en-171","text":"Your request was rejected because a required attachment was missing."}
+{"id":"clean-en-172","text":"You can submit the request again with all the attachments listed on the service page."}
+{"id":"clean-en-173","text":"The list of required documents is available on the service page under the requirements section."}
+{"id":"clean-en-174","text":"The insured person must be at least sixty years old to receive the old age pension."}
+{"id":"clean-en-175","text":"Members who have completed the required contribution period can request their pension earlier in some cases."}
+{"id":"clean-en-176","text":"I recommend reading the guide on the website before submitting your application."}
+{"id":"clean-en-177","text":"We will send you a reminder before your appointment."}
+{"id":"clean-en-178","text":"Your satisfaction is important to us, and we appreciate your patience."}
+{"id":"clean-en-179","text":"Our records show that you have contributions with two employers during the same month."}
+{"id":"clean-en-180","text":"This is acceptable if you worked for both employers at the same time."}
+{"id":"clean-en-181","text":"If you only worked for one of them, please let us know so we can investigate."}
+{"id":"clean-en-182","text":"We have received a report from your employer stating that your contract ended last month."}
+{"id":"clean-en-183","text":"If this information is not correct, you can object within the specified period."}
+{"id":"clean-en-184","text":"Your objection has been registered, and the employer will be asked to provide evidence."}
+{"id":"clean-en-185","text":"I am happy to confirm that your objection was accepted."}
+{"id":"clean-en-186","text":"Hello Khalid, welcome back. How can I help you this evening?"}
+{"id":"clean-en-187","text":"Mohammed, I have checked your file and found the payment you mentioned."}
+{"id":"clean-en-188","text":"Noura, thank you for your message. I will look into it right away."}
+{"id":"clean-en-189","text":"Thank you, Omar. I have updated your address as requested."}
+{"id":"clean-en-190","text":"Dear Aisha, your certificate has been sent to your registered email address."}
+{"id":"clean-en-191","text":"Our team is working hard to process all requests as quickly as possible."}
+{"id":"clean-en-192","text":"Please accept our apologies for any confusion caused by the previous message."}
+{"id":"clean-en-193","text":"The information in the previous message was incomplete, and here are the correct details."}
+{"id":"clean-en-194","text":"Thank you for bringing this to our attention."}
+{"id":"clean-en-197","text":"Your contribution records are up to date, and the latest payment has been registered on your account."}
+{"id":"clean-en-198","text":"Your request has been received and will be processed within 3 working days; you will be notified by SMS once it is complete.","labels":[{"start":60,"word":"3","gold":"excluded"}]}
+{"id":"clean-en-199","text":"To complete your request, please upload a copy of your national ID and the employer's salary certificate through the online portal."}
+{"id":"clean-en-200","text":"Pension eligibility depends on your total contribution period and age; I can check your current eligibility if you share your registration number."}
+{"id":"clean-en-201","text":"You can update your bank account details from your profile page; changes take effect from the next payment cycle."}
+{"id":"clean-en-202","text":"Thank you for contacting us; is there anything else I can help you with today?"}
+{"id":"clean-en-203","text":"Early retirement eligibility"}
+{"id":"clean-en-204","text":"Early retirement is available to members with at least 25 years of contributions. The pension is calculated on the average salary of the last 24 months. Applications are submitted online and reviewed within 10 working days.","labels":[{"start":55,"word":"25","gold":"excluded"},{"start":142,"word":"24","gold":"excluded"},{"start":207,"word":"10","gold":"excluded"}]}
+{"id":"clean-en-205","text":"Survivor benefits for dependents"}
+{"id":"clean-en-206","text":"When a member passes away, eligible dependents may receive a survivor pension. Dependents must submit the death certificate and proof of relationship. The survivor pension is shared among eligible dependents."}
+{"id":"clean-en-207","text":"Reporting a work injury"}
+{"id":"clean-en-208","text":"Employers must report a work injury within 3 working days of the incident. The injured member receives a daily allowance during the treatment period. Medical reports should be uploaded through the employer portal.","labels":[{"start":43,"word":"3","gold":"excluded"}]}
+{"id":"clean-en-209","text":"Unemployment insurance claims"}
+{"id":"clean-en-210","text":"Members who lose their job involuntarily can claim unemployment insurance within 90 days. The benefit is paid monthly for up to 12 months. Claimants must keep their job-seeker profile active.","labels":[{"start":81,"word":"90","gold":"excluded"},{"start":128,"word":"12","gold":"excluded"}]}
+{"id":"clean-en-211","text":"Registering a new employee"}
+{"id":"clean-en-212","text":"Employers register new employees within 15 days of their start date. Registration requires the national ID and the employment contract. Contributions start from the first month of employment.","labels":[{"start":40,"word":"15","gold":"excluded"}]}
+{"id":"clean-en-213","text":"Requesting a contribution certificate"}
+{"id":"clean-en-214","text":"Members can download a contribution certificate from the online portal at any time. The certificate lists all registered employers and contribution periods. It is accepted by banks and government agencies."}
+{"id":"clean-en-217","text":"Dear Mr. Al-Harbi, thank you for your email regarding your pension calculation. We have reviewed your file carefully, and the amount shown on your latest statement is correct. The calculation takes into account your average wage over the final years of service and the total number of months in which contributions were paid. If you would like a detailed breakdown, please reply to this email and we will send it to you."}
+{"id":"clean-en-218","text":"Dear customer, we would like to remind you that the deadline for submitting the annual proof of life is approaching. Beneficiaries who do not confirm their status in time may have their payments suspended until the confirmation is received. You can confirm your status online in a few minutes, and no visit to the branch is required."}
+{"id":"clean-en-219","text":"Thank you for your inquiry about voluntary registration. Saudi citizens who are not covered by a mandatory scheme may register voluntarily and pay contributions themselves. This allows them to continue building their pension entitlement during periods without employment. You can find the conditions and the application form on our website."}
+{"id":"clean-en-220","text":"We have received your request to transfer your contributions from the previous scheme. The transfer requires confirmation from the other organization, which usually takes several weeks. We will contact you as soon as the confirmation arrives, and you will not need to take any further action in the meantime."}
+{"id":"clean-en-221","text":"I would like to clarify the difference between the two services you mentioned. The certificate of contributions confirms the periods for which contributions were paid, while the salary statement shows the wages reported by your employer. Banks usually ask for the certificate, whereas some government agencies prefer the statement."}
+{"id":"clean-en-222","text":"Following our conversation yesterday, I have checked with the pensions department. They confirmed that your file is complete and that the first payment will be issued at the beginning of next month. Please make sure that your bank account remains active, as returned payments may take longer to reissue."}
+{"id":"clean-en-223","text":"We regret to inform you that your request could not be completed because the employer has not yet registered the end of your previous contract. We have contacted the employer and asked them to correct the record. Once the correction is made, your request will be processed automatically."}
+{"id":"clean-en-224","text":"Thank you for your suggestion about the mobile application. I have shared it with the product team, who regularly review feedback from our customers. While I cannot promise a specific date, suggestions like yours help us improve our services."}
+{"id":"clean-en-225","text":"Your establishment has been selected for a routine inspection. The inspector will contact you to agree on a suitable date and will ask to see the employment contracts and payroll records. Inspections help us make sure that all employees are registered correctly and receive their entitlements."}
+{"id":"clean-en-226","text":"Please note that the penalty for late registration of employees is applied automatically by the system. If you believe the penalty was applied in error, you can submit an objection with supporting documents. Each objection is reviewed individually, and the decision will be sent to the establishment account."}
+{"id":"clean-en-227","text":"We understand that your employee was registered with the wrong occupation. The occupation can be corrected by the establishment through the employer portal under employee services. After the correction, the record will be updated within one working day."}
+{"id":"clean-en-228","text":"I have reviewed the history of your account and can see that three requests were submitted this month. Two of them were completed, and the third is waiting for an additional document. As soon as you upload the missing document, the request will continue to the next stage."}
+{"id":"clean-en-229","text":"Thank you for your patience while we investigated the missing payment. The payment was returned by your bank because the account had been closed. Please add a new bank account to your profile, and we will reissue the payment within the next payment cycle."}
+{"id":"clean-en-230","text":"We would like to inform you that our offices will be closed for the national holiday. Online services, including chat, will remain available throughout the holiday. Requests submitted during this period will be processed in the order they were received once our offices reopen."}
+{"id":"clean-en-231","text":"Your request to change the bank account has been put on hold for your protection. We noticed that the request was submitted shortly after a change to your mobile number. To continue, please confirm the request by signing in with Nafath."}
+{"id":"clean-en-232","text":"Dear Ms. Al-Otaibi, we have completed the review of your work injury file. The medical committee has determined a permanent partial disability, and you are entitled to a lump-sum compensation. The amount will be transferred to your registered bank account, and a letter explaining the decision has been sent to your address."}
+{"id":"clean-en-233","text":"I appreciate you taking the time to explain the situation in detail. Based on what you have described, the best option is to submit a correction request together with a letter from your employer. I have attached the guide that explains each step of the process."}
+{"id":"clean-en-234","text":"Please be aware that messages sent outside working hours will be answered on the next working day. If your matter is urgent, you may call our customer service number, which is available around the clock."}
+{"id":"clean-en-235","text":"To protect your personal information, we have masked part of your identification number in this conversation. Only the last digits are visible to our staff. This is a standard measure that applies to all customers."}
+{"id":"clean-en-236","text":"We noticed that you have not yet activated your online account. Activating your account gives you access to your statements, certificates and requests at any time. The activation takes only a few minutes and requires your national ID number and the mobile number registered with us."}
+{"id":"clean-en-237","text":"Thank you for confirming your details. I have now linked your account to the new mobile number, and all future notifications will be sent there. If you did not request this change, please contact us immediately."}
+{"id":"clean-en-238","text":"The contribution rate depends on the type of coverage and the nationality of the employee. Saudi employees are covered by the annuities, occupational hazards and unemployment insurance branches, while non-Saudi employees are covered by the occupational hazards branch only."}
+{"id":"clean-en-239","text":"Unfortunately, we are unable to accept the medical report because it does not include the stamp of the hospital. Please ask the hospital to stamp the report and upload it again. Reports without an official stamp cannot be reviewed by the medical committee."}
+{"id":"clean-en-240","text":"I can see that you are trying to register a domestic worker through the establishment portal. Domestic workers must be registered through the Musaned platform instead, which will forward the information to us automatically."}
+{"id":"clean-en-241","text":"Your request was submitted successfully, and the reference number has been sent to you by text message. You can use the reference number to follow up on your request through the website or the mobile application."}
+{"id":"clean-en-242","text":"Thank you for letting us know about the error on the website. I have reported the problem with the page, and our technical team is already working on it. In the meantime, you can complete the same service through the mobile application."}
+{"id":"clean-en-243","text":"Please do not worry about the message you received earlier. It was sent to all customers as part of a planned system update, and no action is required on your part."}
+{"id":"clean-en-244","text":"If your employer has stopped paying your wages, you can file a complaint with the labour office. Please note that we are responsible for registration and contributions, while wage disputes are handled by the labour office."}
+{"id":"clean-en-245","text":"We have noticed that your address is incomplete. A complete address helps us deliver official letters to you without delay. You can update your address from your profile in a few simple steps."}
+{"id":"clean-en-246","text":"Hello, and welcome to our chat service. My name is Faisal, and I will be glad to assist you. Before we begin, may I have your name, please?"}
+{"id":"clean-en-247","text":"Thank you, I have found your account. I can see that your last contribution was paid two months ago. Has your employment ended, or have you moved to a new employer?"}
+{"id":"clean-en-248","text":"I understand. When you join a new employer, they will register you, and your contributions will continue on the same account. You do not need to open a new account."}
+{"id":"clean-en-249","text":"That is correct. Your previous periods of contribution are kept in your record and will be included when your pension is calculated."}
+{"id":"clean-en-250","text":"I am sorry to hear that you have been waiting for a long time. I have checked the status of your request, and it is now with the final approval team. I have asked them to prioritize it, and you should receive an update within two working days."}
+{"id":"clean-en-251","text":"Thank you for your understanding. I have also added a note asking the team to contact you directly if they need anything else from you."}
+{"id":"clean-en-252","text":"The information you requested is confidential and can only be shared with the account holder. If you are acting on behalf of the account holder, please provide a valid power of attorney."}
+{"id":"clean-en-253","text":"We have received your power of attorney, and it has been verified. You can now submit requests on behalf of your father through your own account."}
+{"id":"clean-en-254","text":"Please note that the power of attorney must remain valid for the entire duration of the request. If it expires, you will need to upload a renewed copy."}
+{"id":"clean-en-255","text":"Our records show that your father's pension is paid to his account at the same bank. Would you like to change the account, or do you have a question about the payments?"}
+{"id":"clean-en-256","text":"The change has been recorded. The next payment will be transferred to the new account, provided that the bank confirms the account details."}
+{"id":"clean-en-257","text":"Thank you for contacting us, and please accept our best wishes to your father."}
+{"id":"clean-en-260","text":"Sure, one moment please."}
+{"id":"clean-en-261","text":"Thank you. I am checking that for you now."}
+{"id":"clean-en-262","text":"Yes, that is correct."}
+{"id":"clean-en-263","text":"No problem at all."}
+{"id":"clean-en-264","text":"You are welcome. Take care."}
+{"id":"clean-en-265","text":"Could you please clarify what you mean by the second payment?"}
+{"id":"clean-en-266","text":"I see. In that case, the payment you received was the annual adjustment."}
+{"id":"clean-en-267","text":"Would you like me to send you a link to the form?"}
+{"id":"clean-en-268","text":"Here is the link to the form: https://www.gosi.gov.sa/forms/correction.","labels":[{"start":30,"word":"https://www.gosi.gov.sa/forms/correction","gold":"excluded"}]}
+{"id":"clean-en-269","text":"Please let me know once you have submitted it."}
+{"id":"clean-en-270","text":"Great, I can see your submission now."}
+{"id":"clean-en-271","text":"It looks like the page did not load correctly. Could you refresh it and try again?"}
+{"id":"clean-en-272","text":"That error usually appears when the session has expired. Please sign in again."}
+{"id":"clean-en-273","text":"I have checked, and there are no outstanding amounts on your establishment account."}
+{"id":"clean-en-274","text":"Your establishment is compliant, and the compliance certificate can be printed from the portal."}
+{"id":"clean-en-275","text":"The compliance certificate is valid for one month and is renewed automatically while payments are up to date."}
+{"id":"clean-en-276","text":"I am afraid that request falls outside our responsibilities. You may want to contact the Ministry of Human Resources."}
+{"id":"clean-en-277","text":"We do not handle medical insurance. Please contact your insurance provider for that matter."}
+{"id":"clean-en-278","text":"Your registration with the previous employer ended on the date they reported."}
+{"id":"clean-en-279","text":"I will stay with you while you complete the steps, so feel free to ask if anything is unclear."}
+{"id":"clean-en-280","text":"Please choose the reason for the request from the list, and then attach the document."}
+{"id":"clean-en-281","text":"After you press submit, you will see a confirmation message with the request number."}
+{"id":"clean-en-282","text":"Perfect, the request has been submitted successfully."}
+{"id":"clean-en-283","text":"Thank you for confirming. I have closed the request as resolved."}
+{"id":"clean-en-284","text":"If you have any other questions in the future, we are always happy to help."}
+{"id":"clean-en-285","text":"We apologize, but the chat service will close shortly for maintenance. Please contact us again in an hour."}
+{"id":"clean-en-286","text":"Good evening. Thank you for waiting, and sorry for the delay in replying."}
+{"id":"clean-en-287","text":"I have good news: your pension application has been approved."}
+{"id":"clean-en-288","text":"Your first pension payment will include the amounts due since the date of eligibility."}
+{"id":"clean-en-289","text":"A letter with the details of your pension has been sent to your registered address."}
+{"id":"clean-en-290","text":"You can also view the letter at any time in the documents section of your account."}
+{"id":"clean-en-291","text":"Congratulations on your retirement, and thank you for your many years of service."}
+{"id":"clean-en-294","text":"To reset your password, choose the option for forgotten passwords on the sign-in page and follow the instructions."}
+{"id":"clean-en-295","text":"The new password must be different from the previous three passwords you used."}
+{"id":"clean-en-296","text":"For your security, we recommend using a long password that combines letters, numbers and symbols."}
+{"id":"clean-en-297","text":"Once you have changed your password, you will be signed out of all other devices."}
+{"id":"clean-en-298","text":"The notification you received was sent automatically and does not require a reply."}
+{"id":"clean-en-299","text":"If you would like to stop receiving promotional messages, you can change your preferences in the settings."}
+{"id":"clean-en-300","text":"Important messages about your pension and requests will still be sent to you."}
+{"id":"clean-en-301","text":"I can confirm that your preferences have been saved."}
+{"id":"clean-en-302","text":"The mobile application offers the same services as the website, and some customers find it more convenient."}
+{"id":"clean-en-303","text":"You can enable fingerprint sign-in from the security settings of the application."}
+{"id":"clean-en-304","text":"Please keep the application updated to benefit from the latest improvements and security fixes."}
+{"id":"clean-en-305","text":"I see that you are using an older version of the application. Updating it should solve the problem."}
+{"id":"clean-en-306","text":"Thank you for your feedback about the waiting time. We are adding more staff during busy periods."}
+{"id":"clean-en-307","text":"Thank you for holding. I have confirmed with the finance team that the refund was issued this morning."}
+{"id":"clean-en-308","text":"Depending on your bank, it may take one or two working days for the amount to appear in your account."}
+{"id":"clean-en-309","text":"If you have not received it by the end of the week, please contact us again and mention this conversation."}
+{"id":"clean-en-310","text":"We have noted that you prefer to be contacted by email rather than by phone."}

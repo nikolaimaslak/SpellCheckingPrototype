@@ -21,7 +21,14 @@
     "build:wasm": "bash wasm/build.sh",
     "ad-loader": "node dev/ad-loader/serve.ts",
     "server": "node server/main.ts",
-    "demo": "node scripts/demo.ts"
+    "demo": "node scripts/demo.ts",
+    "eval": "node --import ./eval/register.ts eval/cli/eval.ts",
+    "eval:check": "node --import ./eval/register.ts eval/cli/eval.ts --check",
+    "eval:baseline": "node --import ./eval/register.ts eval/cli/eval.ts --baseline",
+    "eval:build": "node --import ./eval/register.ts eval/cli/build.ts",
+    "eval:manifest": "node --import ./eval/register.ts eval/cli/manifest.ts",
+    "eval:words": "node --import ./eval/register.ts eval/cli/words.ts",
+    "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

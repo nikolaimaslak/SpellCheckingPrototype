@@ -16,3 +16,7 @@ wasm/.build/
 # Completion server: secrets and local telemetry log
 .env
 /telemetry/
+
+# Evaluation: run reports, and private datasets that must never be committed
+/eval/reports/
+/eval/datasets/private/

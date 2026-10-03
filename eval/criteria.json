@@ -1,0 +1,205 @@
+{
+  "_note": "PROVISIONAL thresholds, set before the first measurement (openspec/specs/spelling-eval). Rates are fractions; corruption is per 10,000 correct words; latency in ms. \"tolerance\" is how much worse than the baseline a value may get before eval:check fails. Criteria marked \"gate\" decide whether auto-replace may be on by default. Scopes: clean = clean datasets, misspelled = typos and injected datasets, all = every committed dataset. Criteria with \"compare\": false (instability, latency) vary with machine load: they are judged against their threshold but not compared with the baseline.",
+  "criteria": [
+    {
+      "id": "corruption-en",
+      "label": "Corruption rate on clean in-domain text (per 10,000 words)",
+      "metric": "corruptionPer10k",
+      "scope": "clean",
+      "lang": "en",
+      "threshold": 1,
+      "direction": "max",
+      "tolerance": 0,
+      "gate": true
+    },
+    {
+      "id": "corruption-ar",
+      "label": "Corruption rate on clean in-domain text (per 10,000 words)",
+      "metric": "corruptionPer10k",
+      "scope": "clean",
+      "lang": "ar",
+      "threshold": 1,
+      "direction": "max",
+      "tolerance": 0,
+      "gate": true
+    },
+    {
+      "id": "autoreplace-precision-en",
+      "label": "Auto-replace precision",
+      "metric": "autoReplacePrecision",
+      "scope": "all",
+      "lang": "en",
+      "threshold": 0.99,
+      "direction": "min",
+      "tolerance": 0,
+      "gate": true
+    },
+    {
+      "id": "autoreplace-precision-ar",
+      "label": "Auto-replace precision",
+      "metric": "autoReplacePrecision",
+      "scope": "all",
+      "lang": "ar",
+      "threshold": 0.99,
+      "direction": "min",
+      "tolerance": 0,
+      "gate": true
+    },
+    {
+      "id": "detection-recall-en",
+      "label": "Detection recall",
+      "metric": "detectionRecall",
+      "scope": "misspelled",
+      "lang": "en",
+      "threshold": 0.9,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "detection-recall-ar",
+      "label": "Detection recall",
+      "metric": "detectionRecall",
+      "scope": "misspelled",
+      "lang": "ar",
+      "threshold": 0.8,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "false-flag-en",
+      "label": "False-flag rate on clean in-domain text",
+      "metric": "falseFlagRate",
+      "scope": "clean",
+      "lang": "en",
+      "threshold": 0.02,
+      "direction": "max",
+      "tolerance": 0.002
+    },
+    {
+      "id": "false-flag-ar",
+      "label": "False-flag rate on clean in-domain text",
+      "metric": "falseFlagRate",
+      "scope": "clean",
+      "lang": "ar",
+      "threshold": 0.05,
+      "direction": "max",
+      "tolerance": 0.002
+    },
+    {
+      "id": "correction-at5-en",
+      "label": "Correction accuracy@5",
+      "metric": "correctionAt5",
+      "scope": "misspelled",
+      "lang": "en",
+      "threshold": 0.9,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "correction-at5-ar",
+      "label": "Correction accuracy@5",
+      "metric": "correctionAt5",
+      "scope": "misspelled",
+      "lang": "ar",
+      "threshold": 0.8,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "correction-at1-en",
+      "label": "Correction accuracy@1",
+      "metric": "correctionAt1",
+      "scope": "misspelled",
+      "lang": "en",
+      "threshold": 0.7,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "correction-at1-ar",
+      "label": "Correction accuracy@1",
+      "metric": "correctionAt1",
+      "scope": "misspelled",
+      "lang": "ar",
+      "threshold": 0.6,
+      "direction": "min",
+      "tolerance": 0.01
+    },
+    {
+      "id": "exclusion-leaks-all",
+      "label": "Exclusion leaks",
+      "metric": "exclusionLeaks",
+      "scope": "all",
+      "lang": "all",
+      "threshold": 0,
+      "direction": "max",
+      "tolerance": 0
+    },
+    {
+      "id": "instability-en",
+      "label": "Decision instability (tokens)",
+      "metric": "instability",
+      "scope": "all",
+      "lang": "en",
+      "threshold": 0,
+      "direction": "max",
+      "tolerance": 0,
+      "compare": false
+    },
+    {
+      "id": "instability-ar",
+      "label": "Decision instability (tokens)",
+      "metric": "instability",
+      "scope": "all",
+      "lang": "ar",
+      "threshold": 0,
+      "direction": "max",
+      "tolerance": 0,
+      "compare": false
+    },
+    {
+      "id": "check-latency-en",
+      "label": "Correctness-check latency p95 (ms)",
+      "metric": "checkP95Ms",
+      "scope": "all",
+      "lang": "en",
+      "threshold": 5,
+      "direction": "max",
+      "tolerance": 2,
+      "compare": false
+    },
+    {
+      "id": "check-latency-ar",
+      "label": "Correctness-check latency p95 (ms)",
+      "metric": "checkP95Ms",
+      "scope": "all",
+      "lang": "ar",
+      "threshold": 5,
+      "direction": "max",
+      "tolerance": 2,
+      "compare": false
+    },
+    {
+      "id": "suggest-latency-en",
+      "label": "Correction latency p95 (ms)",
+      "metric": "suggestP95Ms",
+      "scope": "all",
+      "lang": "en",
+      "threshold": 100,
+      "direction": "max",
+      "tolerance": 20,
+      "compare": false
+    },
+    {
+      "id": "suggest-latency-ar",
+      "label": "Correction latency p95 (ms)",
+      "metric": "suggestP95Ms",
+      "scope": "all",
+      "lang": "ar",
+      "threshold": 100,
+      "direction": "max",
+      "tolerance": 20,
+      "compare": false
+    }
+  ]
+}

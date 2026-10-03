@@ -1,0 +1,41 @@
+{
+  "generator": "eval/inject.ts",
+  "version": 1,
+  "input": "eval/datasets/clean-ar.jsonl",
+  "options": {
+    "lang": "ar",
+    "types": "all",
+    "rate": 0.08,
+    "perWord": false,
+    "seed": 2,
+    "customWords": "eval/datasets/custom-words.txt"
+  },
+  "stats": {
+    "eligible": 4662,
+    "inserted": {
+      "keyboard-sub": 64,
+      "transpose": 42,
+      "insert": 66,
+      "substitute": 61,
+      "dots": 52,
+      "delete": 34,
+      "emphatic": 22,
+      "hamza": 9,
+      "ta-marbuta": 6,
+      "alef-maqsura": 3
+    },
+    "realWord": {
+      "keyboard-sub": 42,
+      "dots": 36,
+      "transpose": 39,
+      "delete": 115,
+      "insert": 23,
+      "substitute": 30,
+      "emphatic": 7,
+      "ta-marbuta": 2,
+      "alef-maqsura": 2,
+      "hamza": 3
+    },
+    "notApplicable": {}
+  }
+}

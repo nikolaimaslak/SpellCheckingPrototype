@@ -1,5 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { classify, type Lang } from '../eval/error-types.ts';
 
 const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed'] as const;
 const SPELLING = ['autocorrect', 'revert', 'accept', 'ignore'] as const;
@@ -91,6 +92,7 @@ export function summarize(events: StoredEvent[]) {
     .filter((e) => e.type === 'polish-shown' && typeof e.latencyMs === 'number')
     .map((e) => e.latencyMs!)
     .sort((a, b) => a - b);
+  const spelling = spellingByLang(events);
   const tally = (key: 'type' | 'lang') =>
     events.reduce<Record<string, number>>((acc, e) => ((acc[e[key] ?? '—'] = (acc[e[key] ?? '—'] ?? 0) + 1), acc), {});
   return {
@@ -104,6 +106,7 @@ export function summarize(events: StoredEvent[]) {
       latencyP95: percentile(latencies, 95),
     },
     autocorrect: { count: autocorrects, reverts, revertRate: autocorrects ? reverts / autocorrects : null },
+    spelling,
     polish: {
       shownWithChanges: polishShown,
       accepted: count('polish-accepted'),
@@ -113,6 +116,56 @@ export function summarize(events: StoredEvent[]) {
     byType: tally('type'),
     byLang: tally('lang'),
   };
+}
+
+export interface SpellingInTheField {
+  autocorrects: number;
+  reverts: number;
+  /** Field counterpart of 1 − auto-replace precision (a lower bound: not every wrong fix is reverted). */
+  revertRate: number | null;
+  accepts: number;
+  ignores: number;
+  /** Field proxy for the false-flag rate: ignores ÷ (accepts + ignores). */
+  ignoreShare: number | null;
+  /** Error types of accepted suggestions and auto-corrections (typed word → correction). */
+  errorTypes: Record<string, number>;
+  /** Per auto-correction type: how many were made and how many reverted. */
+  revertsByType: Record<string, { autocorrects: number; reverts: number; revertRate: number | null }>;
+}
+
+const isLang = (l: unknown): l is Lang => l === 'en' || l === 'ar';
+const typeOf = (e: StoredEvent, lang: Lang) =>
+  e.original && e.replacement ? (classify(e.original, e.replacement, lang)?.type ?? 'unclassified') : 'unclassified';
+
+/** Per-language spelling figures, classified with the benchmark's error-type taxonomy (eval/error-types.ts). */
+export function spellingByLang(events: StoredEvent[]): Partial<Record<Lang, SpellingInTheField>> {
+  const out: Partial<Record<Lang, SpellingInTheField>> = {};
+  const get = (lang: Lang) =>
+    (out[lang] ??= { autocorrects: 0, reverts: 0, revertRate: null, accepts: 0, ignores: 0, ignoreShare: null, errorTypes: {}, revertsByType: {} });
+  for (const e of events) {
+    if (!isLang(e.lang) || !(SPELLING as readonly string[]).includes(e.type)) continue;
+    const s = get(e.lang);
+    const type = typeOf(e, e.lang);
+    const byType = () => (s.revertsByType[type] ??= { autocorrects: 0, reverts: 0, revertRate: null });
+    if (e.type === 'autocorrect') {
+      s.autocorrects++;
+      byType().autocorrects++;
+      s.errorTypes[type] = (s.errorTypes[type] ?? 0) + 1;
+    } else if (e.type === 'accept') {
+      s.accepts++;
+      s.errorTypes[type] = (s.errorTypes[type] ?? 0) + 1;
+    } else if (e.type === 'revert') {
+      // A revert carries the auto-correction's original and replacement, so it has the same type.
+      s.reverts++;
+      byType().reverts++;
+    } else if (e.type === 'ignore') s.ignores++;
+  }
+  for (const s of Object.values(out)) {
+    s.revertRate = s.autocorrects ? s.reverts / s.autocorrects : null;
+    s.ignoreShare = s.accepts + s.ignores ? s.ignores / (s.accepts + s.ignores) : null;
+    for (const t of Object.values(s.revertsByType)) t.revertRate = t.autocorrects ? t.reverts / t.autocorrects : null;
+  }
+  return out;
 }
 
 const pct = (r: number | null) => (r === null ? '—' : `${Math.round(r * 100)}%`);
@@ -134,7 +187,34 @@ export function renderSummary(s: ReturnType<typeof summarize>): string {
 <div>Auto-correct revert rate<div class="k">${pct(s.autocorrect.revertRate)}</div>${s.autocorrect.reverts} of ${s.autocorrect.count}</div>
 <div>Polish acceptance<div class="k">${pct(s.polish.acceptanceRate)}</div>${s.polish.accepted} of ${s.polish.shownWithChanges} previews · p50 ${ms(s.polish.latencyP50)}</div>
 </div>
+${renderSpelling(s.spelling)}
 <h2>By event type</h2><table><tr><th>Type</th><th>Count</th></tr>${rows(s.byType)}</table>
 <h2>By language</h2><table><tr><th>Language</th><th>Count</th></tr>${rows(s.byLang)}</table>
 </body></html>`;
+}
+
+function renderSpelling(spelling: Partial<Record<Lang, SpellingInTheField>>): string {
+  const langs = Object.entries(spelling) as [Lang, SpellingInTheField][];
+  if (!langs.length) return '';
+  const rows = langs
+    .map(
+      ([l, s]) =>
+        `<tr><td>${l}</td><td>${s.autocorrects}</td><td>${s.reverts}</td><td>${pct(s.revertRate)}</td><td>${s.accepts}</td><td>${s.ignores}</td><td>${pct(s.ignoreShare)}</td></tr>`,
+    )
+    .join('');
+  const types = langs
+    .map(([l, s]) => {
+      const all = [...new Set([...Object.keys(s.errorTypes), ...Object.keys(s.revertsByType)])].sort();
+      const body = all
+        .map((t) => {
+          const r = s.revertsByType[t];
+          return `<tr><td>${esc(t)}</td><td>${s.errorTypes[t] ?? 0}</td><td>${r?.autocorrects ?? 0}</td><td>${pct(r?.revertRate ?? null)}</td></tr>`;
+        })
+        .join('');
+      return `<h3>${l}: error types in the field</h3><table><tr><th>Error type</th><th>Corrections (accepted + automatic)</th><th>Auto-corrections</th><th>Reverted</th></tr>${body}</table>`;
+    })
+    .join('');
+  return `<h2>Spelling in the field</h2>
+<p>Field counterparts of the offline benchmark (npm run eval): the revert rate approximates 1 − auto-replace precision (a lower bound, since not every wrong fix is reverted); the ignore share approximates the false-flag rate; the error types compare with the benchmark's error-type distribution.</p>
+<table><tr><th>Language</th><th>Auto-corrections</th><th>Reverts</th><th>Revert rate</th><th>Suggestions accepted</th><th>Ignored</th><th>Ignore share</th></tr>${rows}</table>${types}`;
 }

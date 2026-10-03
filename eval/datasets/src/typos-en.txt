@@ -1,0 +1,159 @@
+# Curated English misspellings, each inside a short SYNTHETIC agent message.
+# Markup: ⟨typed→intended⟩. Includes the typos of test/autocorrect/corpus.test.ts
+# plus slips common in contact-center replies. Every typo must be a non-word
+# (the engine rejects it); real-word errors are out of scope.
+Please ⟨seperate→separate⟩ the two documents before uploading them.
+We will ⟨definately→definitely⟩ look into this for you.
+The error ⟨occured→occurred⟩ while the page was loading.
+Please wait ⟨untill→until⟩ you receive the confirmation message.
+Could you tell me ⟨wich→which⟩ document you uploaded?
+You will ⟨recieve→receive⟩ a text message shortly.
+I ⟨beleive→believe⟩ the issue has been resolved.
+Please update ⟨thier→their⟩ contact details in the portal.
+We are happy to ⟨accomodate→accommodate⟩ your request.
+Your appointment is ⟨tommorow→tomorrow⟩ morning.
+The ⟨goverment→government⟩ portal is available at all times.
+You can ask a ⟨freind→friend⟩ or relative to help you.
+That error message is ⟨wierd→weird⟩, let me check it.
+This happened ⟨becuase→because⟩ the session expired.
+Please check the ⟨calender→calendar⟩ for available appointments.
+Our working ⟨enviroment→environment⟩ is busy today.
+It is not ⟨necesary→necessary⟩ to visit the branch.
+The update was a ⟨sucess→success⟩.
+⟨Pleae→Please⟩ confirm your national ID number.
+⟨Thnak→Thank⟩ you for your patience.
+Your ⟨reqeust→request⟩ has been received.
+We need more ⟨informaton→information⟩ about the issue.
+Please sign in to your ⟨acount→account⟩ first.
+The ⟨paymnet→payment⟩ was transferred yesterday.
+Your ⟨registraiton→registration⟩ is now complete.
+Your ⟨pensoin→pension⟩ will be paid on the usual date.
+The ⟨contributon→contribution⟩ records are up to date.
+I ⟨apologise→apologize⟩ for the inconvenience.
+Thank you for ⟨contaction→contacting⟩ us today.
+How can I ⟨hlep→help⟩ you today?
+I will ⟨chekc→check⟩ the status for you.
+Please ⟨confrim→confirm⟩ the mobile number on your file.
+Your ⟨applicaton→application⟩ is under review.
+The ⟨employr→employer⟩ must register you within the required period.
+Your ⟨employeer→employer⟩ has updated your wage.
+Please upload the ⟨documnet→document⟩ again.
+The ⟨docuemnts→documents⟩ were received.
+Your ⟨certifcate→certificate⟩ is ready to download.
+The ⟨certificat→certificate⟩ lists all your employers.
+We have ⟨recieved→received⟩ your complaint.
+The ⟨beneficary→beneficiary⟩ list was updated.
+All ⟨benificiaries→beneficiaries⟩ must submit the form.
+Your ⟨eligiblity→eligibility⟩ has been confirmed.
+You are ⟨eligable→eligible⟩ for early retirement.
+The ⟨retirment→retirement⟩ application was submitted.
+Your ⟨retiremnet→retirement⟩ date has been recorded.
+The ⟨compensaton→compensation⟩ will be paid next month.
+The ⟨insurence→insurance⟩ coverage starts this month.
+Your ⟨unemployement→unemployment⟩ benefit was approved.
+The ⟨establisment→establishment⟩ account is active.
+Please contact the ⟨branh→branch⟩ for this service.
+Our ⟨branchs→branches⟩ are open from Sunday to Thursday.
+The ⟨appointmnet→appointment⟩ is confirmed.
+Please bring your ⟨identifcation→identification⟩ document.
+The ⟨verificaton→verification⟩ code was sent.
+Your ⟨pasword→password⟩ must be changed every year.
+Please do not share your ⟨passowrd→password⟩ with anyone.
+You can ⟨downlaod→download⟩ the statement from the portal.
+Please ⟨uplaod→upload⟩ a clearer copy.
+The file is ⟨attatched→attached⟩ to this message.
+Please find the ⟨attachement→attachment⟩ below.
+The ⟨adress→address⟩ on your file is incomplete.
+Your ⟨addres→address⟩ has been updated.
+Please update your ⟨emial→email⟩ address.
+I have sent you an ⟨emal→email⟩ with the details.
+The ⟨mesage→message⟩ was sent to your phone.
+Thank you for your ⟨messsage→message⟩.
+Please check your ⟨phnoe→phone⟩ for the code.
+The ⟨numebr→number⟩ you entered is not correct.
+The ⟨amout→amount⟩ will be transferred soon.
+The ⟨ammount→amount⟩ is shown on your statement.
+Your ⟨statment→statement⟩ is now available.
+The ⟨monthy→monthly⟩ wage was updated.
+The ⟨salery→salary⟩ certificate does not match.
+The ⟨sallary→salary⟩ shown is correct.
+Your ⟨recrod→record⟩ has been corrected.
+Our ⟨recods→records⟩ show two employers.
+The ⟨histroy→history⟩ of your account is complete.
+I have ⟨escalted→escalated⟩ your case.
+The ⟨complant→complaint⟩ was forwarded.
+Your ⟨complaitn→complaint⟩ has been closed.
+The ⟨departmnet→department⟩ will reply soon.
+The ⟨specialst→specialist⟩ team will contact you.
+We ⟨appreciat→appreciate⟩ your patience.
+We ⟨apreciate→appreciate⟩ your feedback.
+Thank you for your ⟨patiance→patience⟩.
+Thank you for your ⟨pateince→patience⟩.
+Thank you for your ⟨undrestanding→understanding⟩.
+I ⟨undersatnd→understand⟩ your concern.
+We ⟨apologiez→apologize⟩ for the delay.
+Sorry for the ⟨incovenience→inconvenience⟩.
+The ⟨inconvinience→inconvenience⟩ is regretted.
+The page is ⟨temporarly→temporarily⟩ unavailable.
+The ⟨maintainance→maintenance⟩ will finish tonight.
+The ⟨maintenence→maintenance⟩ window is short.
+Please try again ⟨latr→later⟩ today.
+The ⟨sytem→system⟩ is working again.
+The ⟨systme→system⟩ was updated last night.
+The ⟨servcie→service⟩ is available online.
+This ⟨sevice→service⟩ is free of charge.
+The ⟨portla→portal⟩ is available in Arabic and English.
+Please sign in to the ⟨protal→portal⟩.
+The ⟨websit→website⟩ has a guide.
+The ⟨webiste→website⟩ was updated.
+The ⟨applicaiton→application⟩ is available for phones.
+Your ⟨profle→profile⟩ page shows your details.
+Please ⟨complte→complete⟩ the form.
+The request is now ⟨compelte→complete⟩.
+The issue is ⟨resloved→resolved⟩.
+The problem was ⟨reslved→resolved⟩ this morning.
+Please ⟨submti→submit⟩ the request again.
+The form was ⟨submited→submitted⟩ successfully.
+The request was ⟨approvd→approved⟩.
+Your objection was ⟨accpeted→accepted⟩.
+Your request was ⟨rejectd→rejected⟩.
+The ⟨desicion→decision⟩ was sent by email.
+The ⟨comittee→committee⟩ will review your file.
+The ⟨commitee→committee⟩ meets every week.
+The ⟨medcial→medical⟩ report is missing.
+The ⟨hosptial→hospital⟩ must stamp the report.
+The ⟨injurey→injury⟩ was reported.
+The ⟨disabilty→disability⟩ was assessed.
+The ⟨paymnets→payments⟩ will resume next month.
+The ⟨transfered→transferred⟩ amount is shown.
+The ⟨tranfer→transfer⟩ takes two days.
+Your bank ⟨acount→account⟩ was verified.
+The ⟨ballance→balance⟩ is correct.
+The ⟨invocie→invoice⟩ is paid.
+The penalty was waived. Please check the ⟨penalities→penalties⟩ page.
+The ⟨deadlien→deadline⟩ is approaching.
+The ⟨schedual→schedule⟩ is on the website.
+The ⟨availble→available⟩ appointments are listed.
+The service is ⟨avaiable→available⟩ now.
+⟨Unfortunatly→Unfortunately⟩, the request was not approved.
+⟨Unfortunetly→Unfortunately⟩, the file is not readable.
+⟨Additonal→Additional⟩ documents are required.
+⟨Recieving→Receiving⟩ the code may take a minute.
+The ⟨begining→beginning⟩ of the month is the due date.
+The amount is paid ⟨immediatly→immediately⟩.
+Please respond ⟨immediatley→immediately⟩.
+We will contact you ⟨shorlty→shortly⟩.
+Please keep the ⟨refrence→reference⟩ number.
+The ⟨referance→reference⟩ number is on the letter.
+We ⟨recomend→recommend⟩ updating the application.
+We ⟨reccommend→recommend⟩ paying before the due date.
+The ⟨responsability→responsibility⟩ lies with the employer.
+The ⟨occassion→occasion⟩ of the holiday changes our hours.
+The ⟨publically→publicly⟩ available guide explains the steps.
+Your file was ⟨succesfully→successfully⟩ updated.
+The request was ⟨sucessfully→successfully⟩ submitted.
+The ⟨knowlege→knowledge⟩ base has the answer.
+Please ⟨recieve→receive⟩ my apologies.
+Our team will ⟨folow→follow⟩ up with you.
+Please ⟨contcat→contact⟩ us again if needed.
+Have a ⟨wonderfull→wonderful⟩ day.

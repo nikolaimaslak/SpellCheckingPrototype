@@ -1,0 +1,64 @@
+# SYNTHETIC agent messages mixing Arabic and English, as agents write them:
+# Arabic text with English product names, service names and technical
+# terms, and English text with Arabic names and terms. Not real GOSI content.
+# Excluded spans (digits, URLs, emails, substitution fields) are in ⟦…⟧.
+يمكنك تسجيل الدخول عبر Nafath ثم اختيار خدمة تحديث البيانات.
+يرجى رفع الملف بصيغة PDF أو JPEG من صفحة المرفقات.
+تظهر لك رسالة Error عند انتهاء الجلسة، يرجى تسجيل الدخول مرة أخرى.
+يرجى استخدام متصفح Chrome أو Safari بأحدث إصدار.
+أرسلنا رمز OTP إلى رقم جوالك المسجل لدينا.
+يمكنك السداد عبر SADAD باستخدام رقم الفاتورة الظاهر في البوابة.
+للدخول إلى حساب المنشأة، اختر Employer Services من القائمة الرئيسية.
+رقم حالتك في النظام هو ⟦CS-104233⟧ ويمكنك متابعته عبر الموقع.
+يرجى إرسال صورة Screenshot لرسالة الخطأ حتى نتمكن من مساعدتك.
+تم تحديث بياناتك في GOSI بنجاح، وستظهر في Absher خلال يوم عمل.
+يسجل العمال المنزليون عبر منصة Musaned وليس عبر بوابة المنشآت.
+يمكنك تحميل التطبيق من App Store أو Google Play.
+بعد تثبيت التطبيق، اختر Sign in ثم أدخل رقم الهوية الوطنية.
+تصل الإشعارات عبر SMS والبريد الإلكتروني معاً.
+يرجى التأكد من تفعيل الإشعارات في إعدادات الجوال.
+لا يدعم النظام حالياً متصفح Internet Explorer، ننصح باستخدام Edge بدلاً منه.
+أرسلت لك رابط الدليل عبر البريد الإلكتروني ⟦support@gosi.gov.sa⟧.
+يمكنك الاطلاع على الأسئلة الشائعة في صفحة FAQ على الموقع.
+تمت إحالة طلبك إلى فريق IT لمراجعة المشكلة التقنية.
+رقم الطلب ⟦REQ-55210⟧ قيد المعالجة لدى قسم Pensions.
+عند ظهور رسالة Session expired، يرجى إعادة تحميل الصفحة.
+يمكنك حفظ الشهادة بصيغة PDF أو طباعتها مباشرة.
+نستخدم Nafath للتحقق من الهوية بدلاً من رمز التحقق التقليدي.
+اختر Upload documents ثم حدد الملفات المطلوبة من جهازك.
+إذا كنت تستخدم VPN، يرجى إيقافه مؤقتاً ثم المحاولة مجدداً.
+تعمل الخدمة على iPhone وأجهزة Android بالكفاءة نفسها.
+للتواصل مع فريق الدعم الفني، اضغط على Contact us أسفل الصفحة.
+Your request has been sent to the التأمينات team for review.
+Please enter your name exactly as it appears on your Iqama.
+Dear Mr. Al-Ghamdi, thank you for contacting us about your مكافأة نهاية الخدمة request.
+The document is called شهادة الاشتراك, and you can download it from your account.
+Please write the reason for the objection in Arabic or English.
+The Arabic name on your file is محمد عبدالرحمن, which matches your ID.
+You can choose العربية or English from the language menu at the top of the page.
+Domestic workers are registered through Musaned, which is called مساند in Arabic.
+The service named تحديث البيانات lets you update your address and contact details.
+If you see the message رقم الهوية غير صحيح, please check the number and try again.
+Our working hours are from Sunday to Thursday, and the chat is available on weekends too.
+شكراً لك، Thank you for your patience.
+مرحباً، Hello and welcome to our chat service.
+يرجى تأكيد البيانات، then press Submit to complete the request.
+تم استلام طلبك successfully، وسيتم إشعارك عند الانتهاء.
+Please check the section called الطلبات السابقة to see your previous requests.
+The certificate shows both the Gregorian and the Hijri dates.
+Your employer, شركة الأفق للتقنية, has updated your wage.
+Please visit the فرع الرياض branch with your original documents.
+عزيزي ⟦$(user.firstName)⟧، your request has been completed.
+Dear ⟦$(user.firstName)⟧، تم إكمال طلبك بنجاح.
+الرابط هو ⟦https://www.gosi.gov.sa/en⟧ للنسخة الإنجليزية من الموقع.
+يمكنك مراسلتنا على ⟦info@gosi.gov.sa⟧ أو عبر نموذج Contact us.
+أرى في النظام أن حالة الطلب Pending، أي أنه ما زال قيد المراجعة.
+عندما تتغير الحالة إلى Approved، سيصلك إشعار فوراً.
+إذا ظهرت الحالة Rejected، يمكنك الاطلاع على السبب من تفاصيل الطلب.
+تم تحويل المحادثة إلى زميلي في فريق Customer Care.
+يرجى كتابة رقم IBAN كاملاً دون مسافات.
+تحقق من أن رقم IBAN يبدأ بالحرفين المخصصين للمملكة.
+يمكن تغيير لغة الرسائل النصية من Settings في التطبيق.
+I have forwarded your message to the فريق المعاشات, and they will reply by email.
+The mobile application is available in Arabic and English, and both versions offer the same services.
+يرجى إدخال البريد الإلكتروني بأحرف إنجليزية صغيرة.

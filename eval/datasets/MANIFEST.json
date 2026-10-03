@@ -1,0 +1,121 @@
+{
+  "datasets": [
+    {
+      "file": "clean-en.jsonl",
+      "kind": "clean",
+      "lang": "en",
+      "source": "SYNTHETIC agent messages written for this prototype by Claude, from eval/datasets/src/clean-en.txt (npm run eval:build); includes the synthetic texts of server/data/canned.json and kb.json; human review: pending",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "2072c429e1cb03e6966dafec6f49cba7f5d4211d6b4c27e595b40745fb95b3bc",
+      "customWords": "custom-words.txt"
+    },
+    {
+      "file": "clean-ar.jsonl",
+      "kind": "clean",
+      "lang": "ar",
+      "source": "SYNTHETIC agent messages written for this prototype by Claude, from eval/datasets/src/clean-ar.txt (npm run eval:build); includes the synthetic texts of server/data/canned.json and kb.json; human review: pending",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "6669fb4ebadbcc3cb38ad6a8b427a9c45c75261f2e010077950c0ff26c6df67d",
+      "customWords": "custom-words.txt"
+    },
+    {
+      "file": "clean-mixed.jsonl",
+      "kind": "clean",
+      "lang": "mixed",
+      "source": "SYNTHETIC agent messages written for this prototype by Claude, from eval/datasets/src/clean-mixed.txt (npm run eval:build); includes the synthetic texts of server/data/canned.json and kb.json; human review: pending",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "9054abaae03c855e9f9ece5103dc613fb0245944658419e5cf44f56806a40605",
+      "customWords": "custom-words.txt"
+    },
+    {
+      "file": "typos-en.jsonl",
+      "kind": "typos",
+      "lang": "en",
+      "source": "Curated misspellings in SYNTHETIC carrier messages, written by Claude, from eval/datasets/src/typos-en.txt (npm run eval:build); seeded from test/autocorrect/corpus.test.ts; every typo checked to be a non-word; human review: pending",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "24372e1f62e8205f1109be04fcaf5f4eaf48e36de8ea0ffaab9292f31ea0fb6d",
+      "customWords": "custom-words.txt"
+    },
+    {
+      "file": "typos-ar.jsonl",
+      "kind": "typos",
+      "lang": "ar",
+      "source": "Curated misspellings in SYNTHETIC carrier messages, written by Claude, from eval/datasets/src/typos-ar.txt (npm run eval:build); seeded from test/autocorrect/corpus.test.ts; every typo checked to be a non-word; human review: pending",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "1d7165866d5f3788abf4fd28df950ed428daaff34a8f66aa7a584013187713c4",
+      "customWords": "custom-words.txt"
+    },
+    {
+      "file": "injected-en.jsonl",
+      "kind": "injected",
+      "lang": "en",
+      "source": "Generated from eval/datasets/clean-en.jsonl by the misspelling inserter",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "bba5baa0d1679e1d17d0a016379076e662d3af583b66dc4d8b131a25fa6e4f0d",
+      "customWords": "custom-words.txt",
+      "generator": {
+        "command": "npm run eval:inject -- eval/datasets/clean-en.jsonl --lang en --seed 1 --out eval/datasets/injected-en.jsonl",
+        "version": 1,
+        "seed": 1,
+        "from": "eval/datasets/clean-en.jsonl",
+        "options": {
+          "types": "all",
+          "rate": 0.08
+        }
+      }
+    },
+    {
+      "file": "injected-ar.jsonl",
+      "kind": "injected",
+      "lang": "ar",
+      "source": "Generated from eval/datasets/clean-ar.jsonl by the misspelling inserter",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "48a6a81c113213cd4172ed7264fe9c0521715fe739edeada08f82b349c941bca",
+      "customWords": "custom-words.txt",
+      "generator": {
+        "command": "npm run eval:inject -- eval/datasets/clean-ar.jsonl --lang ar --seed 2 --out eval/datasets/injected-ar.jsonl",
+        "version": 1,
+        "seed": 2,
+        "from": "eval/datasets/clean-ar.jsonl",
+        "options": {
+          "types": "all",
+          "rate": 0.08
+        }
+      }
+    },
+    {
+      "file": "words-en.tsv",
+      "kind": "wordlist",
+      "lang": "en",
+      "source": "Words of the clean en and mixed datasets that the engine accepts, by frequency",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "4b17c223b9a9d30c48f44f6d6fe67588b8a8955fc3aff1b8c2d22724b0717363",
+      "generator": {
+        "command": "npm run eval:words -- eval/datasets/clean-en.jsonl eval/datasets/clean-mixed.jsonl --lang en --out eval/datasets/words-en.tsv",
+        "version": 1,
+        "seed": 0,
+        "from": "eval/datasets/clean-en.jsonl, eval/datasets/clean-mixed.jsonl",
+        "options": {
+          "lang": "en"
+        }
+      }
+    },
+    {
+      "file": "words-ar.tsv",
+      "kind": "wordlist",
+      "lang": "ar",
+      "source": "Words of the clean ar and mixed datasets that the engine accepts, by frequency",
+      "license": "Project-internal synthetic data (no third-party content)",
+      "sha256": "116eade6b1d37283a0a26f0449e11d4e7c0ace2f5fc83cdaee9447f72a5083e7",
+      "generator": {
+        "command": "npm run eval:words -- eval/datasets/clean-ar.jsonl eval/datasets/clean-mixed.jsonl --lang ar --out eval/datasets/words-ar.tsv",
+        "version": 1,
+        "seed": 0,
+        "from": "eval/datasets/clean-ar.jsonl, eval/datasets/clean-mixed.jsonl",
+        "options": {
+          "lang": "ar"
+        }
+      }
+    }
+  ]
+}

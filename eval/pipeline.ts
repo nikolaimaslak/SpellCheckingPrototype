@@ -1,0 +1,204 @@
+// The composer's Tier 1 spelling path, run on plain messages: tokenizer
+// (exclusions, per-word language), Hunspell with the committed dictionaries,
+// the custom dictionary, and the auto-replace confidence rule. Mirrors
+// src/composer/attach.ts as if the message were typed from start to end:
+// auto-replacement is decided for the word each typed boundary completes,
+// on the text typed so far, and underlines on the finished text. A message
+// without a final boundary gets one, so its last word counts as completed
+// (the worst case for corrupting correct words).
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { JSDOM } from 'jsdom';
+import { decide } from '../src/autocorrect/confidence';
+import { loadHunspell } from '../src/spell/engine';
+import { createHandler, type DictionaryLoader } from '../src/spell/handler';
+import type { Lang, ResultByType, SpellCommand, SpellRequest } from '../src/spell/protocol';
+import { buildTextMap, languageOf, tokenize, type Token } from '../src/tokenizer';
+
+export interface TokenResult {
+  word: string;
+  lang: Lang;
+  /** Flat-text offsets, [start, end). */
+  start: number;
+  end: number;
+  /** Underlined (or auto-replaced): the engine rejects the word. */
+  flagged: boolean;
+  /** The engine's suggestions for a flagged word, in order. */
+  suggestions: string[];
+  /** The auto-replacement the composer would make in `auto` mode, if any. */
+  replacement: string | null;
+  /** Engine time for the correctness check and, when flagged, for suggestions. */
+  checkMs: number;
+  suggestMs: number | null;
+}
+
+/**
+ * An auto-replacement made while typing, of a word that is not a word of the
+ * finished text: "gosi" completed by the "." of "info@gosi.gov.sa" before the
+ * address is recognizable as one.
+ */
+export interface TransientReplacement {
+  word: string;
+  lang: Lang;
+  start: number;
+  end: number;
+  replacement: string;
+}
+
+export interface PipelineResult {
+  tokens: TokenResult[];
+  transient: TransientReplacement[];
+}
+
+export interface PipelineOptions {
+  languages?: Lang[];
+  customWords?: string[];
+}
+
+export interface Pipeline {
+  run(text: string): Promise<PipelineResult>;
+  /** Whether the engine accepts a single word as correct. */
+  isCorrect(word: string, lang: Lang): Promise<boolean>;
+  /** The engine's suggestions for a word. */
+  suggest(word: string, lang: Lang): Promise<string[]>;
+}
+
+export const loadDictionary: DictionaryLoader = async (lang) =>
+  lang === 'en'
+    ? { aff: readFileSync('node_modules/dictionary-en/index.aff'), dic: readFileSync('node_modules/dictionary-en/index.dic') }
+    : { aff: readFileSync('dicts/ar/ar.aff'), dic: readFileSync('dicts/ar/ar.dic') };
+
+const WASM = resolve('src/spell/wasm/hunspell.wasm');
+/** The engine runtime, located on disk even where import.meta.url is an http URL (jsdom tests). */
+export const loadRuntime = () => loadHunspell({ wasmBinary: readFileSync(WASM), locateFile: () => WASM });
+
+// As src/autocorrect/trigger.ts: one typed boundary character completes the
+// word before it, if only 1–3 separator characters lie between them.
+const BOUNDARY_CHAR = /^[\s\p{P}]$/u;
+const GAP = /^[\s\p{P}￼]{1,3}$/u;
+
+const lastWhitespaceBefore = (text: string, index: number) => {
+  for (let i = Math.min(index, text.length) - 1; i >= 0; i--) if (/\s/u.test(text[i])) return i;
+  return -1;
+};
+
+let dom: JSDOM | undefined;
+
+/** A DOM for the tokenizer: the test environment's own, or a private jsdom. */
+function documentForTokenizer(): Document {
+  if (typeof document !== 'undefined') return document;
+  dom ??= new JSDOM('<!doctype html><body></body>');
+  // buildTextMap reads Node.TEXT_NODE and friends from the global scope.
+  (globalThis as { Node?: unknown }).Node ??= dom.window.Node;
+  return dom.window.document;
+}
+
+export async function createPipeline(options: PipelineOptions = {}): Promise<Pipeline> {
+  const { languages = ['en', 'ar'], customWords = [] } = options;
+  const handle = createHandler(loadRuntime, loadDictionary);
+  let id = 0;
+  const request = async <C extends SpellCommand>(command: C): Promise<ResultByType[C['type']]> => {
+    const reply = await handle({ ...command, id: ++id } as SpellRequest);
+    if (!reply.ok) throw new Error(reply.error);
+    return reply.result as ResultByType[C['type']];
+  };
+
+  const load = await request({ type: 'load', langs: languages });
+  if (load.failed.length) throw new Error(`dictionary failed to load: ${load.failed.map((f) => `${f.lang} (${f.reason})`).join(', ')}`);
+  // As the spell service does: each custom word goes to the engine of its script.
+  for (const lang of languages) {
+    for (const word of customWords.filter((w) => !/\s/.test(w) && languageOf(w) === lang)) await request({ type: 'add', lang, word });
+  }
+  const custom = new Set(customWords);
+  const ctx = { ignored: new Set<string>(), customWords: custom };
+  const doc = documentForTokenizer();
+
+  const tokensOf = (text: string): Token[] => {
+    const el = doc.createElement('div');
+    el.textContent = text;
+    return tokenize(buildTextMap(el)).filter((t) => languages.includes(t.lang));
+  };
+
+  const timed = async <T>(work: () => Promise<T>): Promise<[T, number]> => {
+    const begin = performance.now();
+    const result = await work();
+    return [result, performance.now() - begin];
+  };
+
+  const misspelled = async (word: string, lang: Lang) => {
+    const [checked, ms] = await timed(() => request({ type: 'check', words: { [lang]: [word] } }));
+    return { flagged: (checked.misspelled[lang] ?? []).includes(word), ms };
+  };
+
+  // Suggestions are the engine's slow, time-limited call (KI-1). Within one
+  // message each word gets them once: the composer, too, decides on the list
+  // it got at the boundary.
+  type Suggested = { list: string[]; ms: number };
+  const suggestOnce = async (cache: Map<string, Promise<Suggested>>, word: string, lang: Lang): Promise<Suggested> => {
+    const key = `${lang}:${word}`;
+    if (!cache.has(key)) cache.set(key, timed(() => request({ type: 'suggest', lang, word })).then(([list, ms]) => ({ list, ms })));
+    return cache.get(key)!;
+  };
+
+  /** The composer's auto-replacement for a completed word (attach.ts autoCorrect). */
+  const autoReplacement = async (t: Token, cache: Map<string, Promise<Suggested>>): Promise<string | null> => {
+    if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return null;
+    return decide(t.text, t.lang, (await suggestOnce(cache, t.text, t.lang)).list, ctx);
+  };
+
+  return {
+    isCorrect: (word, lang) => request({ type: 'spell', lang, word }),
+    suggest: (word, lang) => request({ type: 'suggest', lang, word }),
+    async run(text) {
+      const typed = text.length && BOUNDARY_CHAR.test([...text].at(-1)!) ? text : `${text} `;
+
+      // Typing order: each boundary completes at most the word just before it.
+      // Exclusion patterns never span whitespace, so the text typed so far can
+      // be tokenized from the last whitespace before the possible word (which
+      // ends at most 3 characters back) with the same result.
+      const completed = new Map<string, Token>();
+      for (let i = 0; i < typed.length; i++) {
+        if (!BOUNDARY_CHAR.test(typed[i])) continue;
+        const from = lastWhitespaceBefore(typed, i - 3) + 1;
+        const window = typed.slice(from, i + 1);
+        const last = tokensOf(window).at(-1);
+        if (last && GAP.test(window.slice(last.end))) {
+          const start = from + last.start;
+          const end = from + last.end;
+          completed.set(`${start}:${end}:${last.text}`, { ...last, start, end });
+        }
+      }
+      const suggested = new Map<string, Promise<Suggested>>();
+      const replacements = new Map<string, string | null>();
+      for (const [key, t] of completed) replacements.set(key, await autoReplacement(t, suggested));
+
+      const tokens: TokenResult[] = [];
+      const final = new Set<string>();
+      for (const t of tokensOf(text)) {
+        const key = `${t.start}:${t.end}:${t.text}`;
+        final.add(key);
+        const { flagged, ms: checkMs } = await misspelled(t.text, t.lang);
+        let suggestions: string[] = [];
+        let suggestMs: number | null = null;
+        if (flagged) ({ list: suggestions, ms: suggestMs } = await suggestOnce(suggested, t.text, t.lang));
+        tokens.push({
+          word: t.text,
+          lang: t.lang,
+          start: t.start,
+          end: t.end,
+          flagged,
+          suggestions,
+          replacement: replacements.get(key) ?? null,
+          checkMs,
+          suggestMs,
+        });
+      }
+      const transient: TransientReplacement[] = [];
+      for (const [key, t] of completed) {
+        const replacement = replacements.get(key);
+        if (replacement && !final.has(key)) transient.push({ word: t.text, lang: t.lang, start: t.start, end: t.end, replacement });
+      }
+      return { tokens, transient };
+    },
+  };
+}

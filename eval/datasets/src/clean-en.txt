@@ -1,0 +1,310 @@
+# SYNTHETIC agent messages for the spelling benchmark: correct English, as a
+# careful agent would send it. Not real GOSI content, policies or figures.
+# One message per line. Spans that must never be checked (anything with a
+# digit, URLs, emails, substitution fields) are wrapped in ⟦…⟧ by hand.
+Good morning, and thank you for contacting us. How can I help you today?
+Hello ⟦$(user.firstName)⟧, thank you for reaching out. I will be happy to look into this for you.
+Thank you for your patience while I review your account details.
+Could you please confirm your national ID number so I can locate your record?
+I can see your registration was completed successfully, and your account is now active.
+Your contribution records are up to date, and the latest payment has been registered on your account.
+Your request has been received and will be processed shortly. You will be notified by text message once it is complete.
+I understand your concern, and I apologize for the inconvenience this has caused.
+Let me check the status of your request. This will only take a moment.
+I have escalated your case to the specialist team, and they will contact you directly.
+Your case number is ⟦CS-104233⟧. Please keep it for future reference.
+You can follow the progress of your request at any time through the online portal.
+For security reasons, I cannot share these details over chat. Please sign in through Absher to view them.
+The employer is responsible for registering employees within the required period after they join.
+Your employer has updated your monthly wage, and the new amount will appear on your next statement.
+If the wage shown on your record is incorrect, please ask your employer to submit a correction.
+We have received the documents you uploaded, and they are now under review.
+Unfortunately, the document you attached is not readable. Could you please upload a clearer copy?
+Please make sure the file is in PDF format and smaller than ⟦5⟧ MB.
+I have forwarded your complaint to the relevant department, and you should receive a response within ⟦5⟧ working days.
+Is there anything else I can help you with today?
+Thank you for contacting GOSI. Have a wonderful day.
+Your pension will be paid on the usual date this month.
+The pension amount is calculated based on your average salary and the number of years of contributions.
+To apply for early retirement, you will need to submit the application through the online services.
+Before submitting the application, please make sure that your bank details are correct.
+Your bank account was verified successfully, and future payments will be transferred to it.
+I noticed that the bank details on your file belong to another person. Please update them to an account in your own name.
+You can update your contact information from the profile page after signing in.
+We sent a verification code to the mobile number registered with us.
+If you did not receive the code, please wait a few minutes and request it again.
+I am sorry, but I am not able to change your date of birth through chat. This requires an official document.
+Please visit the nearest branch with your original identification document to complete the update.
+You can book an appointment at the branch through the website to avoid waiting.
+Our branches are open from Sunday to Thursday during official working hours.
+The service is temporarily unavailable due to scheduled maintenance. Please try again later.
+We apologize for the delay. Our systems are experiencing a high volume of requests today.
+Your certificate of contributions is ready, and you can download it from your account.
+The certificate includes all periods of registration and the wages reported by your employers.
+If a period is missing from the certificate, please contact your previous employer first.
+Your request for a refund has been approved, and the amount will be transferred within ⟦10⟧ working days.
+I can confirm that no additional fees are required for this service.
+The unemployment benefit is available to insured members who lose their job for reasons beyond their control.
+To be eligible, you must have contributed for a minimum period before the end of your employment.
+Please submit your application within the required period after your contract ends.
+Your application for unemployment benefit is currently being reviewed by the committee.
+I have checked your file, and your application meets the eligibility conditions.
+Unfortunately, your application was not approved because the minimum contribution period was not met.
+You have the right to appeal this decision through the online portal.
+Occupational hazard coverage protects you against work injuries and occupational diseases.
+If you were injured at work, your employer must report the injury as soon as possible.
+The medical committee will review your report and decide on the compensation.
+Your employer reported the work injury, and your file has been sent to the medical committee.
+Please attend the medical examination at the scheduled time and bring all your medical reports.
+Compensation for temporary disability is paid for the period you are unable to work.
+I understand that this is a difficult time, and we are here to support you.
+Could you please describe what happened when you tried to submit the form?
+Which browser are you using? Some features work best with the latest version.
+Please clear your browser cache and try signing in again.
+If the problem continues, please send us a screenshot of the error message.
+Thank you for the screenshot. I can see the issue, and I am reporting it to our technical team.
+The technical team has resolved the issue. Could you please try again now?
+I am glad to hear that everything is working now.
+You can find more information on our website at ⟦https://www.gosi.gov.sa⟧.
+For employer services, please visit ⟦https://www.gosi.gov.sa/en/employers⟧ and sign in with your establishment account.
+You can also email us at ⟦info@gosi.gov.sa⟧ with your request and supporting documents.
+Please do not share your password or verification code with anyone, including our staff.
+We will never ask for your password by phone, chat or email.
+If you suspect that someone has accessed your account, please change your password immediately.
+Your account has been locked after several unsuccessful attempts. It will be unlocked automatically after one hour.
+I have reset your access, and you should be able to sign in now.
+The establishment must pay the contributions by the fifteenth day of the following month.
+Late payment results in a penalty, so we recommend paying before the due date.
+You can pay the contributions through SADAD using the invoice number shown on the portal.
+The invoice number is ⟦7731045⟧, and the amount due is shown on the payment page.
+Your payment was received, and the invoice is now marked as paid.
+If you paid twice by mistake, you can request a refund of the extra amount.
+To register a new employee, please enter the national ID number and the start date of the contract.
+Non-Saudi employees are registered using their Iqama number.
+The employee will receive a text message confirming the registration.
+If an employee leaves your establishment, please register the end of service promptly.
+The end of service date cannot be earlier than the last month for which contributions were paid.
+I can see that the employee is still registered with your establishment.
+Would you like me to explain how to register the end of service?
+Domestic workers are registered through the Musaned platform.
+Your question has been noted, and I will make sure it reaches the right team.
+I am transferring you to a colleague who specializes in pension matters. Please stay with us.
+Thank you for waiting. My colleague will continue the conversation with you.
+Hello, my name is Sara, and I will be assisting you from now on.
+I have read the previous messages, so you do not need to repeat your question.
+Dear ⟦$(user.firstName)⟧, your request ⟦REQ-55210⟧ has been completed.
+Dear customer, we would like to inform you that your annual statement is now available.
+The annual statement shows your contributions, wages and periods of registration for the past year.
+Please review your statement carefully and let us know if anything is incorrect.
+We value your feedback. You may receive a short survey after this conversation.
+Thank you for your kind words. I am happy that I could help.
+I understand your frustration, and I will do my best to resolve this quickly.
+I am afraid I need a little more information before I can proceed.
+Could you please tell me the name of your current employer?
+Could you please confirm the month in which you started working there?
+According to our records, your current employer registered you last year.
+The registration date on your record matches the date in your employment contract.
+If your employer did not register you, you can submit a complaint through the portal.
+We will contact the employer and ask them to correct the registration.
+The investigation may take some time, but we will keep you informed of any progress.
+Your complaint has been closed after the employer corrected your record.
+Please note that the inspection team may visit the establishment to verify the information.
+Your pension has been suspended because we have not received the annual proof of life.
+To reactivate your pension, please confirm your status through the online service.
+Once the confirmation is received, the suspended payments will be released.
+The beneficiaries of a deceased member may be entitled to a survivors' pension.
+To apply, the beneficiaries need to provide the death certificate and proof of relationship.
+I am very sorry for your loss. Please let me guide you through the required steps.
+The survivors' pension is divided among the eligible family members according to the regulations.
+Your daughter will continue to receive her share until she marries or starts working.
+We have updated the list of beneficiaries on the file.
+Your request to add a beneficiary is pending the approval of the supervisor.
+Please allow up to ⟦3⟧ working days for the supervisor to review the request.
+I have added a note to your file so that any colleague can see what we discussed today.
+You will receive a confirmation email at ⟦m.alqahtani@example.com⟧ shortly.
+Please check your spam folder if you cannot find the email.
+The link in the email is valid for twenty-four hours.
+If the link has expired, you can request a new one from the sign-in page.
+We are unable to process requests submitted on behalf of another person without a valid power of attorney.
+Please upload the power of attorney together with the identification documents of both parties.
+The agent who submitted the request must have an active account on the portal.
+Your appointment is confirmed for Tuesday morning at the Riyadh branch.
+Please arrive ten minutes early and bring your national ID card.
+If you need to cancel the appointment, please do so at least one day in advance.
+We have extended our working hours during the holiday season to serve you better.
+Our chat service is available every day, including weekends.
+Due to the public holiday, responses may take slightly longer than usual.
+Mr. Abdullah, thank you for your patience. Your issue has been resolved.
+Ms. Fatimah, I have sent you the form you asked for.
+I have spoken with the pensions team, and they confirmed that your calculation is correct.
+The difference in the amount is due to the deduction of the annual adjustment.
+The adjustment was applied because of a change in the reported wage last year.
+If you disagree with the calculation, you can request a review.
+The review will be carried out by an independent committee.
+You will be notified of the result by text message and email.
+Please make sure your mobile number is up to date so you do not miss any notifications.
+You can now sign in with Nafath using your national ID number.
+The Nafath application will ask you to choose the number shown on the screen.
+If you have trouble with Nafath, please contact their support team directly.
+Your establishment account is linked to the commercial registration number ⟦1010456789⟧.
+The establishment owner can add other users and assign them permissions.
+Each user should have their own account, and sharing credentials is not allowed.
+I can see that the user permissions were updated this morning.
+The changes will take effect the next time the user signs in.
+Thank you for contacting us again. I can see that your previous request is still open.
+I will add your new message to the same request so that everything is in one place.
+We kindly ask you not to submit the same request more than once, as this may delay processing.
+Your duplicate request has been cancelled, and the original request remains active.
+The salary certificate you uploaded does not match the wage reported by your employer.
+Please ask your employer to confirm the correct wage in writing.
+Once we receive the confirmation, we will update your record accordingly.
+Thank you for providing the information. Everything is now in order.
+I hope this answers your question. Please let me know if anything is unclear.
+Is there anything else you would like to know about your pension?
+Thank you for your time, and have a pleasant evening.
+Good afternoon. I see that you contacted us earlier about your registration.
+The registration issue was caused by a mismatch between your name in Arabic and in English.
+We have corrected the spelling of your name to match your passport.
+From now on, all documents will show the corrected name.
+Unfortunately, we cannot accept photographs of documents taken at an angle.
+Please scan the document or take a photograph from directly above it in good light.
+Your request was rejected because a required attachment was missing.
+You can submit the request again with all the attachments listed on the service page.
+The list of required documents is available on the service page under the requirements section.
+The insured person must be at least sixty years old to receive the old age pension.
+Members who have completed the required contribution period can request their pension earlier in some cases.
+I recommend reading the guide on the website before submitting your application.
+We will send you a reminder before your appointment.
+Your satisfaction is important to us, and we appreciate your patience.
+Our records show that you have contributions with two employers during the same month.
+This is acceptable if you worked for both employers at the same time.
+If you only worked for one of them, please let us know so we can investigate.
+We have received a report from your employer stating that your contract ended last month.
+If this information is not correct, you can object within the specified period.
+Your objection has been registered, and the employer will be asked to provide evidence.
+I am happy to confirm that your objection was accepted.
+Hello Khalid, welcome back. How can I help you this evening?
+Mohammed, I have checked your file and found the payment you mentioned.
+Noura, thank you for your message. I will look into it right away.
+Thank you, Omar. I have updated your address as requested.
+Dear Aisha, your certificate has been sent to your registered email address.
+Our team is working hard to process all requests as quickly as possible.
+Please accept our apologies for any confusion caused by the previous message.
+The information in the previous message was incomplete, and here are the correct details.
+Thank you for bringing this to our attention.
+
+# From server/data/canned.json and server/data/kb.json (also synthetic).
+Your contribution records are up to date, and the latest payment has been registered on your account.
+Your request has been received and will be processed within ⟦3⟧ working days; you will be notified by SMS once it is complete.
+To complete your request, please upload a copy of your national ID and the employer's salary certificate through the online portal.
+Pension eligibility depends on your total contribution period and age; I can check your current eligibility if you share your registration number.
+You can update your bank account details from your profile page; changes take effect from the next payment cycle.
+Thank you for contacting us; is there anything else I can help you with today?
+Early retirement eligibility
+Early retirement is available to members with at least ⟦25⟧ years of contributions. The pension is calculated on the average salary of the last ⟦24⟧ months. Applications are submitted online and reviewed within ⟦10⟧ working days.
+Survivor benefits for dependents
+When a member passes away, eligible dependents may receive a survivor pension. Dependents must submit the death certificate and proof of relationship. The survivor pension is shared among eligible dependents.
+Reporting a work injury
+Employers must report a work injury within ⟦3⟧ working days of the incident. The injured member receives a daily allowance during the treatment period. Medical reports should be uploaded through the employer portal.
+Unemployment insurance claims
+Members who lose their job involuntarily can claim unemployment insurance within ⟦90⟧ days. The benefit is paid monthly for up to ⟦12⟧ months. Claimants must keep their job-seeker profile active.
+Registering a new employee
+Employers register new employees within ⟦15⟧ days of their start date. Registration requires the national ID and the employment contract. Contributions start from the first month of employment.
+Requesting a contribution certificate
+Members can download a contribution certificate from the online portal at any time. The certificate lists all registered employers and contribution periods. It is accepted by banks and government agencies.
+
+# Longer replies, as written in the email composer.
+Dear Mr. Al-Harbi, thank you for your email regarding your pension calculation. We have reviewed your file carefully, and the amount shown on your latest statement is correct. The calculation takes into account your average wage over the final years of service and the total number of months in which contributions were paid. If you would like a detailed breakdown, please reply to this email and we will send it to you.
+Dear customer, we would like to remind you that the deadline for submitting the annual proof of life is approaching. Beneficiaries who do not confirm their status in time may have their payments suspended until the confirmation is received. You can confirm your status online in a few minutes, and no visit to the branch is required.
+Thank you for your inquiry about voluntary registration. Saudi citizens who are not covered by a mandatory scheme may register voluntarily and pay contributions themselves. This allows them to continue building their pension entitlement during periods without employment. You can find the conditions and the application form on our website.
+We have received your request to transfer your contributions from the previous scheme. The transfer requires confirmation from the other organization, which usually takes several weeks. We will contact you as soon as the confirmation arrives, and you will not need to take any further action in the meantime.
+I would like to clarify the difference between the two services you mentioned. The certificate of contributions confirms the periods for which contributions were paid, while the salary statement shows the wages reported by your employer. Banks usually ask for the certificate, whereas some government agencies prefer the statement.
+Following our conversation yesterday, I have checked with the pensions department. They confirmed that your file is complete and that the first payment will be issued at the beginning of next month. Please make sure that your bank account remains active, as returned payments may take longer to reissue.
+We regret to inform you that your request could not be completed because the employer has not yet registered the end of your previous contract. We have contacted the employer and asked them to correct the record. Once the correction is made, your request will be processed automatically.
+Thank you for your suggestion about the mobile application. I have shared it with the product team, who regularly review feedback from our customers. While I cannot promise a specific date, suggestions like yours help us improve our services.
+Your establishment has been selected for a routine inspection. The inspector will contact you to agree on a suitable date and will ask to see the employment contracts and payroll records. Inspections help us make sure that all employees are registered correctly and receive their entitlements.
+Please note that the penalty for late registration of employees is applied automatically by the system. If you believe the penalty was applied in error, you can submit an objection with supporting documents. Each objection is reviewed individually, and the decision will be sent to the establishment account.
+We understand that your employee was registered with the wrong occupation. The occupation can be corrected by the establishment through the employer portal under employee services. After the correction, the record will be updated within one working day.
+I have reviewed the history of your account and can see that three requests were submitted this month. Two of them were completed, and the third is waiting for an additional document. As soon as you upload the missing document, the request will continue to the next stage.
+Thank you for your patience while we investigated the missing payment. The payment was returned by your bank because the account had been closed. Please add a new bank account to your profile, and we will reissue the payment within the next payment cycle.
+We would like to inform you that our offices will be closed for the national holiday. Online services, including chat, will remain available throughout the holiday. Requests submitted during this period will be processed in the order they were received once our offices reopen.
+Your request to change the bank account has been put on hold for your protection. We noticed that the request was submitted shortly after a change to your mobile number. To continue, please confirm the request by signing in with Nafath.
+Dear Ms. Al-Otaibi, we have completed the review of your work injury file. The medical committee has determined a permanent partial disability, and you are entitled to a lump-sum compensation. The amount will be transferred to your registered bank account, and a letter explaining the decision has been sent to your address.
+I appreciate you taking the time to explain the situation in detail. Based on what you have described, the best option is to submit a correction request together with a letter from your employer. I have attached the guide that explains each step of the process.
+Please be aware that messages sent outside working hours will be answered on the next working day. If your matter is urgent, you may call our customer service number, which is available around the clock.
+To protect your personal information, we have masked part of your identification number in this conversation. Only the last digits are visible to our staff. This is a standard measure that applies to all customers.
+We noticed that you have not yet activated your online account. Activating your account gives you access to your statements, certificates and requests at any time. The activation takes only a few minutes and requires your national ID number and the mobile number registered with us.
+Thank you for confirming your details. I have now linked your account to the new mobile number, and all future notifications will be sent there. If you did not request this change, please contact us immediately.
+The contribution rate depends on the type of coverage and the nationality of the employee. Saudi employees are covered by the annuities, occupational hazards and unemployment insurance branches, while non-Saudi employees are covered by the occupational hazards branch only.
+Unfortunately, we are unable to accept the medical report because it does not include the stamp of the hospital. Please ask the hospital to stamp the report and upload it again. Reports without an official stamp cannot be reviewed by the medical committee.
+I can see that you are trying to register a domestic worker through the establishment portal. Domestic workers must be registered through the Musaned platform instead, which will forward the information to us automatically.
+Your request was submitted successfully, and the reference number has been sent to you by text message. You can use the reference number to follow up on your request through the website or the mobile application.
+Thank you for letting us know about the error on the website. I have reported the problem with the page, and our technical team is already working on it. In the meantime, you can complete the same service through the mobile application.
+Please do not worry about the message you received earlier. It was sent to all customers as part of a planned system update, and no action is required on your part.
+If your employer has stopped paying your wages, you can file a complaint with the labour office. Please note that we are responsible for registration and contributions, while wage disputes are handled by the labour office.
+We have noticed that your address is incomplete. A complete address helps us deliver official letters to you without delay. You can update your address from your profile in a few simple steps.
+Hello, and welcome to our chat service. My name is Faisal, and I will be glad to assist you. Before we begin, may I have your name, please?
+Thank you, I have found your account. I can see that your last contribution was paid two months ago. Has your employment ended, or have you moved to a new employer?
+I understand. When you join a new employer, they will register you, and your contributions will continue on the same account. You do not need to open a new account.
+That is correct. Your previous periods of contribution are kept in your record and will be included when your pension is calculated.
+I am sorry to hear that you have been waiting for a long time. I have checked the status of your request, and it is now with the final approval team. I have asked them to prioritize it, and you should receive an update within two working days.
+Thank you for your understanding. I have also added a note asking the team to contact you directly if they need anything else from you.
+The information you requested is confidential and can only be shared with the account holder. If you are acting on behalf of the account holder, please provide a valid power of attorney.
+We have received your power of attorney, and it has been verified. You can now submit requests on behalf of your father through your own account.
+Please note that the power of attorney must remain valid for the entire duration of the request. If it expires, you will need to upload a renewed copy.
+Our records show that your father's pension is paid to his account at the same bank. Would you like to change the account, or do you have a question about the payments?
+The change has been recorded. The next payment will be transferred to the new account, provided that the bank confirms the account details.
+Thank you for contacting us, and please accept our best wishes to your father.
+
+# Short chat turns and follow-ups.
+Sure, one moment please.
+Thank you. I am checking that for you now.
+Yes, that is correct.
+No problem at all.
+You are welcome. Take care.
+Could you please clarify what you mean by the second payment?
+I see. In that case, the payment you received was the annual adjustment.
+Would you like me to send you a link to the form?
+Here is the link to the form: ⟦https://www.gosi.gov.sa/forms/correction⟧.
+Please let me know once you have submitted it.
+Great, I can see your submission now.
+It looks like the page did not load correctly. Could you refresh it and try again?
+That error usually appears when the session has expired. Please sign in again.
+I have checked, and there are no outstanding amounts on your establishment account.
+Your establishment is compliant, and the compliance certificate can be printed from the portal.
+The compliance certificate is valid for one month and is renewed automatically while payments are up to date.
+I am afraid that request falls outside our responsibilities. You may want to contact the Ministry of Human Resources.
+We do not handle medical insurance. Please contact your insurance provider for that matter.
+Your registration with the previous employer ended on the date they reported.
+I will stay with you while you complete the steps, so feel free to ask if anything is unclear.
+Please choose the reason for the request from the list, and then attach the document.
+After you press submit, you will see a confirmation message with the request number.
+Perfect, the request has been submitted successfully.
+Thank you for confirming. I have closed the request as resolved.
+If you have any other questions in the future, we are always happy to help.
+We apologize, but the chat service will close shortly for maintenance. Please contact us again in an hour.
+Good evening. Thank you for waiting, and sorry for the delay in replying.
+I have good news: your pension application has been approved.
+Your first pension payment will include the amounts due since the date of eligibility.
+A letter with the details of your pension has been sent to your registered address.
+You can also view the letter at any time in the documents section of your account.
+Congratulations on your retirement, and thank you for your many years of service.
+
+# Account and portal help.
+To reset your password, choose the option for forgotten passwords on the sign-in page and follow the instructions.
+The new password must be different from the previous three passwords you used.
+For your security, we recommend using a long password that combines letters, numbers and symbols.
+Once you have changed your password, you will be signed out of all other devices.
+The notification you received was sent automatically and does not require a reply.
+If you would like to stop receiving promotional messages, you can change your preferences in the settings.
+Important messages about your pension and requests will still be sent to you.
+I can confirm that your preferences have been saved.
+The mobile application offers the same services as the website, and some customers find it more convenient.
+You can enable fingerprint sign-in from the security settings of the application.
+Please keep the application updated to benefit from the latest improvements and security fixes.
+I see that you are using an older version of the application. Updating it should solve the problem.
+Thank you for your feedback about the waiting time. We are adding more staff during busy periods.
+Thank you for holding. I have confirmed with the finance team that the refund was issued this morning.
+Depending on your bank, it may take one or two working days for the amount to appear in your account.
+If you have not received it by the end of the week, please contact us again and mention this conversation.
+We have noted that you prefer to be contacted by email rather than by phone.
