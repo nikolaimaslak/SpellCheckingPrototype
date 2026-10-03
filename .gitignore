@@ -20,3 +20,6 @@ wasm/.build/
 # Evaluation: run reports, and private datasets that must never be committed
 /eval/reports/
 /eval/datasets/private/
+
+# Obsidian vault settings (per-user editor state)
+/.obsidian/
