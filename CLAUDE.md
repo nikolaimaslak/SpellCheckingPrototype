@@ -2,6 +2,8 @@
 
 Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spell check and auto-correct (PER #60254) and Smart Compose-style inline completion (PER #60145) for tenant 2P / GOSI. Read these before designing anything:
 
+- `docs/requirements/60145-60254-formal-requirements.md`: the **formal requirements** (authoritative where they differ from the tickets)
+- `docs/requirements/gap-analysis-60145-60254.md`: how the prototype measures against them, with proposed changes and open questions
 - `docs/requirements/60254-auto-correct.txt`, `docs/requirements/60145-auto-complete.txt`: the customer tickets
 - `docs/architecture/composer-assistance-architecture.txt`: the architecture draft (tiers, components, phases)
 - `openspec/config.yaml`: project context and constraints for all planning
