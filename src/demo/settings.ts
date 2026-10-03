@@ -35,6 +35,26 @@ export function loadSettings(storage: Pick<Storage, 'getItem'> | undefined): Dem
   }
 }
 
+export function clearSettings(storage: Pick<Storage, 'removeItem'> | undefined): void {
+  try {
+    storage?.removeItem(KEY);
+  } catch {
+    // nothing stored, or storage blocked
+  }
+}
+
+/** Quick configurations for testers; anything not listed keeps its default. */
+export const PRESETS: Record<'spell' | 'autocorrect' | 'all', (base: AdminPolicy) => AdminPolicy> = {
+  spell: (p) => ({ ...p, mode: 'suggest', completion: { ...p.completion, enabled: 'off' }, grammar: { ...p.grammar, enabled: 'off' } }),
+  autocorrect: (p) => ({ ...p, mode: 'auto', completion: { ...p.completion, enabled: 'off' }, grammar: { ...p.grammar, enabled: 'off' } }),
+  all: (p) => ({
+    ...p,
+    mode: 'auto',
+    completion: { ...p.completion, enabled: 'all', sources: { transcript: true, canned: true, kb: true } },
+    grammar: { ...p.grammar, enabled: 'all' },
+  }),
+};
+
 export function saveSettings(storage: Pick<Storage, 'setItem'> | undefined, settings: DemoSettings): void {
   try {
     storage?.setItem(KEY, JSON.stringify(settings));
@@ -47,7 +67,12 @@ const MODE_LABEL = { off: 'Off', suggest: 'Suggest only', auto: 'Auto-replace an
 const list = (v: string) => v.split(',').map((x) => x.trim()).filter(Boolean);
 
 /** Wires the settings form: fills it, keeps agent controls and the effective settings in sync, applies on submit. */
-export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onApply: (s: DemoSettings) => void): void {
+export function mountSettings(
+  form: HTMLFormElement,
+  initial: DemoSettings,
+  onApply: (s: DemoSettings) => void,
+  onReset?: () => void,
+): void {
   const field = <T extends Element>(name: string) => form.querySelector<T>(`[name="${name}"]`)!;
   const mode = field<HTMLSelectElement>('mode');
   const langBoxes = [...form.querySelectorAll<HTMLInputElement>('input[name="lang"]')];
@@ -69,25 +94,27 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
   const agentTeam = field<HTMLInputElement>('agentTeam');
   const effective = field<HTMLOutputElement>('effective');
 
-  const { policy, preference, agent } = initial;
-  mode.value = policy.mode;
-  langBoxes.forEach((b) => (b.checked = policy.languages.includes(b.value as 'en' | 'ar')));
-  agentMayLower.checked = policy.agentMayLower;
-  dictionary.value = policy.customDictionary.join('\n');
-  completionEnabled.value = policy.completion.enabled;
-  teams.value = policy.completion.teams.join(', ');
-  users.value = policy.completion.users.join(', ');
-  sourceTranscript.checked = policy.completion.sources.transcript;
-  sourceCanned.checked = policy.completion.sources.canned;
-  sourceKb.checked = policy.completion.sources.kb;
-  grammarEnabled.value = policy.grammar.enabled;
-  grammarTeams.value = policy.grammar.teams.join(', ');
-  grammarUsers.value = policy.grammar.users.join(', ');
-  agentGrammar.checked = preference.grammar !== false;
-  agentMode.value = preference.mode ?? '';
-  agentCompletion.checked = preference.completion !== false;
-  agentUser.value = agent.user;
-  agentTeam.value = agent.team;
+  const fill = ({ policy, preference, agent }: DemoSettings) => {
+    mode.value = policy.mode;
+    langBoxes.forEach((b) => (b.checked = policy.languages.includes(b.value as 'en' | 'ar')));
+    agentMayLower.checked = policy.agentMayLower;
+    dictionary.value = policy.customDictionary.join('\n');
+    completionEnabled.value = policy.completion.enabled;
+    teams.value = policy.completion.teams.join(', ');
+    users.value = policy.completion.users.join(', ');
+    sourceTranscript.checked = policy.completion.sources.transcript;
+    sourceCanned.checked = policy.completion.sources.canned;
+    sourceKb.checked = policy.completion.sources.kb;
+    grammarEnabled.value = policy.grammar.enabled;
+    grammarTeams.value = policy.grammar.teams.join(', ');
+    grammarUsers.value = policy.grammar.users.join(', ');
+    agentGrammar.checked = preference.grammar !== false;
+    agentMode.value = preference.mode ?? '';
+    agentCompletion.checked = preference.completion !== false;
+    agentUser.value = agent.user;
+    agentTeam.value = agent.team;
+  };
+  fill(initial);
 
   const read = (): DemoSettings => ({
     policy: parsePolicy({
@@ -124,6 +151,22 @@ export function mountSettings(form: HTMLFormElement, initial: DemoSettings, onAp
   form.addEventListener('change', sync);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    onApply(read());
+  });
+  form.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const preset = target.closest<HTMLElement>('[data-preset]')?.dataset.preset as keyof typeof PRESETS | undefined;
+    if (preset && PRESETS[preset]) {
+      const current = read();
+      // Presets switch features on for the tester, so agent opt-outs are cleared too.
+      fill({ ...current, policy: PRESETS[preset](current.policy), preference: {} });
+    } else if (target.closest('[data-reset]')) {
+      onReset?.();
+      fill({ policy: parsePolicy(null), preference: {}, agent: { ...DEFAULT_AGENT } });
+    } else {
+      return;
+    }
+    sync();
     onApply(read());
   });
   sync();

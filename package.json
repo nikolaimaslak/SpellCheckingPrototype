@@ -1,9 +1,12 @@
 {
   "name": "spell-checking-prototype",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Prototype of the Agent Desktop composer assistance layer (PER #60254, #60145)",
   "type": "module",
+  "engines": {
+    "node": ">=23.6.0"
+  },
   "scripts": {
     "predev": "node scripts/fetch-dicts.ts",
     "dev": "vite",
@@ -17,7 +20,8 @@
     "fetch-dicts": "node scripts/fetch-dicts.ts",
     "build:wasm": "bash wasm/build.sh",
     "ad-loader": "node dev/ad-loader/serve.ts",
-    "server": "node server/main.ts"
+    "server": "node server/main.ts",
+    "demo": "node scripts/demo.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

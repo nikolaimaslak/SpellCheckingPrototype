@@ -1,16 +1,15 @@
 // Dev stand-in for the Intelligence Engine: inline completion and assistance
-// telemetry. Usage: npm run server   (env: GEMINI_API_KEY, COMPLETION_MODEL=gemini|fake, PORT)
+// telemetry. Usage: npm run server   (env: GEMINI_API_KEY, COMPLETION_MODEL=auto|gemini|fake, PORT)
 import { existsSync, readFileSync } from 'node:fs';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { complete } from './complete.ts';
-import { createFakeModel } from './models/fake.ts';
 import { polish } from './polish.ts';
-import { createGeminiModel } from './models/gemini.ts';
+import { selectModel } from './model-select.ts';
 import { appendEvents, readEvents, renderSummary, summarize } from './telemetry.ts';
 import { kbPassages, type KbArticle } from './retrieval.ts';
-import type { CannedResponse, CompletionModel } from './types.ts';
+import type { CannedResponse } from './types.ts';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -24,14 +23,13 @@ if (existsSync(envFile)) {
 }
 
 const PORT = Number(process.env.PORT ?? 5175);
-const MODE = process.env.COMPLETION_MODEL ?? 'gemini';
 const EVENTS = join(ROOT, 'telemetry/events.jsonl');
 const library = (JSON.parse(readFileSync(join(ROOT, 'server/data/canned.json'), 'utf8')) as { responses: CannedResponse[] }).responses;
 const kb = kbPassages((JSON.parse(readFileSync(join(ROOT, 'server/data/kb.json'), 'utf8')) as { articles: KbArticle[] }).articles);
 
-let model: CompletionModel | null = null;
-if (MODE === 'fake') model = createFakeModel();
-else if (process.env.GEMINI_API_KEY) model = createGeminiModel({ apiKey: process.env.GEMINI_API_KEY });
+const selection = selectModel(process.env);
+const { model } = selection;
+if (selection.warning) console.warn(`warning: ${selection.warning}`);
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
   let size = 0;
@@ -72,12 +70,18 @@ createServer(async (req, res) => {
       return send(res, 200, renderSummary(summarize(readEvents(EVENTS))), 'text/html; charset=utf-8');
     }
     if (req.method === 'GET' && path === '/health') {
-      return send(res, 200, { ok: true, model: model?.name ?? null });
+      return send(res, 200, { ok: true, model: model?.name ?? null, mode: selection.mode, external: selection.external });
     }
     send(res, 404, { error: 'not found' });
   } catch {
     send(res, 400, { error: 'bad request' });
   }
-}).listen(PORT, () => {
-  console.log(`completion server on http://localhost:${PORT}  model: ${model?.name ?? 'unavailable (set GEMINI_API_KEY or COMPLETION_MODEL=fake)'}`);
+// Loopback only: the endpoint (and the key's quota) is never exposed to the network.
+}).listen(PORT, '127.0.0.1', () => {
+  const where = !model
+    ? 'unavailable (COMPLETION_MODEL=gemini needs GEMINI_API_KEY)'
+    : selection.external
+      ? `${model.name} (typed text is sent to Google: use made-up text only)`
+      : `${model.name} (offline test model: canned results, nothing leaves this machine)`;
+  console.log(`completion server on http://localhost:${PORT}  model: ${where}`);
 });

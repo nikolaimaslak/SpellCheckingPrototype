@@ -1,10 +1,27 @@
 /// <reference types="vitest/config" />
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { defineConfig } from 'vite';
 
+// "0.1.0 · 3abdde6": testers quote this in reports so they name the exact build.
+function appVersion(): string {
+  const { version } = JSON.parse(readFileSync('package.json', 'utf8')) as { version: string };
+  try {
+    return `${version} · ${execFileSync('git', ['rev-parse', '--short', 'HEAD'], { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()}`;
+  } catch {
+    return `${version} · unknown`;
+  }
+}
+
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   server: {
+    // IPv4 loopback: both http://localhost:5173 and http://127.0.0.1:5173 work,
+    // and nothing is exposed to the network.
+    host: '127.0.0.1',
+    port: 5173,
     // Completion service (npm run server); the page calls same-origin /api/...
-    proxy: { '/api': { target: 'http://localhost:5175', rewrite: (path) => path.replace(/^\/api/, '') } },
+    proxy: { '/api': { target: 'http://127.0.0.1:5175', rewrite: (path) => path.replace(/^\/api/, '') } },
   },
   worker: {
     format: 'es',

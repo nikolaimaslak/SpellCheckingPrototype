@@ -9,7 +9,8 @@ import { createTelemetry } from '../telemetry';
 import { mountChat, mountChatControls, readTranscript, setChatFidelity } from './chat';
 import { mountEmail } from './email';
 import { mountScenarios } from './scenarios';
-import { loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from './settings';
+import { fetchModelState, highlightsSupported, renderBrowserNotice, renderModelBanner, renderVersion } from './model-banner';
+import { clearSettings, loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from './settings';
 import { trackStatus } from './status';
 
 const byId = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -76,12 +77,23 @@ function apply({ policy, preference, agent }: DemoSettings) {
     : [];
 }
 
+const refreshModelBanner = () => void fetchModelState().then((s) => renderModelBanner(byId('model-banner'), s));
+renderBrowserNotice(byId('browser-notice'), highlightsSupported());
+renderVersion(byId('app-version'), __APP_VERSION__);
+
 const initial = loadSettings(storage);
-mountSettings(byId<HTMLFormElement>('assist-settings'), initial, (s) => {
-  saveSettings(storage, s);
-  apply(s);
-});
+mountSettings(
+  byId<HTMLFormElement>('assist-settings'),
+  initial,
+  (s) => {
+    saveSettings(storage, s);
+    apply(s);
+    refreshModelBanner();
+  },
+  () => clearSettings(storage),
+);
 apply(initial);
+refreshModelBanner();
 
 if (import.meta.env.DEV) {
   // Console access for manual checks.

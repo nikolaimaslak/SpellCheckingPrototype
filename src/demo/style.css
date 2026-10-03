@@ -128,3 +128,11 @@ main {
 .customer-controls form { display: flex; gap: 6px; flex: 1 1 220px; }
 .customer-controls input { flex: 1; min-width: 0; }
 .customer-controls select, .customer-controls input, .customer-controls button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 6px; }
+
+.banner { margin: 0 0 8px; padding: 6px 10px; border-radius: 6px; font-size: 0.875rem; border: 1px solid var(--border); background: var(--panel); }
+.banner.warn { border-color: #d39e00; background: color-mix(in srgb, #f5c542 18%, var(--panel)); }
+.banner.ok { border-color: var(--ok); }
+.banner.off { color: var(--muted); }
+.presets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+.presets button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px; cursor: pointer; }
+.app-footer { margin-top: 16px; color: var(--muted); font-size: 0.8rem; }

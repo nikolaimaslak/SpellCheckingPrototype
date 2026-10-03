@@ -6,6 +6,7 @@ Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spe
 - `docs/architecture/composer-assistance-architecture.txt`: the architecture draft (tiers, components, phases)
 - `openspec/config.yaml`: project context and constraints for all planning
 - `docs/known-issues.md`: deferred issues to address (check before touching auto-correct)
+- `docs/TESTING.md`: the external tester guide. Keep its scenarios and expected results in sync with behavior changes. Report template: `docs/TEST-REPORT-TEMPLATE.md`, mirrored in `.github/ISSUE_TEMPLATE/`
 
 ## Workflow
 
@@ -15,13 +16,14 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | Demo page at http://localhost:5173 (provisions English first) |
+| `npm run demo` | Testers' one-command start: checks Node and ports, runs the demo page (:5173) and completion server (:5175), prints the URL and active model |
+| `npm run dev` | Demo page only, at http://localhost:5173 (bound to 127.0.0.1; provisions dictionaries first) |
 | `npm test` | Vitest (Node by default; DOM tests opt in with `// @vitest-environment jsdom`) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` (both dictionaries) |
 | `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
-| `npm run server` | Completion and telemetry server on :5175 (`COMPLETION_MODEL=gemini` with `GEMINI_API_KEY`, or `fake` offline); the demo reaches it via the Vite `/api` proxy |
+| `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. The demo reaches it via the Vite `/api` proxy |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout

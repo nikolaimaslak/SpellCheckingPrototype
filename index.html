@@ -8,11 +8,20 @@
   <body>
     <header>
       <h1>Composer assistance demo</h1>
+      <div id="model-banner" class="banner" role="status" aria-live="polite">Checking the completion and polish model…</div>
+      <div id="browser-notice" class="banner warn" role="alert" hidden></div>
       <p id="engine-status" class="status" role="status" aria-live="polite">Spelling engine: loading…</p>
       <div class="settings">
         <label><input type="checkbox" id="fidelity-toggle" /> Agent Desktop fidelity (chat: fixed LTR)</label>
       </div>
       <form id="assist-settings" class="panel assist-settings" aria-label="Assistance settings">
+        <div class="presets" role="group" aria-label="Presets">
+          <span>Presets:</span>
+          <button type="button" data-preset="spell">Spell check only</button>
+          <button type="button" data-preset="autocorrect">Auto-correct</button>
+          <button type="button" data-preset="all">Everything on</button>
+          <button type="button" data-reset>Reset demo settings</button>
+        </div>
         <fieldset>
           <legend>Admin policy <small>(stand-in for Contact Center Administrator)</small></legend>
           <label>Mode
@@ -109,6 +118,7 @@
              aria-multiline="true" aria-label="Email body"><p><br /></p></div>
       </section>
     </main>
+    <footer class="app-footer">Composer assistance prototype <span id="app-version"></span> · synthetic demo data only</footer>
     <script type="module" src="/src/demo/main.ts"></script>
   </body>
 </html>

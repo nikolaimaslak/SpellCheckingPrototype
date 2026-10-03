@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_POLICY, parsePolicy } from '../../src/policy';
-import { DEFAULT_AGENT, loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from '../../src/demo/settings';
+import { clearSettings, DEFAULT_AGENT, loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from '../../src/demo/settings';
 
 // The real form markup from index.html.
 const formHtml = readFileSync('index.html', 'utf8').match(/<form id="assist-settings"[\s\S]*?<\/form>/)![0];
@@ -77,6 +77,41 @@ describe('settings panel', () => {
       preference: { completion: false },
       agent: DEFAULT_AGENT,
     });
+  });
+});
+
+describe('presets and reset', () => {
+  const click = (sel: string) => form.querySelector<HTMLElement>(sel)!.click();
+
+  it('"Everything on" turns on auto-correct, completion and polish and applies', () => {
+    const onApply = vi.fn();
+    mountSettings(form, settings({ preference: { completion: false, grammar: false } }), onApply);
+    click('[data-preset="all"]');
+    expect(effective()).toBe('Effective: Auto-replace and suggest · completion on · polish on');
+    expect(onApply).toHaveBeenCalledTimes(1);
+    const applied = onApply.mock.calls[0][0] as DemoSettings;
+    expect(applied.policy.completion.sources).toEqual({ transcript: true, canned: true, kb: true });
+    expect(applied.preference).toEqual({});
+  });
+
+  it('"Spell check only" and "Auto-correct" set the mode and switch the model features off', () => {
+    const onApply = vi.fn();
+    mountSettings(form, settings({ policy: parsePolicy({ mode: 'auto', completion: { enabled: 'all' }, grammar: { enabled: 'all' } }) }), onApply);
+    click('[data-preset="spell"]');
+    expect(effective()).toBe('Effective: Suggest only · completion off · polish off');
+    click('[data-preset="autocorrect"]');
+    expect(effective()).toBe('Effective: Auto-replace and suggest · completion off · polish off');
+  });
+
+  it('reset clears storage and restores the defaults', () => {
+    const store = new Map<string, string>([['bp-spell-demo-settings', '{"policy":{"mode":"auto"}}']]);
+    const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) };
+    const onApply = vi.fn((s: DemoSettings) => saveSettings(storage, s));
+    mountSettings(form, loadSettings(storage), onApply, () => clearSettings(storage));
+    expect(effective()).toMatch(/^Effective: Auto-replace/);
+    click('[data-reset]');
+    expect(effective()).toBe('Effective: Suggest only · completion off · polish off');
+    expect(loadSettings(storage)).toEqual({ policy: DEFAULT_POLICY, preference: {}, agent: DEFAULT_AGENT });
   });
 });
 

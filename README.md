@@ -1,57 +1,72 @@
-# SpellCheckingPrototype
+# Composer assistance prototype
 
-Prototype of the Agent Desktop composer assistance layer: Arabic and English spell checking and auto-correct (PER #60254), Smart Compose-style inline completion grounded in the conversation, canned responses and a knowledge base (PER #60145), and an on-demand grammar polish button (PER #60254). Spelling runs entirely in the browser (Hunspell compiled to WebAssembly, in a Web Worker, no network calls). Completion is server-side: a dev server stands in for the Intelligence Engine and calls a hosted model (Gemini in dev).
+Prototype of writing help for Bright Pattern Agent Desktop's chat and email composers, in **Arabic and English**:
+- **Spell checking and auto-correct** (PER #60254), entirely in the browser.
+- **Smart Compose-style inline completion**, grounded in the conversation, canned responses and a knowledge base (PER #60145).
+- An on-demand **grammar polish** button (PER #60254).
 
-## Prerequisites
+## Quick start (testers)
 
-- Node.js 25+ and npm
-- Docker, **optional**, only to rebuild the Hunspell WASM module (the build output is committed)
-- A Gemini API key, **optional**, only for live inline completion (`COMPLETION_MODEL=fake` works without one)
-
-## Setup
+You need **Node.js 23.6 or newer** (`node --version`) and a current **Chrome or Edge** (Safari 17.2+ and Firefox 140+ also work).
 
 ```sh
 npm install
-npm run fetch-dicts   # English from npm, Arabic from dicts/ar (offline; also runs before dev/test/build)
-npm run dev           # http://localhost:5173
+npm run demo
 ```
 
-For inline completion, also start the completion server in a second terminal:
+Then open **http://localhost:5173/** and follow the **[tester guide](docs/TESTING.md)**: scenarios, what to type, and what you should see. Stop the demo with **Ctrl+C**.
 
-```sh
-echo 'GEMINI_API_KEY=your-key' > .env    # gitignored; or: export GEMINI_API_KEY=...
-npm run server                          # :5175, proxied to the demo as /api
-COMPLETION_MODEL=fake npm run server    # offline, deterministic test double (no key)
-```
+**Which model is used?** The banner at the top of the page tells you:
+- **Offline test model** (default, no setup): completion and polish show canned results, and nothing leaves your machine.
+- **Gemini (yellow banner):** live results. Enable it by copying `.env.example` to `.env` and setting `GEMINI_API_KEY`. Text you type in the composers may then be sent to Google, so **use made-up text only**.
 
-The demo page has a chat composer (Enter sends, Shift+Enter adds a new line, like Agent Desktop) and a rich-text email composer.
-- **Settings panel:** stands in for the admin and agent settings (spelling mode, custom dictionary, completion for everyone or listed teams and users).
-- **Customer conversation:** a scripted customer side, in English or Arabic, gives completions context.
-- **Grammar polish:** the Polish button by each composer previews grammar and spelling fixes. Accept applies only the changed words; within formatting, a "Revert polish" button undoes all of them in one click.
-- **Telemetry summary:** the link (`/api/summary`) shows completion and polish acceptance, latency and auto-correct revert rate.
+Spell checking and auto-correct always run locally, with or without a key.
 
-**Data handling:** completion requests (recent conversation, canned and knowledge base snippets, the agent's sentence) and polish requests (the whole draft) go to the hosted model. Use synthetic text only. The canned responses and knowledge base are synthetic demo data. Telemetry records no conversation, completion, draft or corrected text.
+**Found a problem?** Fill in [`docs/TEST-REPORT-TEMPLATE.md`](docs/TEST-REPORT-TEMPLATE.md) (include the version stamp from the page footer) and send it to whoever shared the prototype with you.
 
-## Scripts
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| "Node 23.6.0 or newer is required" | Install a current Node from https://nodejs.org. |
+| "Port 5173 (or 5175) is already in use" | Another program uses it. Find it with `lsof -i :5173` (or `:5175`), stop it, and run `npm run demo` again. |
+| Page doesn't load | Use exactly `http://localhost:5173/` (`http://127.0.0.1:5173/` also works) while `npm run demo` is running. |
+| Banner says completion and polish are unavailable | The completion server stopped (check the terminal), or `COMPLETION_MODEL=gemini` is set without a key. Spell checking still works. |
+| No underlines at all | Use a supported browser; the page shows a notice if yours isn't. |
+| Settings got confusing | Press **Reset demo settings** in the settings panel. |
+
+## What the demo contains
+
+- **Two composers:** a chat composer that behaves like Agent Desktop's (Enter sends) and an email composer with formatting.
+- **Customer side:** a scripted customer conversation in English or Arabic.
+- **Settings panel:** stands in for the administrator and agent settings, with presets ("Spell check only", "Auto-correct", "Everything on").
+- **Usage summary:** acceptance rates, latency and revert rate. It records no typed text.
+
+All customer messages, canned responses and knowledge-base articles are **synthetic demo data**.
+
+## For developers
 
 | Script | Purpose |
 |---|---|
-| `npm run dev` | Dev server with the demo page |
-| `npm test` | Unit tests (Vitest) |
+| `npm run demo` | Demo page (:5173) and completion server (:5175) together, for testers |
+| `npm run dev` | Demo page only (Vite, :5173); the completion API is proxied as `/api` |
+| `npm run server` | Completion, polish and telemetry server (:5175). Environment: `GEMINI_API_KEY`, `COMPLETION_MODEL=auto\|gemini\|fake`, `PORT` |
+| `npm test` | Unit tests (Vitest; test files run one at a time, see `docs/known-issues.md` KI-1) |
 | `npm run typecheck` | Type checking |
-| `npm run build` | Production build to `dist/` |
+| `npm run build` | Production build of the demo page to `dist/` |
 | `npm run fetch-dicts` | Provision both dictionaries into `public/dicts/` (offline) |
 | `npm run build:wasm` | Recompile Hunspell to WASM in Docker (pinned tag and toolchain) |
-| `npm run server` | Completion and telemetry server (`GEMINI_API_KEY`, `COMPLETION_MODEL=gemini\|fake`, `PORT`) |
-| `npm run ad-loader` | Dev-only loader for a live Agent Desktop tenant |
+| `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (not for testers) |
+
+**Architecture:**
+- **Spelling (Tier 1):** Hunspell compiled to WebAssembly runs in a Web Worker, with no network calls. Underlines use the CSS Custom Highlight API and are never written into the editor's DOM.
+- **Completion and polish (Tier 2):** server-side. The dev server (`server/`) stands in for the Intelligence Engine and calls Gemini.
+
+`CLAUDE.md` describes the layout and constraints. Requirements and the architecture draft are in `docs/`. Work is planned and tracked with OpenSpec under `openspec/`.
 
 ## Licensing and terms
 
 - **Hunspell** (v1.7.4) is compiled to WASM and used under its **MPL 1.1** option. See `src/spell/wasm/NOTICE` and `PROVENANCE.json`.
-- **English dictionary**: `dictionary-en` (SCOWL-derived), MIT AND BSD.
-- **Gemini API** (dev completion only): Google APIs Terms of Service and Gemini API Additional Terms. It's not shipped.
-- **Arabic dictionary** (AyaSpell): tri-licensed GPL-2+ / LGPL-2.1+ / MPL-1.1; this project elects **MPL 1.1**. Vendored unmodified in `dicts/ar/` with a `NOTICE`; hashes pinned. See `dicts/MANIFEST.md`.
-
-## Planning
-
-Requirements and architecture are in `docs/`. Work is planned and tracked with OpenSpec under `openspec/`.
+- **English dictionary:** `dictionary-en` (SCOWL-derived), MIT AND BSD.
+- **Arabic dictionary** (AyaSpell): tri-licensed GPL-2+ / LGPL-2.1+ / MPL-1.1; this project elects **MPL 1.1**. It's vendored unmodified in `dicts/ar/` with a `NOTICE`, and its hashes are pinned. See `dicts/MANIFEST.md`.
+- **Gemini API** (optional, dev completion and polish only): Google APIs Terms of Service and Gemini API Additional Terms. It's not shipped.
