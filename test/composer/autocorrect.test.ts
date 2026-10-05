@@ -11,11 +11,13 @@ afterEach(() => {
 });
 
 const BAD = {
-  en: ['seperate', 'Seperate', 'recieve', 'paymnet', 'GOSSI', 'teh', 'Teh', 'TEH', 'tge', 'afte', 'oNly', 'info', 'gosi', 'https', 'www'],
-  ar: ['النضام', 'اذا', 'الى', 'ان', 'التامينات', 'المستخذم', 'حتىى'],
+  en: ['seperate', 'Seperate', 'recieve', 'Fatimah', 'Harbi', 'Noura', 'Almarai', 'paymnet', 'GOSSI', 'teh', 'Teh', 'TEH', 'tge', 'afte', 'oNly', 'info', 'gosi', 'https', 'www'],
+  ar: ['النضام', 'نوره', 'اذا', 'الى', 'ان', 'التامينات', 'المستخذم', 'حتىى'],
 };
 
-function setup(opts: { customWords?: string[]; mode?: 'suggest' | 'auto'; autoReplace?: 'list' | 'list-and-rule' } = {}) {
+function setup(
+  opts: { customWords?: string[]; mode?: 'suggest' | 'auto'; autoReplace?: 'list' | 'list-and-rule'; conversation?: { role: string; text: string }[] } = {},
+) {
   const el = composer('');
   const hl = fakeHighlightEnv();
   const svc = fakeService(BAD);
@@ -25,6 +27,7 @@ function setup(opts: { customWords?: string[]; mode?: 'suggest' | 'auto'; autoRe
     service: svc.service,
     mode: opts.mode ?? 'auto',
     autoReplace: opts.autoReplace,
+    conversation: opts.conversation && (() => opts.conversation!),
     debounceMs: 1,
     flashMs: 30,
     customWords: opts.customWords,
@@ -135,9 +138,9 @@ describe('known misspellings', () => {
 
   it('fixes listed words whatever their length, keeping a leading capital', async () => {
     const { el, handle } = setup();
-    typeChars(el, 'teh Teh ');
+    typeChars(el, 'teh. Teh ');
     await handle.settled();
-    expect(el.textContent).toBe('the The ');
+    expect(el.textContent).toBe('the. The ');
   });
 
   it('fixes a listed Arabic hamza slip', async () => {
@@ -187,6 +190,119 @@ describe('known misspellings', () => {
     expect(optionTexts()[0]).toBe(first);
     expect(optionTexts().filter((t) => t === first)).toHaveLength(1);
     expect(popover()!.dir).toBe(dir);
+  });
+});
+
+describe('names (Req 4.2.2)', () => {
+  it.each(['Dear Ms. Fatimah, ', 'Dear Mr. Al-Harbi, '])('leaves a capitalized name in mid-sentence: %s', async (text) => {
+    const { el, replace, handle } = setup();
+    typeChars(el, text);
+    await handle.settled();
+    expect(el.textContent).toBe(text);
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('still fixes a capitalized typo that starts a sentence', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'Thanks. Seperate forms ');
+    await handle.settled();
+    expect(el.textContent).toBe('Thanks. Separate forms ');
+  });
+
+  it('leaves words the customer wrote, in English and Arabic', async () => {
+    const conversation = [
+      { role: 'customer', text: 'Hello, this is Noura' },
+      { role: 'customer', text: 'معك نوره من الرياض' },
+      { role: 'customer', text: 'my employer is Almarai' },
+    ];
+    const { el, replace, handle } = setup({ conversation });
+    typeChars(el, 'Noura, thank you. شكراً نوره، ');
+    await handle.settled();
+    expect(el.textContent).toBe('Noura, thank you. شكراً نوره، ');
+    typeChars(el, 'تم تحديث بيانات Almarai والنضام ');
+    await handle.settled();
+    expect(el.textContent).toContain('Almarai');
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('without a conversation, a name that starts a sentence follows the other rules', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'Noura, ');
+    await handle.settled();
+    expect(el.textContent).toBe('Nora, ');
+  });
+});
+
+describe('Backspace right after a correction (Req 4.2.1)', () => {
+  const backspace = (el: HTMLElement, init: KeyboardEventInit = {}) => {
+    const e = new KeyboardEvent('keydown', { key: 'Backspace', bubbles: true, cancelable: true, ...init });
+    el.dispatchEvent(e);
+    return e;
+  };
+  const caretText = () => {
+    const sel = document.getSelection()!;
+    return sel.anchorNode!.textContent!.slice(0, sel.anchorOffset);
+  };
+
+  it('restores the word, keeps the space and the caret, and is never seen by the host', async () => {
+    const { el, events, replace, handle } = setup();
+    const host = vi.fn();
+    el.addEventListener('keydown', host);
+    typeChars(el, 'please seperate ');
+    await handle.settled();
+    expect(el.textContent).toBe('please separate ');
+    replace.mockClear();
+    const e = backspace(el);
+    expect(e.defaultPrevented).toBe(true);
+    expect(host).not.toHaveBeenCalled();
+    expect(el.textContent).toBe('please seperate ');
+    expect(caretText()).toBe('please seperate ');
+    expect(replace).toHaveBeenCalledTimes(1); // one undo step
+    expect(events.map((x) => x.type)).toEqual(['autocorrect', 'revert']);
+    typeChars(el, 'seperate ');
+    await handle.settled();
+    expect(el.textContent).toBe('please seperate seperate ');
+  });
+
+  it('reverts an Arabic correction', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'رقم المستخذم ');
+    await handle.settled();
+    expect(el.textContent).toBe('رقم المستخدم ');
+    expect(backspace(el).defaultPrevented).toBe(true);
+    expect(el.textContent).toBe('رقم المستخذم ');
+  });
+
+  it('deletes normally when the agent typed more before the correction landed', async () => {
+    const { el, svc, handle } = setup();
+    const release = svc.holdChecks();
+    typeChars(el, 'seperate t');
+    release();
+    await handle.settled();
+    expect(el.textContent).toBe('separate t');
+    expect(backspace(el).defaultPrevented).toBe(false);
+    expect(el.textContent).toBe('separate t');
+  });
+
+  it('deletes normally when it is not the next key after the correction', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'please seperate ');
+    await handle.settled();
+    typeChars(el, 'x');
+    const node = el.firstChild as Text;
+    node.deleteData(node.length - 1, 1);
+    document.getSelection()!.collapse(node, node.length);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'deleteContentBackward' }));
+    expect(backspace(el).defaultPrevented).toBe(false);
+    expect(el.textContent).toBe('please separate ');
+  });
+
+  it('Ctrl+Backspace is not a revert', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'please seperate ');
+    await handle.settled();
+    expect(backspace(el, { ctrlKey: true }).defaultPrevented).toBe(false);
+    expect(el.textContent).toBe('please separate ');
   });
 });
 

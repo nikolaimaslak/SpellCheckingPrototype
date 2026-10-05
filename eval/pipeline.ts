@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
 import { caseFolded, decide, needsEvidence, withLeadingCapital, type AutoReplaceConfidence, type FixSource } from '../src/autocorrect/confidence';
+import { startsSentence } from '../src/autocorrect/context';
 import { knownFix } from '../src/autocorrect/misspellings';
 import { boundaryKind, completedWord, releasable, type HeldWord } from '../src/autocorrect/trigger';
 import { loadHunspell } from '../src/spell/engine';
@@ -155,7 +156,8 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
 
   /** The composer's auto-replacement for a completed word (attach.ts autoCorrect), and the decision's engine time. */
   type Replacement = { fix: string | null; source: FixSource | null; ms: number | null };
-  const autoReplacement = async (t: Token): Promise<Replacement> => {
+  /** `text`: the message as typed; only the text before the word matters for its sentence position. Messages carry no conversation. */
+  const autoReplacement = async (t: Token, text: string): Promise<Replacement> => {
     if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return { fix: null, source: null, ms: null };
     let caseFix: string | null = null;
     let neighbors: string[] = [];
@@ -167,7 +169,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
       if (!caseFix) neighbors = await request({ type: 'neighbors', lang: t.lang, word: t.text });
       ms = performance.now() - begin;
     }
-    const d = decide(t.text, t.lang, { neighbors, caseFix }, { ...ctx, confidence: autoReplace });
+    const d = decide(t.text, t.lang, { neighbors, caseFix }, { ...ctx, confidence: autoReplace, startsSentence: startsSentence(text, t.start) });
     return { fix: d?.fix ?? null, source: d?.source ?? null, ms };
   };
 
@@ -214,7 +216,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
       }
       const suggested = new Map<string, Promise<Suggested>>();
       const replacements = new Map<string, Replacement>();
-      for (const [key, t] of completed) replacements.set(key, await autoReplacement(t));
+      for (const [key, t] of completed) replacements.set(key, await autoReplacement(t, typed));
 
       const tokens: TokenResult[] = [];
       const final = new Set<string>();

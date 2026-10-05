@@ -29,6 +29,8 @@ const MESSAGES = [
   'please seperate. Thanks',
   'oNly thiS dOcument',
   'teh customer said Teh form is ready',
+  'Ms. Fatimah, I have sent you the form.',
+  'Thanks. Seperate forms are needed.',
   'اذا كان الطلب جاهزا سنرسله الى بريدك',
 ];
 

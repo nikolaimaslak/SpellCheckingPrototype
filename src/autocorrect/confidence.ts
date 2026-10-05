@@ -1,5 +1,6 @@
 import { stripMarks } from '../spell/arabic';
 import type { Lang } from '../spell/protocol';
+import { inConversation } from './context';
 import { knownFix } from './misspellings';
 
 /** How aggressive auto-replace is (admin setting): only known misspellings, or also the general rules. */
@@ -19,6 +20,10 @@ export interface DecideContext {
   customWords: ReadonlySet<string>;
   /** Defaults to 'list-and-rule'. */
   confidence?: AutoReplaceConfidence;
+  /** The word begins a sentence (context.ts startsSentence). Defaults to true. */
+  startsSentence?: boolean;
+  /** Normalized words of the customer's messages (context.ts conversationWords). */
+  conversation?: ReadonlySet<string>;
 }
 
 /** What the engine says about a misspelled word, gathered by the caller. */
@@ -78,6 +83,9 @@ export const needsEvidence = (word: string, lang: Lang, confidence: AutoReplaceC
  */
 export function decide(word: string, lang: Lang, evidence: DecideEvidence, ctx: DecideContext): Decision | null {
   if (ctx.ignored.has(`${lang}:${word}`) || ctx.customWords.has(word) || isAllCaps(word)) return null;
+  // Names (Req 4.2.2): a capital in mid-sentence, or a word the customer wrote.
+  if (startsUpper(word) && ctx.startsSentence === false) return null;
+  if (inConversation(word, lang, ctx.conversation)) return null;
   const keepCapital = (fix: string) => withLeadingCapital(word, fix);
 
   const known = knownFix(word, lang);

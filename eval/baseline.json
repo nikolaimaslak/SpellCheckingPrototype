@@ -1,13 +1,13 @@
 {
   "build": {
     "version": "0.1.0",
-    "commit": "d1c7d76",
-    "date": "2026-10-05T20:08:13.799Z"
+    "commit": "2b27ab2",
+    "date": "2026-10-05T21:20:41.758Z"
   },
   "criteria": {
-    "corruption-en": 11.474469305794607,
+    "corruption-en": 7.649646203863071,
     "corruption-ar": 1.9952114924181965,
-    "autoreplace-precision-en": 0.9566666666666667,
+    "autoreplace-precision-en": 0.9694915254237289,
     "autoreplace-precision-ar": 0.9491525423728814,
     "detection-recall-en": 1,
     "detection-recall-ar": 1,
@@ -20,14 +20,14 @@
     "exclusion-leaks-all": 0,
     "instability-en": 0,
     "instability-ar": 0,
-    "check-latency-en": 0.014885999999023625,
-    "check-latency-ar": 0.026352000000770204,
-    "suggest-latency-en": 30.387340000000222,
-    "suggest-latency-ar": 128.3472299999994
+    "check-latency-en": 0.011427000000367116,
+    "check-latency-ar": 0.026051999997434905,
+    "suggest-latency-en": 25.666361999999936,
+    "suggest-latency-ar": 128.69798300000548
   },
   "counts": {
     "en": {
-      "corruption": 12,
+      "corruption": 8,
       "wrongFix": 1
     },
     "ar": {
@@ -39,16 +39,12 @@
   "identities": {
     "en": {
       "corruptions": [
-        "clean-en clean-en-138 \"Fatimah\" → \"Fatima\"",
         "clean-en clean-en-157 \"cancelled\" → \"canceled\"",
         "clean-en clean-en-188 \"Noura\" → \"Nora\"",
-        "clean-en clean-en-217 \"Harbi\" → \"Harbin\"",
         "clean-en clean-en-244 \"labour\" → \"labor\"",
         "clean-en clean-en-244 \"labour\" → \"labor\"",
-        "injected-en clean-en-138 \"Fatimah\" → \"Fatima\"",
         "injected-en clean-en-157 \"cancelled\" → \"canceled\"",
         "injected-en clean-en-188 \"Noura\" → \"Nora\"",
-        "injected-en clean-en-217 \"Harbi\" → \"Harbin\"",
         "injected-en clean-en-244 \"labour\" → \"labor\"",
         "injected-en clean-en-244 \"labour\" → \"labor\""
       ],
@@ -106,7 +102,7 @@
       "insert": {
         "detectionRecall": 1,
         "correctionAt1": 0.8088235294117647,
-        "autoReplaceCoverage": 0.5
+        "autoReplaceCoverage": 0.4852941176470588
       },
       "case": {
         "detectionRecall": 1,
@@ -189,11 +185,11 @@
         "autoReplaceCoverage": 0.07665505226480836
       },
       "neighbor": {
-        "fixed": 185,
+        "fixed": 184,
         "wrongFix": 1,
-        "corruption": 12,
-        "autoReplacePrecision": 0.9343434343434344,
-        "autoReplaceCoverage": 0.32229965156794427
+        "corruption": 8,
+        "autoReplacePrecision": 0.9533678756476683,
+        "autoReplaceCoverage": 0.3205574912891986
       }
     },
     "ar": {

@@ -1,5 +1,6 @@
 import { caseFolded, decide, needsEvidence, withLeadingCapital, type AutoReplaceConfidence } from '../autocorrect/confidence';
 import { knownFix } from '../autocorrect/misspellings';
+import { conversationWords, startsSentence } from '../autocorrect/context';
 import { boundaryKind, completedWord, releasable } from '../autocorrect/trigger';
 import type { Lang } from '../spell/protocol';
 import type { SpellService } from '../spell/service';
@@ -31,6 +32,11 @@ export interface AttachOptions {
   languages?: Lang[];
   /** Admin custom dictionary: never auto-corrected. */
   customWords?: string[];
+  /**
+   * The conversation so far; words in the customer's turns are never
+   * auto-replaced (names, Req 4.2.2). Read in the page only, never sent.
+   */
+  conversation?: () => readonly { role: string; text: string }[];
   /** Receives assistance events; nothing is stored or sent by the layer itself. */
   onEvent?: (event: AssistEvent) => void;
   debounceMs?: number;
@@ -91,6 +97,8 @@ function matchesShortcut(e: KeyboardEvent, shortcut: string): boolean {
 }
 
 const keyOf = (t: { lang: Lang; text: string }) => `${t.lang}:${t.text}`;
+/** What may lie between a corrected word and the caret for Backspace to revert it: the trigger (as in trigger.ts). */
+const TRIGGER_GAP = /^[\s\p{P}￼]{1,3}$/u;
 
 function containsCaret(range: Range, sel: Selection | null): boolean {
   if (!sel?.isCollapsed || !sel.anchorNode) return false;
@@ -136,6 +144,8 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   let timer: ReturnType<typeof setTimeout> | undefined;
   let popover: PopoverHandle | undefined;
   let inFlight: Promise<void> = Promise.resolve();
+  /** The correction that just landed, while Backspace may still revert it (Req 4.2.1). */
+  let justCorrected: { correction: Correction; text: string; caret: number } | undefined;
   let handedOver = false;
   let detached = false;
 
@@ -230,7 +240,15 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
       caseFix = folded && service.misspelled(lang, folded) === false ? folded : null;
       if (!caseFix) neighbors = await service.neighbors(lang, word);
     }
-    const fix = decide(word, lang, { neighbors, caseFix }, { ignored, customWords, confidence: autoReplace })?.fix;
+    const now = buildTextMap(el);
+    const context = {
+      ignored,
+      customWords,
+      confidence: autoReplace,
+      startsSentence: startsSentence(now.text, flatOffsetOf(now, token.range.startContainer, token.range.startOffset)),
+      conversation: options.conversation ? conversationWords(options.conversation()) : undefined,
+    };
+    const fix = decide(word, lang, { neighbors, caseFix }, context)?.fix;
     // Re-validate: the agent may have edited the word, or sent the message, meanwhile.
     if (!fix || detached || !el.isConnected || token.range.toString() !== word) return;
 
@@ -247,7 +265,11 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     }
     if (after.text.slice(start, start + fix.length) !== fix) return;
     const range = rangeFor(after, start, start + fix.length);
-    corrections.push({ range, original: word, replacement: fix, lang, flatStart: start });
+    const correction: Correction = { range, original: word, replacement: fix, lang, flatStart: start };
+    corrections.push(correction);
+    // Set after replace(): its own input event must not clear it.
+    const caretNow = caretOffset(after, doc.getSelection());
+    justCorrected = caretNow === undefined ? undefined : { correction, text: after.text, caret: caretNow };
     flashRange(range);
     emit({ type: 'autocorrect', lang, original: word, replacement: fix });
     schedule();
@@ -275,7 +297,31 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     void recheck();
   }
 
+  /**
+   * Backspace as the very next key after a correction, with only its trigger
+   * between the corrected word and the caret: restore the original word, keep
+   * the trigger and the caret where they are.
+   */
+  function backspaceRevert(): boolean {
+    const j = justCorrected;
+    justCorrected = undefined;
+    if (!j || j.correction.range.toString() !== j.correction.replacement) return false;
+    const sel = doc.getSelection();
+    if (!sel?.isCollapsed) return false;
+    const map = buildTextMap(el);
+    const caret = caretOffset(map, sel);
+    const end = j.correction.flatStart + j.correction.replacement.length;
+    if (caret !== j.caret || map.text !== j.text || !TRIGGER_GAP.test(map.text.slice(end, caret))) return false;
+    const { original, replacement } = j.correction;
+    revert(j.correction);
+    const after = buildTextMap(el);
+    const p = pointAt(after, caret + original.length - replacement.length);
+    doc.getSelection()?.collapse(p.node, p.offset);
+    return true;
+  }
+
   const onInput = (e: Event) => {
+    justCorrected = undefined;
     schedule();
     const ie = e as InputEvent;
     if (ie.inputType === 'historyUndo') detectUndoRevert();
@@ -362,6 +408,19 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
 
   // Let the click settle the caret first.
   const onMouseUp = () => setTimeout(openForCaret, 0);
+  const onMouseDown = () => (justCorrected = undefined);
+  // Capture phase on the window, so the host's own key handlers never see a reverting Backspace.
+  const onBackspace = (e: KeyboardEvent) => {
+    if (!justCorrected || !el.contains(e.target as Node)) return;
+    if (['Shift', 'Control', 'Alt', 'Meta'].includes(e.key)) return;
+    const plain = !e.ctrlKey && !e.altKey && !e.metaKey && !e.shiftKey;
+    if (e.key === 'Backspace' && plain && backspaceRevert()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
+    justCorrected = undefined;
+  };
   const onKeyDown = (e: KeyboardEvent) => {
     if (matchesShortcut(e, shortcut) && openForCaret()) e.preventDefault();
   };
@@ -375,6 +434,8 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   observer.observe(el, { characterData: true, childList: true, subtree: true });
   el.addEventListener('input', onInput);
   el.addEventListener('mouseup', onMouseUp);
+  el.addEventListener('mousedown', onMouseDown);
+  doc.defaultView?.addEventListener('keydown', onBackspace, true);
   el.addEventListener('keydown', onKeyDown);
   doc.addEventListener('selectionchange', onSelectionChange);
   const unsubscribe = service.onStatus(() => {
@@ -395,6 +456,9 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
       observer.disconnect();
       el.removeEventListener('input', onInput);
       el.removeEventListener('mouseup', onMouseUp);
+      el.removeEventListener('mousedown', onMouseDown);
+      doc.defaultView?.removeEventListener('keydown', onBackspace, true);
+      justCorrected = undefined;
       el.removeEventListener('keydown', onKeyDown);
       doc.removeEventListener('selectionchange', onSelectionChange);
       unsubscribe();

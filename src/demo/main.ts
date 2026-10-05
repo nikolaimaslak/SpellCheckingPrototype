@@ -68,6 +68,8 @@ function apply({ policy, preference, agent }: DemoSettings) {
             autoReplace: policy.autoReplace,
             languages: policy.languages,
             customWords: policy.customDictionary,
+            // Names and terms the customer wrote are never auto-replaced.
+            conversation: () => readTranscript(transcript),
             onEvent: record,
           }),
         );

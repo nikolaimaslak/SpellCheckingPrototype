@@ -51,6 +51,12 @@ const NEIGHBORS: Record<string, string[]> = {
   oNly: ['oily'],
   afte: ['after', 'aft', 'ate', 'fate', 'ante'],
   tge: ['the', 'toe', 'tie'],
+  // Names: one neighbor each, so only the name guards keep them unchanged.
+  Fatimah: ['fatima'],
+  Harbi: ['harbin'],
+  Noura: ['nora'],
+  نوره: ['نور'],
+  Almarai: ['almaria'],
   ان: ['أن', 'إن', 'آن'],
 };
 

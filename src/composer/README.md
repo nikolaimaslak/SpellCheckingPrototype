@@ -20,6 +20,7 @@ const handle = mode === 'off' ? undefined : attachSpellCheck(composerElement, {
   service,               // shared by every composer (one cache, one worker)
   mode,                  // 'suggest' or 'auto'; don't attach for 'off'
   autoReplace,           // 'list-and-rule' (default) or 'list': which auto-corrections 'auto' may make
+  conversation: () => turns, // optional: words the customer wrote are never auto-replaced
   languages: policy.languages,
   customWords: policy.customDictionary,
   onEvent: (e) => {},    // autocorrect / revert / accept / ignore; nothing is stored or sent
@@ -56,7 +57,8 @@ handle.detach();         // removes every effect on the host
   3. unless the `autoReplace` option is `'list'`: exactly **one dictionary word** a single edit away, from the worker's deterministic `neighbors` request (`SpellService.neighbors`, requested only when needed).
 
   Steps 2 and 3 also require at least 4 letters for English or 3 for Arabic, and the same first letter (Arabic alef forms ا أ إ آ count as one for this test only). No step applies to an all-caps word, an ignored word or a custom word. A leading capital is kept. Anything less certain stays an underline. The decision doesn't depend on CPU load. The popover's suggestions come from Hunspell's `suggest()`, with a known misspelling's fix first.
-- **Revert:** one Undo, or click the corrected word and choose "Revert to *original*". Either way the original goes on the session ignore list, so it isn't corrected or underlined again.
+- **Names** (Req 4.2.2): a capitalized word in mid-sentence ("Dear Ms. Fatimah"), or any word the customer wrote (from the `conversation` option), is never auto-replaced, only underlined. The conversation is read in the page and never sent.
+- **Revert:** one Undo; clicking the corrected word and choosing "Revert to *original*"; or **Backspace as the very next key** after the correction, with only its trigger between the word and the caret. Backspace restores the original word, keeps the space and the caret, and the host never sees that key. Every revert puts the original on the session ignore list, so it isn't corrected or underlined again for the session (deliberately more than Req 4.2.1's "same message").
 - **Typo corpus:** `test/autocorrect/corpus.test.ts` pins the exact set of fixes (26 of 30 English, 15 of 25 Arabic) and checks that none is wrong. Retune against it and `npm run eval:check`.
 
 ## Testing seams

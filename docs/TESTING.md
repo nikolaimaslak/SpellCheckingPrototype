@@ -84,6 +84,8 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T2.12 | `ان␣` | Ambiguous in Arabic: both "أن" and "إن" are words |
 | T2.13 | `النضام␣` | Ambiguous in Arabic: several Arabic words are one typo away. Its menu offers "النظام". |
 | T2.14 | `email info@gosi.gov.sa␣` · `visit https://www.gosi.gov.sa/en␣` | Nothing in the address changes at any moment while you type it (watch "gosi" and "https") |
+| T2.20 | `Dear Ms. Fatimah,␣` · `Dear Mr. Al-Harbi,␣` | Names in mid-sentence (a capital letter not at the start of a sentence) are never changed. They may be underlined. |
+| T2.21 | In the customer box, send `Hello, this is Noura`. Then type `Noura, thank you␣` in the chat composer | "Noura" is not changed, even at the start of a sentence, because the customer wrote it. Without that customer message it would become "Nora". |
 
 **When it must not fire:**
 
@@ -107,6 +109,9 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T3.1 | Type `please seperate␣`, then press Ctrl+Z once | "seperate" comes back. Typing `seperate␣` again isn't corrected. |
 | T3.2 | Type `رقم المستخذم␣`, then click the corrected "المستخدم" | The menu offers only **Revert to المستخذم** (right to left). Choosing it restores the word, and it isn't corrected or underlined again. |
 | T3.3 | Look at the counter under the settings | "Auto-corrected" and "Reverted" counts went up. |
+| T3.4 | Type `please seperate␣` (it becomes "separate"), then press **Backspace** right away | "seperate" comes back; the space stays and the caret stays after it. Typing `seperate␣` again isn't corrected. |
+| T3.5 | Type `رقم المستخذم␣`, then press **Backspace** right away | "المستخذم" comes back. |
+| T3.6 | Type `please seperate␣`, type `x`, press Backspace twice | The first Backspace deletes "x", the second deletes the space: a normal Backspace, because it wasn't the next key after the correction. "separate" stays. |
 
 ### T4. Inline completion (preset **Everything on**)
 
@@ -166,6 +171,7 @@ With the offline test model, the suggestions are canned and may not fit perfectl
 
 - **Short or ambiguous typos aren't auto-corrected** (T2.9–T2.13). Auto-correct only fixes a word when it's a known common misspelling, when exactly one dictionary word is one typo away, or when only a capital letter is wrong. This avoids wrong changes. The other typos are still underlined with suggestions.
 - **Many Arabic typos are only underlined, not auto-corrected** (T2.12, T2.13). Arabic words often have several dictionary words one typo away, because of prefixes and suffixes. Common slips such as "اذا" → "إذا" are fixed through the curated list. For the others, pick the fix from the menu.
+- **British spellings are corrected to American ones** in auto mode ("labour" → "labor", "cancelled" → "canceled"), because the English dictionary is en-US. Whether to use en-GB is an open question.
 - **The misspellings lists are drafts** awaiting human review (known issue KI-5). If you see a word changed that shouldn't have been, please report it with the exact word.
 - **Arabic in a left-to-right composer:** Agent Desktop's chat composer is left to right, so Arabic suggestions appear on the line below (T4.8). This follows from that composer's layout.
 - **Completion and polish take about half a second to a second** with the live model.

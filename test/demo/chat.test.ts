@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
-import { mountChat, setChatFidelity } from '../../src/demo/chat';
+import { conversationWords, inConversation } from '../../src/autocorrect/context';
+import { addMessage, mountChat, readTranscript, setChatFidelity } from '../../src/demo/chat';
 
 let composer: HTMLElement;
 let transcript: HTMLElement;
@@ -64,5 +65,15 @@ describe('chat composer', () => {
     expect(composer.classList.contains('fidelity')).toBe(true);
     setChatFidelity(composer, false);
     expect(composer.dir).toBe('auto');
+  });
+});
+
+describe('transcript as auto-correct conversation', () => {
+  it('gives the customer turns, in the shape attachSpellCheck takes', () => {
+    addMessage(transcript, 'customer', 'Hello, this is Noura');
+    addMessage(transcript, 'agent', 'Welcome Fatimah');
+    const words = conversationWords(readTranscript(transcript));
+    expect(inConversation('Noura', 'en', words)).toBe(true);
+    expect(inConversation('Fatimah', 'en', words)).toBe(false);
   });
 });

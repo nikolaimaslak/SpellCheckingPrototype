@@ -212,3 +212,16 @@ The curated misspellings lists come first, then the case-only fix and the single
 | Decision instability | 0 ✅ | 0 ✅ |
 
 By source, the lists made 58 English and 25 Arabic fixes with no wrong fix and no corruption. Every remaining corruption and wrong fix comes from the single-neighbor rule. Arabic `hamza` coverage in the matrix went from 7% to 44%. Remember the overlap caution above: some of the list's English gain on the curated `typos-en` set comes from classic misspellings that both contain.
+
+### Baseline after `autocorrect-revert-backspace-and-names` (October 5, 2026)
+
+Capitalized words in mid-sentence are no longer auto-replaced (Req 4.2.2). Conversation words aren't exercised here: dataset messages carry no conversation.
+
+| Criterion | English | Arabic |
+|---|---|---|
+| 🔒 Corruption rate, clean text (per 10,000) | 7.6 ❌ (was 11.5) | 2.0 ❌ (unchanged) |
+| 🔒 Auto-replace precision | 96.9% ❌ (was 95.7%) | 94.9% ❌ (unchanged) |
+| Auto-replace coverage | 49.8% (was 50.0%) | 11.8% (unchanged) |
+| Decision instability | 0 ✅ | 0 ✅ |
+
+The names "Fatimah" ("Ms. Fatimah") and "Harbi" ("Al-Harbi") are no longer corrupted. The remaining English corruptions are the British spellings "labour" and "cancelled" (an en-US vs. en-GB decision) and "Noura" at the start of a sentence. In the composer, "Noura" is protected when the customer wrote it, but here it isn't, because dataset messages have no conversation.

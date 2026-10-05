@@ -8,7 +8,9 @@ Decides, for a misspelled word the agent just completed, whether to auto-replace
 
 `decide(word, lang, { neighbors, caseFix }, ctx)` returns `{ fix, source }` or `null`:
 
-1. **Guards.** It returns `null` for a word on the session ignore list or in the custom dictionary, or a word written all in capitals.
+1. **Guards.** It returns `null` for:
+   - a word on the session ignore list or in the custom dictionary, or written all in capitals;
+   - **names** (Req 4.2.2): a word with a capital first letter that doesn't start a sentence (`ctx.startsSentence === false`), or a word the customer wrote (`ctx.conversation`).
 2. **Known misspelling** (`source: 'list'`). If the word is on the misspellings list (`misspellings.ts`, `knownFix`), it returns the list's fix, whatever the word's length or neighbors ("teh" → "the", "اذا" → "إذا").
 3. If the admin's auto-replace confidence (`ctx.confidence`) is `list`, it stops here and returns `null`.
 4. **Minimum length.** It returns `null` for a word shorter than 4 letters (English) or 3 (Arabic, counted without diacritics).
@@ -21,6 +23,13 @@ Every fix gets a leading capital if the typed word had one (`withLeadingCapital`
 The decision is **deterministic**. `neighbors` comes from the worker's `neighbors` request, which checks *every* one-edit variant with `spell()` (`neighbors.ts`: deletions, adjacent swaps, substitutions and insertions over the dictionary's `TRY` letters plus the word's own letters). There's no ranking or time limit, unlike Hunspell's `suggest()`, so CPU load can't change a decision. The popover's suggestions come from `suggest()`, with a known misspelling's fix first.
 
 **Arabic is conservative.** Arabic morphology (clitics, affixes) gives most misspellings several dictionary words one edit away ("النضام" has 24), so the single-neighbor rule rarely applies. The frequent slips (missing hamza, ة/ه) are covered by the list instead.
+
+## Sentence position and the conversation (`context.ts`)
+
+- `startsSentence(text, start)` is true at the start of the text, after a line break, or after `.` `!` `?` `؟` and whitespace. A full stop after a title or abbreviation (Mr, Mrs, Ms, Dr, Prof, Eng, St, Jr, Sr, vs, etc, e.g., i.e.) doesn't count, so "Ms. Fatimah" is mid-sentence, and so is "Harbi" in "Al-Harbi".
+- `conversationWords(turns)` collects the words of the customer's turns, lowercased (English) or without marks (Arabic). `inConversation` looks a word up in that set.
+
+The composer and the eval pass both into `decide()`. Without them, the guards don't apply, as before.
 
 ## The misspellings lists (`misspellings.ts`, `lists/`, `list-checks.ts`)
 

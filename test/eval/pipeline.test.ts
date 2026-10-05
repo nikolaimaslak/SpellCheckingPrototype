@@ -49,6 +49,14 @@ describe('eval pipeline', () => {
     ]);
   });
 
+  it('leaves a capitalized name in mid-sentence, but fixes a typo that starts a sentence', async () => {
+    const r = await byWord('Ms. Fatimah, I have sent you the form.');
+    expect(r.Fatimah.flagged).toBe(true);
+    expect(r.Fatimah.replacement).toBeNull();
+    const s = await byWord('Thanks. Seperate forms are needed.');
+    expect(s.Seperate.replacement).toBe('Separate');
+  });
+
   it('fixes only the case of a stray capital', async () => {
     const r = await byWord('oNly this');
     expect(r.oNly.replacement).toBe('only');

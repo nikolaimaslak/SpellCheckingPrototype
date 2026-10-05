@@ -45,6 +45,31 @@ describe('decide: known misspellings', () => {
   });
 });
 
+describe('decide: names (Req 4.2.2)', () => {
+  const at = (startsSentence: boolean, conversation?: string[]) => ({ ...ctx(), startsSentence, conversation: conversation && new Set(conversation) });
+
+  it('leaves a capitalized word alone in mid-sentence, by every rule', () => {
+    expect(decide('Fatimah', 'en', n('fatima'), at(false))).toBeNull();
+    expect(decide('Teh', 'en', n(), at(false))).toBeNull();
+    expect(decide('ThiS', 'en', { neighbors: [], caseFix: 'This' }, at(false))).toBeNull();
+  });
+
+  it('still fixes a capitalized word that starts a sentence', () => {
+    expect(decide('Teh', 'en', n(), at(true))).toBe('The');
+    expect(decide('Seperate', 'en', n('separate'), at(true))).toBe('Separate');
+  });
+
+  it('leaves conversation words alone, in English and Arabic', () => {
+    expect(decide('Noura', 'en', n('nora'), at(true, ['noura']))).toBeNull();
+    expect(decide('نوره', 'ar', n('نور'), at(true, ['نوره']))).toBeNull();
+    expect(decide('paymnet', 'en', n('payment'), at(true, ['noura']))).toBe('payment');
+  });
+
+  it('keeps the old behavior when no context is given', () => {
+    expect(decide('Seperate', 'en', n('separate'), ctx())).toBe('Separate');
+  });
+});
+
 describe('decide', () => {
   it('fixes a clear English slip', () => {
     expect(decide('seperate', 'en', n('separate'), ctx())).toBe('separate');
