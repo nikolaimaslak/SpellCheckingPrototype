@@ -7,7 +7,7 @@ import type { Message } from '../../eval/types';
 function tok(text: string, word: string, over: Partial<TokenResult> = {}): TokenResult {
   const start = text.indexOf(word);
   const lang = /\p{Script=Arabic}/u.test(word) ? 'ar' : 'en';
-  return { word, lang, start, end: start + word.length, flagged: false, suggestions: [], replacement: null, checkMs: 0, suggestMs: null, ...over };
+  return { word, lang, start, end: start + word.length, flagged: false, suggestions: [], replacement: null, checkMs: 0, suggestMs: null, decideMs: null, ...over };
 }
 
 const result = (tokens: TokenResult[], transient: PipelineResult['transient'] = []): PipelineResult => ({ tokens, transient });

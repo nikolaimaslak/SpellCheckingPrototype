@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 // The benchmark is only meaningful if its pipeline decides like the composer.
 // Both run on the real engine here; the composer gets each message typed
-// character by character, ending with a space so every word is completed.
+// character by character (so . @ : / hold words as they do for an agent),
+// ending with a space so every word is completed.
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { attachSpellCheck, type AssistEvent } from '../../src/composer';
 import { createHandler } from '../../src/spell/handler';
@@ -22,6 +23,11 @@ const MESSAGES = [
   'مرحيا كيف يمكنتي مساعدتك',
   'رقم النضام هو paymnet',
   'طلبك رقم ١٢٣٤٥ في نظام GOSSI قيد المراجعه',
+  'You can also email us at info@gosi.gov.sa with your request.',
+  'visit https://www.gosi.gov.sa/en for details',
+  'راسلنا على info@gosi.gov.sa بخصوص المستخذم',
+  'please seperate. Thanks',
+  'oNly thiS dOcument',
 ];
 
 let pipeline: Pipeline;

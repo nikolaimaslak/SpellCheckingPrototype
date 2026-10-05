@@ -16,7 +16,7 @@ Everything runs locally on the committed WASM engine and dictionaries. No server
 | `npm run eval:build` | Compiles the hand-marked sources in `eval/datasets/src/` into JSONL datasets |
 | `npm run eval:manifest [-- --write]` | Re-hashes the datasets and reports changed, missing or unlisted files |
 
-Don't run other heavy work (tests, builds) while the benchmark runs: CPU load changes Hunspell's suggestions (KI-1) and shows up as instability.
+Don't run other heavy work (tests, builds) while the benchmark runs. CPU load changes the order of Hunspell's time-limited suggestions, which shows up as suggestion instability, and it slows down the latency figures. Auto-replace decisions don't depend on load (the deterministic one-edit rule).
 
 ## What is measured
 
@@ -30,7 +30,11 @@ Every word of every message gets one **outcome** against its gold label:
 
 The system's corrections are the auto-replacement first, then the suggestions in order. Comparison ignores Arabic diacritics and tatweel, but hamza counts.
 
-The benchmark mirrors the composer **in typing order**. Auto-replacement is decided for the word each typed boundary completes, on the text typed so far, so it catches replacements that happen mid-typing (KI-2: "https" becomes "HTTP" as the ":" is typed). Underlines are decided on the finished text. A parity test (`test/eval/parity.test.ts`) holds the pipeline to the composer's decisions.
+The benchmark mirrors the composer **in typing order**, using the composer's own trigger functions (`src/autocorrect/trigger.ts`). Auto-replacement is decided on the text typed so far, for:
+- the word each typed boundary completes;
+- a word completed by `.` `@` `:` or `/`, which is held until the next typed whitespace and dropped if it has become part of an address.
+
+This catches replacements that happen mid-typing. Such a replacement inside a finished address is an `exclusion-leak` (KI-2, before the hold: "gosi" becoming "gosh" as the "." of "info@gosi.gov.sa" is typed). A message that doesn't end in whitespace is evaluated as if a space were typed after it. Underlines are decided on the finished text. A parity test (`test/eval/parity.test.ts`) holds the pipeline to the composer's decisions.
 
 **Metrics, in three layers:**
 - **Detection**
@@ -46,8 +50,9 @@ The benchmark mirrors the composer **in typing order**. Auto-replacement is deci
   - corruption rate per 10,000 correct words, with its 95% upper bound.
 - **Also reported:**
   - exclusion leaks;
-  - engine latency p95;
-  - instability: tokens whose decision differs between the three normal runs and one run under CPU load.
+  - engine latency p95: correctness check, correction (suggestions) and, for information, the auto-replace decision (the worker's neighbors request);
+  - **decision instability**: tokens whose flag or auto-replacement differs between the three normal runs and one run under CPU load. Gated at 0;
+  - **suggestion instability**: tokens with the same decision in every run whose top suggestion differs. Reported without a threshold; it comes from Hunspell's time-limited `suggest()`, which only the popover uses.
 
 ## Acceptance criteria
 
@@ -60,10 +65,10 @@ The benchmark mirrors the composer **in typing order**. Auto-replacement is deci
 | Detection recall | ≥ 90% | ≥ 80% |
 | False-flag rate, clean text | ≤ 2% | ≤ 5% |
 | Correction@5 / @1 | ≥ 90% / 70% | ≥ 80% / 60% |
-| Exclusion leaks, instability | 0 | 0 |
+| Exclusion leaks, decision instability | 0 | 0 |
 | Latency p95: check / correction | ≤ 5 / 100 ms | ≤ 5 / 100 ms |
 
-🔒 marks the gate for turning auto-replace on by default (formal requirement Req 2.5). Auto-replace coverage and per-type figures are reported without thresholds, because precision takes priority over recall.
+🔒 marks the gate for turning auto-replace on by default (formal requirement Req 2.5). Auto-replace coverage, suggestion instability and per-type figures are reported without thresholds, because precision takes priority over recall.
 
 **Why these values:**
 - **Corruption:** changing a correct word unseen is the worst outcome, so it's held to 1 in 10,000.
@@ -173,3 +178,20 @@ Committed synthetic data only; Claude drafted the data and human review is pendi
   - English `transpose`, `double` and `insert` are strong; `substitute` and `delete` are weakest.
 - **Arabic suggestions are slow and unstable.** They take about 130 ms (p95), and 7–11 Arabic decisions change between runs or under load (KI-1). Several are auto-replacements that appear or disappear.
 - **Detection recall of 100% is an artefact.** Every misspelling in the data is a non-word by construction, so Hunspell always flags it. Real-word errors and real agent data will lower it.
+
+### Baseline after `autocorrect-reliability` (October 5, 2026)
+
+Same data and thresholds. Auto-replace now uses the deterministic one-edit rule, the case-only fix and held words (KI-1, KI-2 and KI-3 resolved).
+
+| Criterion | English | Arabic |
+|---|---|---|
+| 🔒 Corruption rate, clean text (per 10,000) | 11.5 ❌ (unchanged: names, British spellings) | 2.0 ❌ (unchanged: ميجابايت) |
+| 🔒 Auto-replace precision | 95.3% ❌ (was 93.6%) | 91.2% ❌ (was 83.5%) |
+| Wrong fixes of real typos | 1 (was 3) | 1 (was 11) |
+| Auto-replace coverage | 46.0% (was 38.0%) | 6.5% (was 13.9%) |
+| Correction@1 | 71.6% ✅ (was 67.6%) | 36.1% ❌ |
+| Exclusion leaks (both languages) | 0 ✅ (was 17) | |
+| Decision instability | 0 ✅ | 0 ✅ (was 7–13) |
+| Decision latency p95 (informational) | 8 ms | 25 ms |
+
+The remaining gap to the 🔒 gate is the clean-text corruptions: names (planned change `autocorrect-revert-backspace-and-names`) and British spellings (a dictionary question for SV). The single wrong fixes are "contaction" → "contraction" and "ارقاف" → "القاف". Arabic auto-replace is deliberately conservative: most Arabic typos have several dictionary words one edit away, so they stay suggestions.

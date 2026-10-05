@@ -1,3 +1,4 @@
+import { oneEditVariants, tryAlphabet } from '../autocorrect/neighbors';
 import type { HunspellRuntime, SpellEngine } from './engine';
 import { stripMarks } from './arabic';
 import type { CheckResult, Lang, LoadResult, SpellReply, SpellRequest } from './protocol';
@@ -20,6 +21,7 @@ export function createHandler(
   now: () => number = () => performance.now(),
 ): (request: SpellRequest) => Promise<SpellReply> {
   const engines = new Map<Lang, SpellEngine>();
+  const alphabets = new Map<Lang, string[]>();
   let runtime: Promise<HunspellRuntime> | undefined;
 
   async function load(langs: Lang[]): Promise<LoadResult> {
@@ -34,6 +36,7 @@ export function createHandler(
         const { aff, dic } = await loadDictionary(lang);
         engines.get(lang)?.destroy();
         engines.set(lang, rt.createEngine(aff, dic));
+        alphabets.set(lang, tryAlphabet(new TextDecoder().decode(aff), lang));
         result.loaded.push({ lang, ms: Math.round(now() - start) });
       } catch (err) {
         result.failed.push({ lang, reason: (err as Error).message });
@@ -63,6 +66,19 @@ export function createHandler(
     return result;
   }
 
+  // Deterministic, unlike suggest(): every variant is checked, no time limit.
+  function neighbors(lang: Lang, word: string): string[] {
+    const engine = engineFor(lang);
+    const w = lang === 'ar' ? stripMarks(word) : word.toLowerCase();
+    const first = [...word][0] ?? '';
+    // A capitalized word also matches words only accepted capitalized (names).
+    const capitalized = lang === 'en' && first !== first.toLowerCase();
+    const capitalize = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
+    return oneEditVariants(w, alphabets.get(lang) ?? [])
+      .filter((v) => isCorrect(engine, lang, v) || (capitalized && engine.spell(capitalize(v))))
+      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  }
+
   function engineFor(lang: Lang): SpellEngine {
     const engine = engines.get(lang);
     if (!engine) throw new Error(`language not loaded: ${lang}`);
@@ -80,6 +96,8 @@ export function createHandler(
           const word = request.lang === 'ar' ? stripMarks(request.word) : request.word;
           return { id: request.id, ok: true, result: engineFor(request.lang).suggest(word) };
         }
+        case 'neighbors':
+          return { id: request.id, ok: true, result: neighbors(request.lang, request.word) };
         case 'check':
           return { id: request.id, ok: true, result: check(request.words) };
         case 'add':

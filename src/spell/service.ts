@@ -29,6 +29,8 @@ export interface SpellService {
   /** Checks every not-yet-cached word in one worker round trip. */
   check(words: Partial<Record<Lang, string[]>>): Promise<void>;
   suggest(lang: Lang, word: string): Promise<string[]>;
+  /** Every dictionary word one edit away; deterministic, so cached per word. */
+  neighbors(lang: Lang, word: string): Promise<string[]>;
 }
 
 export interface SpellServiceOptions {
@@ -43,6 +45,7 @@ export function createSpellService(requester: SpellRequester, options: SpellServ
   const listeners = new Set<(s: SpellServiceStatus) => void>();
   const cache = new Map<Lang, Map<string, boolean>>();
   const inFlight = new Map<string, Promise<void>>();
+  const neighborCache = new Map<string, Promise<string[]>>();
 
   const publish = (next: SpellServiceStatus) => {
     status = next;
@@ -118,5 +121,15 @@ export function createSpellService(requester: SpellRequester, options: SpellServ
       await Promise.all(waits);
     },
     suggest: (lang, word) => requester.request({ type: 'suggest', lang, word }),
+    neighbors(lang, word) {
+      const key = `${lang}:${word}`;
+      let entry = neighborCache.get(key);
+      if (!entry) {
+        entry = requester.request({ type: 'neighbors', lang, word });
+        neighborCache.set(key, entry);
+        entry.catch(() => neighborCache.delete(key)); // a failure is not cached
+      }
+      return entry;
+    },
   };
 }

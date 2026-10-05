@@ -30,10 +30,10 @@ describe('custom dictionary words in the real engine', () => {
     expect(result(await handle({ id: id++, type: 'suggest', lang: 'en', word: 'GOSSI' }))).toContain('GOSI');
   });
 
-  it('makes a custom word an auto-correct target when it is the only one-edit candidate', async () => {
-    const suggestions = result(await handle({ id: id++, type: 'suggest', lang: 'en', word: 'Abshr' })) as string[];
-    const fix = decide('Abshr', 'en', suggestions, { ignored: new Set(), customWords: new Set(['GOSI', 'Absher']) });
-    expect(suggestions).toContain('Absher');
+  it('makes a custom word an auto-correct target when it is the only one-edit neighbor', async () => {
+    const neighbors = result(await handle({ id: id++, type: 'neighbors', lang: 'en', word: 'Abshr' })) as string[];
+    const fix = decide('Abshr', 'en', { neighbors, caseFix: null }, { ignored: new Set(), customWords: new Set(['GOSI', 'Absher']) });
+    expect(neighbors).toEqual(['absher']);
     expect(fix).toBe('Absher');
   });
 });

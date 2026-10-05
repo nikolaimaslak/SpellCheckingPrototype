@@ -1,8 +1,9 @@
 // The spelling benchmark: every dataset through the composer's pipeline,
 // three times as is and once while other threads load the CPU (KI-1), plus
 // the error-type matrix. Metrics use, per token, the result at least two of
-// the three unloaded runs agree on; instability counts tokens whose decision
-// differs in any run. Private datasets only ever contribute aggregates.
+// the three unloaded runs agree on; decision instability counts tokens whose
+// flag or auto-replacement differs in any run, suggestion instability those
+// whose decision is stable but whose top suggestion differs. Private datasets only ever contribute aggregates.
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { availableParallelism } from 'node:os';
@@ -51,9 +52,15 @@ export interface UnstableToken {
   dataset: string;
   messageId: string;
   word: string;
-  /** The decision in each run: "<outcome> <top correction> <replacement>", or "absent". */
+  /** The result in each run: "<outcome> <top correction> <replacement>", or "absent". */
   runs: string[];
   context: string;
+}
+
+export interface Instability {
+  total: number;
+  byLang: Partial<Record<Lang | 'all', number>>;
+  examples: UnstableToken[];
 }
 
 export interface BenchmarkResult {
@@ -63,7 +70,10 @@ export interface BenchmarkResult {
   verdicts: Verdict[];
   byLang: Partial<Record<Lang, { metrics: Metrics; byType: Record<string, Metrics>; correctionTypes: CorrectionTypes }>>;
   matrix: Partial<Record<Lang, MatrixSummary>>;
-  instability: { total: number; byLang: Partial<Record<Lang | 'all', number>>; examples: UnstableToken[] };
+  /** Flag or auto-replace decisions that differ between runs (the gated criterion). */
+  instability: Instability;
+  /** Stable decisions whose top suggestion differs between runs (reported, not gated). */
+  suggestionInstability: Instability;
   examples: { corruptions: WordOutcome[]; wrongFixes: WordOutcome[]; exclusionLeaks: WordOutcome[] };
   /** Every corruption and wrong fix of the committed data, by language (uncapped), for the gate. */
   identities: Partial<Record<Lang, { corruptions: string[]; wrongFixes: string[] }>>;
@@ -74,7 +84,47 @@ export interface BenchmarkResult {
 const EXAMPLE_CAP = 50;
 const scopeOf = (kind: string): Scope | null => (kind === 'clean' ? 'clean' : kind === 'private' || kind === 'wordlist' ? null : 'misspelled');
 const keyOf = (o: WordOutcome) => `${o.dataset}|${o.messageId}|${o.start}|${o.word}|${o.gold}`;
-const decisionOf = (o: WordOutcome | undefined) => (o ? `${o.outcome} ${o.corrections[0] ?? '-'} ${o.replacement ?? '-'}` : 'absent');
+const resultOf = (o: WordOutcome | undefined) => (o ? `${o.outcome} ${o.corrections[0] ?? '-'} ${o.replacement ?? '-'}` : 'absent');
+const decisionOf = (o: WordOutcome | undefined) => (o ? `${o.outcome} ${o.replacement ?? '-'}` : 'absent');
+
+/**
+ * Per token, the outcome at least two of the first `unloadedRuns` runs agree
+ * on, and the tokens whose decision (flag, auto-replacement) or, with a stable
+ * decision, top suggestion differs between any two runs. Examples leave out
+ * private datasets.
+ */
+export function stabilityOf(
+  runs: WordOutcome[][],
+  privateNames: ReadonlySet<string>,
+  unloadedRuns = RUNS,
+): { outcomes: WordOutcome[]; decision: Instability; suggestion: Instability } {
+  const indexed = runs.map((r) => new Map(r.map((o) => [keyOf(o), o])));
+  const keys = [...new Set(runs.flatMap((r) => r.map(keyOf)))];
+  const outcomes: WordOutcome[] = [];
+  const empty = (): Instability => ({ total: 0, byLang: { en: 0, ar: 0, all: 0 }, examples: [] });
+  const decision = empty();
+  const suggestion = empty();
+  const count = (into: Instability, perRun: (WordOutcome | undefined)[]) => {
+    const any = perRun.find(Boolean)!;
+    into.total++;
+    into.byLang.all = (into.byLang.all ?? 0) + 1;
+    if (any.lang) into.byLang[any.lang] = (into.byLang[any.lang] ?? 0) + 1;
+    if (!privateNames.has(any.dataset) && into.examples.length < EXAMPLE_CAP) {
+      into.examples.push({ dataset: any.dataset, messageId: any.messageId, word: any.word, runs: perRun.map(resultOf), context: any.context });
+    }
+  };
+  for (const key of keys) {
+    const perRun = indexed.map((m) => m.get(key));
+    const results = perRun.map(resultOf);
+    const unloaded = results.slice(0, unloadedRuns);
+    const majority = unloaded.find((d) => unloaded.filter((x) => x === d).length >= 2) ?? unloaded[0];
+    const chosen = perRun[results.indexOf(majority)];
+    if (chosen) outcomes.push(chosen);
+    if (new Set(perRun.map(decisionOf)).size > 1) count(decision, perRun);
+    else if (new Set(results).size > 1) count(suggestion, perRun);
+  }
+  return { outcomes, decision, suggestion };
+}
 
 /** Keeps every available core busy until stopped (the KI-1 load). */
 function loadCpu(): () => Promise<void> {
@@ -101,6 +151,7 @@ const volatile = (o: WordOutcome) => o.outcome !== 'untouched' && o.outcome !== 
 interface Timing {
   check: Partial<Record<Lang, number[]>>;
   suggest: Partial<Record<Lang, number[]>>;
+  decide: Partial<Record<Lang, number[]>>;
 }
 
 /**
@@ -139,6 +190,7 @@ async function evaluateOnce(
         for (const t of result.tokens) {
           time(t.lang, 'check', t.checkMs);
           time(t.lang, 'suggest', t.suggestMs);
+          time(t.lang, 'decide', t.decideMs);
         }
       }
       const outcomes = outcomesFor(set.name, message, result);
@@ -176,7 +228,7 @@ export async function runBenchmark(data: LoadedData, criteria: Criterion[], opti
   for (const p of pipelines.values()) await (await p).run('warm up the engine تهيئة المحرك');
 
   const runs: WordOutcome[][] = [];
-  const timing: Timing = { check: {}, suggest: {} };
+  const timing: Timing = { check: {}, suggest: {}, decide: {} };
   const first = new Map<string, WordOutcome[]>();
   for (let i = 0; i < RUNS; i++) {
     const begin = performance.now();
@@ -195,28 +247,8 @@ export async function runBenchmark(data: LoadedData, criteria: Criterion[], opti
   }
 
   // Majority result per token over the unloaded runs; instability over all runs.
-  const indexed = runs.map((r) => new Map(r.map((o) => [keyOf(o), o])));
-  const keys = [...new Set(runs.flatMap((r) => r.map(keyOf)))];
   const privateNames = new Set(data.datasets.filter((d) => d.entry.kind === 'private').map((d) => d.name));
-  const outcomes: WordOutcome[] = [];
-  const unstable: UnstableToken[] = [];
-  const instabilityByLang: Partial<Record<Lang | 'all', number>> = { en: 0, ar: 0, all: 0 };
-  for (const key of keys) {
-    const perRun = indexed.map((m) => m.get(key));
-    const decisions = perRun.map(decisionOf);
-    const unloaded = decisions.slice(0, RUNS);
-    const majority = unloaded.find((d) => unloaded.filter((x) => x === d).length >= 2) ?? unloaded[0];
-    const chosen = perRun[decisions.indexOf(majority)];
-    if (chosen) outcomes.push(chosen);
-    if (new Set(decisions).size > 1) {
-      const any = perRun.find(Boolean)!;
-      instabilityByLang.all = (instabilityByLang.all ?? 0) + 1;
-      if (any.lang) instabilityByLang[any.lang] = (instabilityByLang[any.lang] ?? 0) + 1;
-      if (!privateNames.has(any.dataset)) {
-        unstable.push({ dataset: any.dataset, messageId: any.messageId, word: any.word, runs: decisions, context: any.context });
-      }
-    }
-  }
+  const { outcomes, decision, suggestion } = stabilityOf(runs, privateNames);
 
   const datasetOutcomes = groupBy(outcomes, (o) => o.dataset);
   const summaries: DatasetSummary[] = data.datasets.map((d) => {
@@ -249,9 +281,10 @@ export async function runBenchmark(data: LoadedData, criteria: Criterion[], opti
   for (const lang of [...LANGS, 'all'] as const) {
     const check = lang === 'all' ? LANGS.flatMap((l) => timing.check[l] ?? []) : (timing.check[lang] ?? []);
     const suggest = lang === 'all' ? LANGS.flatMap((l) => timing.suggest[l] ?? []) : (timing.suggest[lang] ?? []);
-    latency[lang] = { checkP95Ms: percentile(check, 95), suggestP95Ms: percentile(suggest, 95) };
+    const decide = lang === 'all' ? LANGS.flatMap((l) => timing.decide[l] ?? []) : (timing.decide[lang] ?? []);
+    latency[lang] = { checkP95Ms: percentile(check, 95), suggestP95Ms: percentile(suggest, 95), decideP95Ms: percentile(decide, 95) };
   }
-  const summary: RunSummary = { scopes, instability: instabilityByLang, latency };
+  const summary: RunSummary = { scopes, instability: decision.byLang, latency };
 
   const matrix: BenchmarkResult['matrix'] = {};
   for (const [lang, m] of matrixInput) {
@@ -272,7 +305,8 @@ export async function runBenchmark(data: LoadedData, criteria: Criterion[], opti
     verdicts: judge(criteria, summary),
     byLang,
     matrix,
-    instability: { total: instabilityByLang.all ?? 0, byLang: instabilityByLang, examples: unstable.slice(0, EXAMPLE_CAP) },
+    instability: decision,
+    suggestionInstability: suggestion,
     examples: {
       corruptions: committed.filter((o) => o.outcome === 'corruption').slice(0, EXAMPLE_CAP),
       wrongFixes: committed.filter((o) => o.outcome === 'wrong-fix').slice(0, EXAMPLE_CAP),

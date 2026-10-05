@@ -7,7 +7,11 @@ Tooling to evaluate spell checking in Arabic and English. It provides correct te
 ## Requirements
 
 ### Requirement: Benchmark run
-`npm run eval` SHALL run every dataset through the same Tier 1 pipeline the composer uses: tokenization with exclusions and per-word language routing, the Hunspell engine with the committed dictionaries, the dataset's custom dictionary, and the auto-replace confidence rule. As in the composer, auto-replacement MUST be decided in typing order: for the word each typed boundary completes, on the text typed so far. Underlines MUST be decided on the finished message. A message without a final boundary MUST be evaluated as if one were typed after its last word. It MUST use only local files (the committed WASM, the provisioned dictionaries and the datasets), and MUST NOT need the completion server or a model key.
+`npm run eval` SHALL run every dataset through the same Tier 1 pipeline the composer uses: tokenization with exclusions and per-word language routing, the Hunspell engine with the committed dictionaries, the dataset's custom dictionary, and the auto-replace confidence rule. Auto-replacement MUST be decided in typing order, as in the composer:
+- for the word each typed boundary completes, on the text typed so far;
+- holding a word completed by `.`, `@`, `:` or `/` until the next typed whitespace, with the same trigger rules as the composer.
+
+Underlines MUST be decided on the finished message. A message that doesn't end in whitespace MUST be evaluated as if a space were typed after it. It MUST use only local files (the committed WASM, the provisioned dictionaries and the datasets), and MUST NOT need the completion server or a model key.
 
 #### Scenario: No server and no key
 - **WHEN** `npm run eval` is run with the completion server stopped and `GEMINI_API_KEY` unset
@@ -22,8 +26,16 @@ Tooling to evaluate spell checking in Arabic and English. It provides correct te
 - **THEN** "النضام" is evaluated against Arabic and "paymnet" against English, each with its own outcome
 
 #### Scenario: Word replaced while typing
-- **WHEN** a dataset message contains "info@gosi.gov.sa", and the "." typed after "gosi" completes "gosi" before the text is recognizable as an email address
-- **THEN** the benchmark records the replacement of "gosi" made while typing, although "gosi" is not a word of the finished message
+- **WHEN** a word is auto-replaced while the message is typed, but that word is not a word of the finished message (it ends up inside an excluded span)
+- **THEN** the benchmark records that replacement as an exclusion leak, with its message
+
+#### Scenario: Address typed in order
+- **WHEN** a dataset message is "You can also email us at info@gosi.gov.sa with your request."
+- **THEN** no exclusion leak is recorded, because "gosi" is held at the "." and the finished address is excluded
+
+#### Scenario: Message ending in a full stop
+- **WHEN** a dataset message is "Please seperate."
+- **THEN** "seperate" is held at the "." and decided at the space added after the message, so it is recorded as auto-replaced
 
 ### Requirement: Correct word lists
 `npm run eval:words` SHALL build a frequency-ranked word list (word, count, language) from correct text: plain text with one message per line, or a dataset. A word MUST be listed only if the pipeline would check it and accepts it as correct. Excluded tokens, mixed-script tokens and misspelled words MUST be left out, and the report MUST say how many were left out and why. Arabic words MUST be counted under their written form with diacritics and tatweel removed. Word lists for English and Arabic built from the clean in-domain text MUST be committed and listed in the manifest.
@@ -209,7 +221,7 @@ A committed criteria file SHALL set a threshold, direction and regression tolera
 | Correctness-check latency p95 | ≤ 5 ms | ≤ 5 ms |
 | Correction latency p95 | ≤ 100 ms | ≤ 100 ms |
 
-Auto-replace coverage and per-type figures MUST be reported without thresholds. Corruption rate and auto-replace precision MUST be labelled as the gate for enabling auto-replace by default.
+Auto-replace coverage, suggestion instability and per-type figures MUST be reported without thresholds. Corruption rate and auto-replace precision MUST be labelled as the gate for enabling auto-replace by default.
 
 #### Scenario: Criterion fails
 - **WHEN** Arabic detection recall is 74%
@@ -219,16 +231,28 @@ Auto-replace coverage and per-type figures MUST be reported without thresholds. 
 - **WHEN** the criteria file changes a threshold
 - **THEN** the next report uses the new threshold, and the measured values are unaffected
 
+#### Scenario: Suggestion instability has no threshold
+- **WHEN** the top suggestion of a flagged word differs in the run under CPU load
+- **THEN** the report shows the suggestion-instability count, and no criterion fails because of it
+
 ### Requirement: Decision stability
-The benchmark SHALL evaluate each dataset three times, plus once while other threads load the CPU. It MUST report as instability the number of tokens whose flag, correction ranking at rank 1, or auto-replace decision differs between any two runs, with examples. Every other metric MUST use, for each token, the result that at least two of the three unloaded runs agree on.
+The benchmark SHALL evaluate each dataset three times, plus once while other threads load the CPU. It MUST report two counts, each with examples:
+- **decision instability**: tokens whose flag or auto-replace decision differs between any two runs;
+- **suggestion instability**: tokens whose decision is the same in every run, but whose top-ranked correction differs between any two runs.
+
+Every other metric MUST use, for each token, the result that at least two of the three unloaded runs agree on.
 
 #### Scenario: Stable under load
-- **WHEN** corrections and the confidence rule are deterministic
-- **THEN** instability is 0 for every dataset
+- **WHEN** the confidence rule is deterministic
+- **THEN** decision instability is 0 for every dataset, in English and Arabic
 
 #### Scenario: Load changes a decision
-- **WHEN** under CPU load a competing suggestion is cut and an ambiguous English or Arabic word becomes an auto-replacement
-- **THEN** that token is counted as unstable, and the report lists it with its outcome in each run
+- **WHEN** under CPU load an ambiguous English or Arabic word becomes an auto-replacement
+- **THEN** that token counts toward decision instability, and the report lists it with its outcome in each run
+
+#### Scenario: Load changes only the top suggestion
+- **WHEN** a misspelled Arabic word gets the same flag and auto-replace decision in every run, but under CPU load its top suggestion differs
+- **THEN** it counts toward suggestion instability, not decision instability
 
 ### Requirement: Datasets and provenance
 Each dataset SHALL be one file of labelled messages. Every token carries a language and a gold label: correct, misspelled (with intended word and optional error type), or excluded. A manifest MUST record each dataset's and word list's source, license, size, hash and, for generated data, the generator version, options and seed. A dataset that is unlisted, or whose hash doesn't match, MUST be refused. The committed data MUST include:

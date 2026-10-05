@@ -6,6 +6,7 @@ export type SpellRequest =
   | { id: number; type: 'load'; langs: Lang[] }
   | { id: number; type: 'spell'; lang: Lang; word: string }
   | { id: number; type: 'suggest'; lang: Lang; word: string }
+  | { id: number; type: 'neighbors'; lang: Lang; word: string }
   | { id: number; type: 'add'; lang: Lang; word: string }
   | { id: number; type: 'check'; words: Partial<Record<Lang, string[]>> };
 
@@ -24,6 +25,8 @@ export interface ResultByType {
   load: LoadResult;
   spell: boolean;
   suggest: string[];
+  /** Every dictionary word one edit away, complete and sorted (no time limit). */
+  neighbors: string[];
   add: null;
   check: CheckResult;
 }

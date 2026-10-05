@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { availableParallelism } from 'node:os';
+import { Worker } from 'node:worker_threads';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { loadHunspell } from '../../src/spell/engine';
 import { createHandler, type DictionaryLoader } from '../../src/spell/handler';
+import type { SpellReply } from '../../src/spell/protocol';
 
 const runtime = () => loadHunspell({ wasmBinary: readFileSync('src/spell/wasm/hunspell.wasm') });
 
@@ -88,5 +91,65 @@ describe('batch check', () => {
     expect(check.ok && check.result).toEqual({ misspelled: { ar: ['اذا'] }, unchecked: {} });
     const suggest = await handle({ id: 3, type: 'suggest', lang: 'ar', word: 'اذا' });
     expect(suggest.ok && suggest.result).toContain('إذا');
+  });
+});
+
+describe('one-edit neighbors', () => {
+  let handle: ReturnType<typeof createHandler>;
+  let id = 1;
+  const neighbors = async (lang: 'en' | 'ar', word: string) => {
+    const mine = ++id;
+    const reply: SpellReply = await handle({ id: mine, type: 'neighbors', lang, word });
+    if (!reply.ok) throw new Error(reply.error);
+    expect(reply.id).toBe(mine);
+    return reply.result as string[];
+  };
+
+  beforeAll(async () => {
+    handle = createHandler(runtime, bothLanguages);
+    await handle({ id: 1, type: 'load', langs: ['en', 'ar'] });
+    await handle({ id: ++id, type: 'add', lang: 'en', word: 'tawasul' });
+  });
+
+  it('lists every English word one edit away, sorted', async () => {
+    expect(await neighbors('en', 'recieve')).toEqual(['receive', 'relieve']);
+    expect(await neighbors('en', 'seperate')).toEqual(['separate']);
+  });
+
+  it('compares English in lower case and accepts capitalized-only words for a capitalized word', async () => {
+    expect(await neighbors('en', 'Seperate')).toEqual(['separate']);
+    // "Fatima" is only accepted capitalized.
+    expect(await neighbors('en', 'Fatimah')).toContain('fatima');
+    expect(await neighbors('en', 'fatimah')).not.toContain('fatima');
+  });
+
+  it('includes custom words', async () => {
+    expect(await neighbors('en', 'tawasull')).toContain('tawasul');
+  });
+
+  it('lists Arabic neighbors, ignoring diacritics', async () => {
+    expect(await neighbors('ar', 'المستخذم')).toEqual(['المستخدم']);
+    expect(await neighbors('ar', 'المُستخذم')).toEqual(['المستخدم']);
+    expect((await neighbors('ar', 'النضام')).length).toBeGreaterThan(1);
+  });
+
+  it('errors for an unloaded language and keeps serving', async () => {
+    const english = createHandler(runtime, englishOnly);
+    await english({ id: 1, type: 'load', langs: ['en'] });
+    expect(await english({ id: 2, type: 'neighbors', lang: 'ar', word: 'النضام' })).toEqual({ id: 2, ok: false, error: 'language not loaded: ar' });
+    expect(await english({ id: 3, type: 'neighbors', lang: 'en', word: 'seperate' })).toEqual({ id: 3, ok: true, result: ['separate'] });
+  });
+
+  it('gives the same reply while every core is busy (KI-1)', async () => {
+    const words: ['en' | 'ar', string][] = [['en', 'recieve'], ['ar', 'الإلكطروني'], ['ar', 'النضام']];
+    const idle = await Promise.all(words.map(([lang, w]) => neighbors(lang, w)));
+    const busy = Array.from({ length: availableParallelism() }, () => new Worker('for (;;) {}', { eval: true }));
+    try {
+      const loaded = [];
+      for (const [lang, w] of words) loaded.push(await neighbors(lang, w));
+      expect(loaded).toEqual(idle);
+    } finally {
+      await Promise.all(busy.map((w) => w.terminate()));
+    }
   });
 });

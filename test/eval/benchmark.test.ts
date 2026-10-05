@@ -1,9 +1,10 @@
 // The benchmark end to end on a small in-memory data set.
 import { beforeAll, describe, expect, it } from 'vitest';
-import { runBenchmark, type BenchmarkResult } from '../../eval/benchmark';
+import { runBenchmark, stabilityOf, type BenchmarkResult } from '../../eval/benchmark';
 import { loadCriteria } from '../../eval/criteria';
 import type { LoadedData, ManifestEntry } from '../../eval/datasets';
 import { AR_TYPES, EN_TYPES } from '../../eval/error-types';
+import type { WordOutcome } from '../../eval/types';
 
 const entry = (file: string, kind: ManifestEntry['kind'], lang: ManifestEntry['lang']): ManifestEntry => ({ file, kind, lang, source: 'test', license: 'test', sha256: '' });
 
@@ -22,7 +23,7 @@ const data: LoadedData = {
       name: 'typos-ar',
       entry: entry('typos-ar.jsonl', 'typos', 'ar'),
       customWords: [],
-      messages: [{ id: 't1', text: 'النضام يعمل الآن', labels: [{ start: 0, word: 'النضام', gold: 'misspelled', intended: 'النظام' }] }],
+      messages: [{ id: 't1', text: 'المستخذم يعمل الآن', labels: [{ start: 0, word: 'المستخذم', gold: 'misspelled', intended: 'المستخدم' }] }],
     },
     {
       name: 'pilot',
@@ -63,7 +64,59 @@ describe('benchmark', () => {
     expect(result.datasets.find((d) => d.name === 'pilot')!.metrics.counts.misspelled).toBe(1);
   });
 
-  it('measures engine latency', () => {
+  it('measures engine latency, including the auto-replace decision', () => {
     expect(result.latency.en!.checkP95Ms).not.toBeNull();
+    expect(result.latency.ar!.decideP95Ms).not.toBeNull();
+  });
+
+  it('reports both instability counts', () => {
+    expect(result.instability.total).toBe(0);
+    expect(result.suggestionInstability.byLang).toEqual({ en: 0, ar: 0, all: 0 });
+  });
+});
+
+describe('stability', () => {
+  const token = (over: Partial<WordOutcome>): WordOutcome => ({
+    dataset: 'injected-ar',
+    messageId: 'm1',
+    lang: 'ar',
+    word: 'الإلكترونيى',
+    start: 0,
+    gold: 'misspelled',
+    intended: 'الإلكترونية',
+    errorType: 'keyboard-sub',
+    rank: null,
+    replacement: null,
+    corrections: [],
+    correctionType: null,
+    context: '',
+    outcome: 'flagged',
+    ...over,
+  });
+
+  it('counts a changed top suggestion as suggestion instability only', () => {
+    const a = token({ corrections: ['ألإلكترونيي'] });
+    const b = token({ corrections: ['الإلكترونية'] });
+    const { decision, suggestion, outcomes } = stabilityOf([[a], [a], [a], [b]], new Set());
+    expect(decision.byLang).toEqual({ en: 0, ar: 0, all: 0 });
+    expect(suggestion.byLang).toEqual({ en: 0, ar: 1, all: 1 });
+    expect(suggestion.examples[0].runs).toEqual(['flagged ألإلكترونيي -', 'flagged ألإلكترونيي -', 'flagged ألإلكترونيي -', 'flagged الإلكترونية -']);
+    expect(outcomes).toEqual([a]);
+  });
+
+  it('counts a changed auto-replacement as decision instability', () => {
+    const flagged = token({ corrections: ['وإليك'] });
+    const fixed = token({ outcome: 'fixed', replacement: 'وإليك', corrections: ['وإليك'] });
+    const { decision, suggestion } = stabilityOf([[flagged], [flagged], [flagged], [fixed]], new Set());
+    expect(decision.byLang).toEqual({ en: 0, ar: 1, all: 1 });
+    expect(suggestion.total).toBe(0);
+  });
+
+  it('keeps private datasets out of the examples', () => {
+    const a = token({ dataset: 'pilot', corrections: ['x'] });
+    const b = token({ dataset: 'pilot', outcome: 'fixed', replacement: 'y', corrections: ['y'] });
+    const { decision } = stabilityOf([[a], [b], [a]], new Set(['pilot']));
+    expect(decision.total).toBe(1);
+    expect(decision.examples).toEqual([]);
   });
 });

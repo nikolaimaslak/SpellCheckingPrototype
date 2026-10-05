@@ -25,6 +25,9 @@ function fakeRequester() {
         }
         case 'suggest':
           return ['receive'] as never;
+        case 'neighbors':
+          if (command.word === 'boom') throw new Error('worker failed');
+          return ['receive', 'relieve'] as never;
         default:
           return null as never;
       }
@@ -72,6 +75,32 @@ describe('spell service', () => {
     await flush();
     await Promise.all([service.check({ en: ['recieve'] }), service.check({ en: ['recieve'] })]);
     expect(sent.filter((c) => c.type === 'check')).toHaveLength(1);
+  });
+
+  it('caches neighbors per word, sharing in-flight requests', async () => {
+    const { requester, sent, releaseArabic } = fakeRequester();
+    releaseArabic();
+    const service = createSpellService(requester);
+    await flush();
+    const [a, b] = await Promise.all([service.neighbors('en', 'recieve'), service.neighbors('en', 'recieve')]);
+    expect(a).toEqual(['receive', 'relieve']);
+    expect(b).toBe(a);
+    await service.neighbors('en', 'recieve');
+    await service.neighbors('ar', 'recieve');
+    expect(sent.filter((c) => c.type === 'neighbors')).toEqual([
+      { type: 'neighbors', lang: 'en', word: 'recieve' },
+      { type: 'neighbors', lang: 'ar', word: 'recieve' },
+    ]);
+  });
+
+  it('does not cache a failed neighbors request', async () => {
+    const { requester, sent, releaseArabic } = fakeRequester();
+    releaseArabic();
+    const service = createSpellService(requester);
+    await flush();
+    await expect(service.neighbors('en', 'boom')).rejects.toThrow('worker failed');
+    await expect(service.neighbors('en', 'boom')).rejects.toThrow('worker failed');
+    expect(sent.filter((c) => c.type === 'neighbors')).toHaveLength(2);
   });
 
   it('does not check languages that are not ready', async () => {

@@ -1,41 +1,41 @@
 {
   "build": {
     "version": "0.1.0",
-    "commit": "d09914b",
-    "date": "2026-10-03T08:18:40.131Z"
+    "commit": "dfae19c",
+    "date": "2026-10-05T19:12:48.765Z"
   },
   "criteria": {
     "corruption-en": 11.474469305794607,
     "corruption-ar": 1.9952114924181965,
-    "autoreplace-precision-en": 0.9356223175965666,
-    "autoreplace-precision-ar": 0.8354430379746836,
+    "autoreplace-precision-en": 0.9530685920577617,
+    "autoreplace-precision-ar": 0.9117647058823529,
     "detection-recall-en": 1,
     "detection-recall-ar": 1,
     "false-flag-en": 0.003251099636641805,
     "false-flag-ar": 0.0011971268954509178,
-    "correction-at5-en": 0.9111498257839721,
+    "correction-at5-en": 0.9128919860627178,
     "correction-at5-ar": 0.6856540084388185,
-    "correction-at1-en": 0.6759581881533101,
+    "correction-at1-en": 0.7160278745644599,
     "correction-at1-ar": 0.36075949367088606,
-    "exclusion-leaks-all": 17,
+    "exclusion-leaks-all": 0,
     "instability-en": 0,
-    "instability-ar": 8,
-    "check-latency-en": 0.012721999999484979,
-    "check-latency-ar": 0.02290799999900628,
-    "suggest-latency-en": 26.2518799999998,
-    "suggest-latency-ar": 125.94674499999746
+    "instability-ar": 0,
+    "check-latency-en": 0.015069000000949018,
+    "check-latency-ar": 0.028989999999794236,
+    "suggest-latency-en": 29.03084100000069,
+    "suggest-latency-ar": 134.21648599999753
   },
   "counts": {
     "en": {
       "corruption": 12,
-      "wrongFix": 3
+      "wrongFix": 1
     },
     "ar": {
       "corruption": 2,
-      "wrongFix": 11
+      "wrongFix": 1
     }
   },
-  "exclusionLeaks": 17,
+  "exclusionLeaks": 0,
   "identities": {
     "en": {
       "corruptions": [
@@ -53,9 +53,7 @@
         "injected-en clean-en-244 \"labour\" → \"labor\""
       ],
       "wrongFixes": [
-        "typos-en typos-en-33 \"contaction\" → \"contraction\"",
-        "injected-en clean-en-228 \"dOcument\" → \"documents\"",
-        "injected-en clean-en-238 \"oNly\" → \"oily\""
+        "typos-en typos-en-33 \"contaction\" → \"contraction\""
       ]
     },
     "ar": {
@@ -64,17 +62,7 @@
         "injected-ar clean-ar-23 \"ميجابايت\" → \"ميغابايت\""
       ],
       "wrongFixes": [
-        "typos-ar typos-ar-34 \"الشكوه\" → \"الشكوة\"",
-        "typos-ar typos-ar-92 \"ارقاف\" → \"القاف\"",
-        "typos-ar typos-ar-93 \"عليى\" → \"عليي\"",
-        "injected-ar clean-ar-26 \"بتمنى\" → \"بتمني\"",
-        "injected-ar clean-ar-196 \"برجى\" → \"برجي\"",
-        "injected-ar clean-ar-227 \"هلى\" → \"هلي\"",
-        "injected-ar clean-ar-257 \"إبلغ\" → \"ابلغ\"",
-        "injected-ar clean-ar-346 \"قفإن\" → \"قفان\"",
-        "injected-ar clean-ar-379 \"صاحإ\" → \"صاحا\"",
-        "injected-ar clean-ar-388 \"عإد\" → \"عاد\"",
-        "injected-ar clean-ar-408 \"حيى\" → \"حيي\""
+        "typos-ar typos-ar-92 \"ارقاف\" → \"القاف\""
       ]
     }
   },
@@ -83,7 +71,7 @@
       "substitute": {
         "detectionRecall": 1,
         "correctionAt1": 0.4492753623188406,
-        "autoReplaceCoverage": 0.391304347826087
+        "autoReplaceCoverage": 0.4057971014492754
       },
       "undouble": {
         "detectionRecall": 1,
@@ -117,20 +105,20 @@
       },
       "insert": {
         "detectionRecall": 1,
-        "correctionAt1": 0.7941176470588235,
-        "autoReplaceCoverage": 0.4852941176470588
+        "correctionAt1": 0.8088235294117647,
+        "autoReplaceCoverage": 0.5
       },
       "case": {
         "detectionRecall": 1,
-        "correctionAt1": 0.6666666666666666,
-        "autoReplaceCoverage": 0
+        "correctionAt1": 0.9855072463768116,
+        "autoReplaceCoverage": 0.6376811594202898
       }
     },
     "ar": {
       "hamza": {
         "detectionRecall": 1,
         "correctionAt1": 0.6363636363636364,
-        "autoReplaceCoverage": 0.21818181818181817
+        "autoReplaceCoverage": 0.07272727272727272
       },
       "insert": {
         "detectionRecall": 1,
@@ -140,7 +128,7 @@
       "ta-marbuta": {
         "detectionRecall": 1,
         "correctionAt1": 0.9523809523809523,
-        "autoReplaceCoverage": 0.7619047619047619
+        "autoReplaceCoverage": 0
       },
       "dots": {
         "detectionRecall": 1,
@@ -155,7 +143,7 @@
       "emphatic": {
         "detectionRecall": 1,
         "correctionAt1": 0.36666666666666664,
-        "autoReplaceCoverage": 0.3333333333333333
+        "autoReplaceCoverage": 0.03333333333333333
       },
       "substitute": {
         "detectionRecall": 1,
@@ -180,7 +168,7 @@
       "alef-maqsura": {
         "detectionRecall": 1,
         "correctionAt1": 1,
-        "autoReplaceCoverage": 0.6666666666666666
+        "autoReplaceCoverage": 0
       }
     }
   }

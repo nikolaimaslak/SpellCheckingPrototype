@@ -10,7 +10,10 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-const BAD = { en: ['seperate', 'Seperate', 'recieve', 'paymnet', 'GOSSI', 'teh'], ar: ['النضام', 'اذا', 'التامينات'] };
+const BAD = {
+  en: ['seperate', 'Seperate', 'recieve', 'paymnet', 'GOSSI', 'teh', 'oNly', 'info', 'gosi', 'https', 'www'],
+  ar: ['النضام', 'اذا', 'التامينات', 'المستخذم', 'حتىى'],
+};
 
 function setup(opts: { customWords?: string[] } = {}) {
   const el = composer('');
@@ -44,11 +47,20 @@ describe('auto-correct in the composer', () => {
     await vi.waitFor(() => expect(flashed(hl)).toEqual([]));
   });
 
-  it('corrects Arabic, including a short hamza slip', async () => {
-    const { el, handle } = setup();
-    typeChars(el, 'النضام اذا ');
+  it('corrects clear Arabic slips and leaves words with many neighbors underlined', async () => {
+    const { el, hl, handle } = setup();
+    typeChars(el, 'المستخذم حتىى النضام اذا ');
     await handle.settled();
-    expect(el.textContent).toBe('النظام إذا ');
+    expect(el.textContent).toBe('المستخدم حتى النضام اذا ');
+    await handle.recheck();
+    expect(hl.words()).toEqual(['النضام', 'اذا']);
+  });
+
+  it('fixes only the case of a stray capital', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'oNly ');
+    await handle.settled();
+    expect(el.textContent).toBe('only ');
   });
 
   it('leaves ambiguous, short and all-caps words as typed', async () => {
@@ -61,9 +73,9 @@ describe('auto-correct in the composer', () => {
 
   it('preserves capitalization and corrects each language in a mixed sentence', async () => {
     const { el, handle } = setup();
-    typeChars(el, 'Seperate النضام paymnet ');
+    typeChars(el, 'Seperate المستخذم paymnet ');
     await handle.settled();
-    expect(el.textContent).toBe('Separate النظام payment ');
+    expect(el.textContent).toBe('Separate المستخدم payment ');
   });
 
   it('keeps the caret where the agent is typing', async () => {
@@ -116,30 +128,107 @@ describe('auto-correct in the composer', () => {
   });
 });
 
+describe('words completed by . @ : / (KI-2)', () => {
+  const step = async (el: HTMLElement, handle: { settled(): Promise<void> }, chars: string) => {
+    typeChars(el, chars);
+    await handle.settled();
+    return el.textContent;
+  };
+
+  it('holds a word before a full stop until the next space', async () => {
+    const { el, handle } = setup();
+    expect(await step(el, handle, 'please seperate.')).toBe('please seperate.');
+    expect(await step(el, handle, ' ')).toBe('please separate. ');
+  });
+
+  it('holds an Arabic word before a full stop', async () => {
+    const { el, handle } = setup();
+    expect(await step(el, handle, 'رقم المستخذم.')).toBe('رقم المستخذم.');
+    expect(await step(el, handle, ' ')).toBe('رقم المستخدم. ');
+  });
+
+  it('decides at once after a comma', async () => {
+    const { el, handle } = setup();
+    expect(await step(el, handle, 'please seperate,')).toBe('please separate,');
+  });
+
+  it.each(['email info@gosi.gov.sa ', 'visit https://www.gosi.gov.sa/en ', 'راسلنا على info@gosi.gov.sa '])(
+    'never touches an address typed by hand: %s',
+    async (text) => {
+      const { el, replace, handle } = setup();
+      for (const ch of text) expect(await step(el, handle, ch)).toBe(text.slice(0, el.textContent!.length));
+      expect(el.textContent).toBe(text);
+      expect(replace).not.toHaveBeenCalled();
+    },
+  );
+
+  it('decides a held word on a line break', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'please seperate.');
+    el.append(document.createElement('br'));
+    placeCaret(el, el.childNodes.length);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'insertLineBreak' }));
+    await handle.settled();
+    expect(el.textContent).toBe('please separate.');
+    expect(el.querySelector('br')).not.toBeNull();
+  });
+
+  it('drops a held word when whitespace is typed elsewhere', async () => {
+    const { el, replace, handle } = setup();
+    typeChars(el, 'please seperate.');
+    (el.firstChild as Text).insertData(0, ' ');
+    placeCaret(el.firstChild!, 1);
+    el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: ' ' }));
+    await handle.settled();
+    expect(el.textContent).toBe(' please seperate.');
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('drops held words when the message is sent', async () => {
+    const { el, replace, handle } = setup();
+    typeChars(el, 'please seperate.');
+    el.replaceChildren(); // host clears the composer on Enter-to-send
+    await handle.recheck();
+    typeChars(el, 'hello ');
+    await handle.settled();
+    expect(replace).not.toHaveBeenCalled();
+  });
+
+  it('reverts a held word\'s replacement with one Undo', async () => {
+    const { el, events, handle } = setup();
+    typeChars(el, 'please seperate. ');
+    await handle.settled();
+    expect(el.textContent).toBe('please separate. ');
+    (el.firstChild as Text).replaceData(7, 8, 'seperate');
+    el.dispatchEvent(new InputEvent('input', { inputType: 'historyUndo' }));
+    expect(events.map((e) => e.type)).toEqual(['autocorrect', 'revert']);
+  });
+});
+
 describe('reverting an auto-correction', () => {
   const popover = () => document.querySelector<HTMLElement>('[data-bp-spell-popover]');
   const options = () => [...document.querySelectorAll<HTMLElement>('[data-bp-spell-popover] [role=option]')];
 
   it('offers "Revert to original" in the popover, restores it once, and never corrects it again', async () => {
     const { el, events, replace, handle } = setup();
-    typeChars(el, 'النضام ');
+    typeChars(el, 'المستخذم ');
     await handle.settled();
-    expect(el.textContent).toBe('النظام ');
+    expect(el.textContent).toBe('المستخدم ');
     placeCaret(el.firstChild!, 2);
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     await vi.waitFor(() => expect(popover()).not.toBeNull());
     expect(popover()!.dir).toBe('rtl');
-    expect(options().map((o) => o.textContent)).toEqual(['Revert to النضام']);
+    expect(options().map((o) => o.textContent)).toEqual(['Revert to المستخذم']);
     replace.mockClear();
     options()[0].click();
     expect(replace).toHaveBeenCalledTimes(1);
-    expect(el.textContent).toBe('النضام ');
+    expect(el.textContent).toBe('المستخذم ');
     expect(events.map((e) => e.type)).toEqual(['autocorrect', 'revert']);
     // not corrected or underlined again
-    typeChars(el, 'النضام ');
+    typeChars(el, 'المستخذم ');
     await handle.settled();
     await handle.recheck();
-    expect(el.textContent).toBe('النضام النضام ');
+    expect(el.textContent).toBe('المستخذم المستخذم ');
   });
 
   it('offers no Revert once the agent edited the corrected word', async () => {

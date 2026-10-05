@@ -1,5 +1,5 @@
-import { decide } from '../autocorrect/confidence';
-import { completedWord } from '../autocorrect/trigger';
+import { caseFolded, decide } from '../autocorrect/confidence';
+import { boundaryKind, completedWord, releasable } from '../autocorrect/trigger';
 import type { Lang } from '../spell/protocol';
 import type { SpellService } from '../spell/service';
 import { buildTextMap, caretOffset, flatOffsetOf, pointAt, rangeFor, tokenize, type Token } from '../tokenizer';
@@ -125,6 +125,8 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   const originalSpellcheck = el.getAttribute('spellcheck');
   const ignored = new Set<string>();
   let corrections: Correction[] = [];
+  /** Words completed by . @ : / whose decision waits for whitespace (KI-2). */
+  let held: Token[] = [];
   let flagged: Token[] = [];
   let generation = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -146,6 +148,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     if (detached) return;
     const mine = ++generation;
     const map = buildTextMap(el);
+    if (!map.text.trim()) held = []; // cleared or sent: nothing is waiting any more
     const tokens = tokenize(map, caretOffset(map, doc.getSelection())).filter(checkable);
 
     const unknown: Partial<Record<Lang, string[]>> = {};
@@ -183,12 +186,29 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     flashTimers.add(t);
   }
 
-  /** The word a typed boundary just completed, captured synchronously at the input event. */
-  function completedAt(e: InputEvent): Token | undefined {
+  /**
+   * The words a typed boundary makes ready for a decision, captured
+   * synchronously at the input event. A word completed by . @ : / is held
+   * until whitespace, then decided only if it isn't part of an address.
+   */
+  function wordsToDecide(e: InputEvent): Token[] {
+    const kind = boundaryKind(e);
+    if (kind === 'none') return [];
     const map = buildTextMap(el);
     const caret = caretOffset(map, doc.getSelection());
-    const token = completedWord(e, map, caret, tokenize(map, caret).filter(checkable));
-    return token && !customWords.has(token.text) ? token : undefined;
+    const tokens = tokenize(map, caret).filter(checkable);
+    const done = completedWord(e, map, caret, tokens);
+    const word = done && !customWords.has(done.text) ? done : undefined;
+    if (kind === 'decide') return word ? [word] : [];
+    if (kind === 'hold') {
+      if (word && !held.some((h) => h.start === word.start && h.text === word.text)) held.push(word);
+      return [];
+    }
+    const waiting = held.map((h) => ({ start: flatOffsetOf(map, h.range.startContainer, h.range.startOffset), text: h.text }));
+    held = [];
+    const ready = caret === undefined ? [] : releasable(waiting, map.text, caret, tokens);
+    if (word && !ready.some((t) => t.start === word.start)) ready.push(word);
+    return ready.sort((a, b) => a.start - b.start);
   }
 
   /** Auto mode: replaces the completed word if it is a clear slip. */
@@ -197,8 +217,11 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
 
     await service.check({ [lang]: [word] });
     if (service.misspelled(lang, word) !== true) return;
-    const suggestions = await service.suggest(lang, word);
-    const fix = decide(word, lang, suggestions, { ignored, customWords });
+    const folded = caseFolded(word, lang);
+    if (folded) await service.check({ [lang]: [folded] });
+    const caseFix = folded && service.misspelled(lang, folded) === false ? folded : null;
+    const neighbors = caseFix ? [] : await service.neighbors(lang, word);
+    const fix = decide(word, lang, { neighbors, caseFix }, { ignored, customWords });
     // Re-validate: the agent may have edited the word, or sent the message, meanwhile.
     if (!fix || detached || !el.isConnected || token.range.toString() !== word) return;
 
@@ -250,8 +273,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     if (mode !== 'auto') return;
     // Capture the word now: by the time earlier corrections finish, the caret
     // may already be several words further on.
-    const token = completedAt(ie);
-    if (token) inFlight = inFlight.then(() => autoCorrect(token)).catch(() => {});
+    for (const token of wordsToDecide(ie)) inFlight = inFlight.then(() => autoCorrect(token)).catch(() => {});
   };
 
   /** The standing auto-correction containing the collapsed caret, if any. */

@@ -1,15 +1,18 @@
 // The composer's Tier 1 spelling path, run on plain messages: tokenizer
 // (exclusions, per-word language), Hunspell with the committed dictionaries,
 // the custom dictionary, and the auto-replace confidence rule. Mirrors
-// src/composer/attach.ts as if the message were typed from start to end:
-// auto-replacement is decided for the word each typed boundary completes,
-// on the text typed so far, and underlines on the finished text. A message
-// without a final boundary gets one, so its last word counts as completed
-// (the worst case for corrupting correct words).
+// src/composer/attach.ts as if the message were typed from start to end,
+// with the same trigger functions (src/autocorrect/trigger.ts):
+// auto-replacement is decided for the word each typed boundary completes, on
+// the text typed so far, holding words completed by . @ : / until the next
+// whitespace; underlines are decided on the finished text. A message that
+// doesn't end in whitespace gets a space, so its last word counts as
+// completed (the worst case for corrupting correct words).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
-import { decide } from '../src/autocorrect/confidence';
+import { caseFolded, decide } from '../src/autocorrect/confidence';
+import { boundaryKind, completedWord, releasable, type HeldWord } from '../src/autocorrect/trigger';
 import { loadHunspell } from '../src/spell/engine';
 import { createHandler, type DictionaryLoader } from '../src/spell/handler';
 import type { Lang, ResultByType, SpellCommand, SpellRequest } from '../src/spell/protocol';
@@ -30,6 +33,8 @@ export interface TokenResult {
   /** Engine time for the correctness check and, when flagged, for suggestions. */
   checkMs: number;
   suggestMs: number | null;
+  /** Engine time for the auto-replace decision (neighbors request), when one was made. */
+  decideMs: number | null;
 }
 
 /**
@@ -72,14 +77,16 @@ const WASM = resolve('src/spell/wasm/hunspell.wasm');
 /** The engine runtime, located on disk even where import.meta.url is an http URL (jsdom tests). */
 export const loadRuntime = () => loadHunspell({ wasmBinary: readFileSync(WASM), locateFile: () => WASM });
 
-// As src/autocorrect/trigger.ts: one typed boundary character completes the
-// word before it, if only 1–3 separator characters lie between them.
-const BOUNDARY_CHAR = /^[\s\p{P}]$/u;
-const GAP = /^[\s\p{P}￼]{1,3}$/u;
-
 const lastWhitespaceBefore = (text: string, index: number) => {
   for (let i = Math.min(index, text.length) - 1; i >= 0; i--) if (/\s/u.test(text[i])) return i;
   return -1;
+};
+
+/** Where the run of non-whitespace text that ends before index `i` (and its trailing whitespace) starts. */
+const runStartBefore = (text: string, i: number) => {
+  let end = i;
+  while (end > 0 && /\s/u.test(text[end - 1])) end--;
+  return lastWhitespaceBefore(text, end) + 1;
 };
 
 let dom: JSDOM | undefined;
@@ -140,37 +147,54 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
     return cache.get(key)!;
   };
 
-  /** The composer's auto-replacement for a completed word (attach.ts autoCorrect). */
-  const autoReplacement = async (t: Token, cache: Map<string, Promise<Suggested>>): Promise<string | null> => {
-    if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return null;
-    return decide(t.text, t.lang, (await suggestOnce(cache, t.text, t.lang)).list, ctx);
+  /** The composer's auto-replacement for a completed word (attach.ts autoCorrect), and the decision's engine time. */
+  const autoReplacement = async (t: Token): Promise<{ fix: string | null; ms: number | null }> => {
+    if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return { fix: null, ms: null };
+    const begin = performance.now();
+    const folded = caseFolded(t.text, t.lang);
+    const caseFix = folded && (await request({ type: 'spell', lang: t.lang, word: folded })) ? folded : null;
+    const neighbors = caseFix ? [] : await request({ type: 'neighbors', lang: t.lang, word: t.text });
+    const ms = performance.now() - begin;
+    return { fix: decide(t.text, t.lang, { neighbors, caseFix }, ctx), ms };
   };
 
   return {
     isCorrect: (word, lang) => request({ type: 'spell', lang, word }),
     suggest: (word, lang) => request({ type: 'suggest', lang, word }),
     async run(text) {
-      const typed = text.length && BOUNDARY_CHAR.test([...text].at(-1)!) ? text : `${text} `;
+      const typed = /\s$/u.test(text) ? text : `${text} `;
 
-      // Typing order: each boundary completes at most the word just before it.
-      // Exclusion patterns never span whitespace, so the text typed so far can
-      // be tokenized from the last whitespace before the possible word (which
-      // ends at most 3 characters back) with the same result.
+      // Typing order, one character at a time, through the composer's trigger
+      // functions. Exclusion patterns never span whitespace, so the text typed
+      // so far can be tokenized from just after a whitespace that precedes
+      // both the possible completed word (at most 3 characters back) and the
+      // run of held words, with the same result.
       const completed = new Map<string, Token>();
+      let held: HeldWord[] = [];
       for (let i = 0; i < typed.length; i++) {
-        if (!BOUNDARY_CHAR.test(typed[i])) continue;
-        const from = lastWhitespaceBefore(typed, i - 3) + 1;
-        const window = typed.slice(from, i + 1);
-        const last = tokensOf(window).at(-1);
-        if (last && GAP.test(window.slice(last.end))) {
-          const start = from + last.start;
-          const end = from + last.end;
-          completed.set(`${start}:${end}:${last.text}`, { ...last, start, end });
+        const input = { inputType: 'insertText', data: typed[i], isComposing: false };
+        const kind = boundaryKind(input);
+        if (kind === 'none') continue;
+        const soFar = typed.slice(0, i + 1);
+        const from = lastWhitespaceBefore(typed, Math.min(i - 3, runStartBefore(typed, i))) + 1;
+        const tokens = tokensOf(typed.slice(from, i + 1)).map((t) => ({ ...t, start: t.start + from, end: t.end + from }));
+        const done = completedWord(input, { text: soFar }, i + 1, tokens);
+        const ready: Token[] = [];
+        if (kind === 'decide' && done) ready.push(done);
+        if (kind === 'hold' && done && !held.some((h) => h.start === done.start && h.text === done.text)) held.push(done);
+        if (kind === 'release') {
+          ready.push(...releasable(held, soFar, i + 1, tokens));
+          held = [];
+          if (done && !ready.some((t) => t.start === done.start)) ready.push(done);
+        }
+        for (const t of ready.sort((a, b) => a.start - b.start)) {
+          const key = `${t.start}:${t.end}:${t.text}`;
+          if (!completed.has(key)) completed.set(key, t);
         }
       }
       const suggested = new Map<string, Promise<Suggested>>();
-      const replacements = new Map<string, string | null>();
-      for (const [key, t] of completed) replacements.set(key, await autoReplacement(t, suggested));
+      const replacements = new Map<string, { fix: string | null; ms: number | null }>();
+      for (const [key, t] of completed) replacements.set(key, await autoReplacement(t));
 
       const tokens: TokenResult[] = [];
       const final = new Set<string>();
@@ -188,14 +212,15 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
           end: t.end,
           flagged,
           suggestions,
-          replacement: replacements.get(key) ?? null,
+          replacement: replacements.get(key)?.fix ?? null,
           checkMs,
           suggestMs,
+          decideMs: replacements.get(key)?.ms ?? null,
         });
       }
       const transient: TransientReplacement[] = [];
       for (const [key, t] of completed) {
-        const replacement = replacements.get(key);
+        const replacement = replacements.get(key)?.fix;
         if (replacement && !final.has(key)) transient.push({ word: t.text, lang: t.lang, start: t.start, end: t.end, replacement });
       }
       return { tokens, transient };

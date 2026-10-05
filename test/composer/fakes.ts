@@ -24,6 +24,28 @@ const SUGGESTIONS: Record<string, string[]> = {
   النضام: ['النظام'],
   اذا: ['إذا'],
   التامينات: ['التأمينات', 'التضمينات'],
+  المستخذم: ['المستخدم'],
+  حتىى: ['حتى'],
+};
+
+// One-edit dictionary neighbors, as the real engine reports them (abridged
+// where the real list is long; only the count matters for the decision).
+const NEIGHBORS: Record<string, string[]> = {
+  recieve: ['receive', 'relieve'],
+  seperate: ['separate'],
+  Seperate: ['separate'],
+  paymnet: ['payment'],
+  النضام: ['الضام', 'النظام', 'لنضام'],
+  اذا: ['إذا', 'ذا', 'هذا'],
+  التامينات: ['التأمينات', 'التضمينات'],
+  المستخذم: ['المستخدم'],
+  حتىى: ['حتى'],
+  gosi: ['gosh'],
+  // Hypothetical (the real engine has none): makes "https:" a fixable word, as
+  // it was when suggest() offered "HTTP", so the URL test can catch a leak.
+  https: ['http'],
+  info: ['inf', 'into'],
+  oNly: ['oily'],
 };
 
 /** In-memory SpellService: words listed in `bad` are misspelled. */
@@ -57,6 +79,7 @@ export function fakeService(bad: Record<string, string[]>, ready: Lang[] = ['en'
       }
     },
     suggest: async (lang, word) => SUGGESTIONS[word] ?? (lang === 'ar' ? ['إذا'] : []),
+    neighbors: async (_lang, word) => NEIGHBORS[word] ?? [],
   };
   return {
     service,

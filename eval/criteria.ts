@@ -27,8 +27,10 @@ export interface Criterion {
 /** What a run measured, as the criteria read it. */
 export interface RunSummary {
   scopes: Record<Scope, Partial<Record<Lang | 'all', Metrics>>>;
+  /** Decision instability: tokens whose flag or auto-replacement differs between runs. */
   instability: Partial<Record<Lang | 'all', number>>;
-  latency: Partial<Record<Lang | 'all', { checkP95Ms: number | null; suggestP95Ms: number | null }>>;
+  /** decideP95Ms (auto-replace decision time) is informational: no criterion reads it. */
+  latency: Partial<Record<Lang | 'all', { checkP95Ms: number | null; suggestP95Ms: number | null; decideP95Ms?: number | null }>>;
 }
 
 export interface Verdict {

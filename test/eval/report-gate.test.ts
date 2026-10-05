@@ -71,6 +71,7 @@ function result(committed: WordOutcome[], extraMisspelled: WordOutcome[] = []): 
     byLang: { en: { metrics, byType: {}, correctionTypes: correctionTypes(all) } },
     matrix: {},
     instability: { total: 0, byLang: {}, examples: [] },
+    suggestionInstability: { total: 0, byLang: {}, examples: [] },
     examples: { corruptions: committed.filter((x) => x.outcome === 'corruption'), wrongFixes: [], exclusionLeaks: [] },
     identities: { en: { corruptions: committed.filter((x) => x.outcome === 'corruption').map(identity), wrongFixes: [] } },
     latency: {},
@@ -89,6 +90,19 @@ describe('report', () => {
     const md = renderMarkdown(result([...clean(10), CORRUPTION]));
     expect(md).toContain('<bdi>Musaned</bdi> → <bdi>Mustard</bdi>, correction type multi — clean-en clean-en-9: <bdi>Your Musaned request is approved</bdi>');
     expect(md).toMatch(/🔒 Corruption rate \| en \| .* \| ≤ 1\.0 \| ❌/);
+  });
+
+  it('shows decision and suggestion instability separately, and decision time', () => {
+    const r = result(clean(5));
+    const ex = (runs: string[]) => ({ dataset: 'injected-ar', messageId: 'm1', word: 'الإلكترونيى', runs, context: '' });
+    r.instability = { total: 1, byLang: { ar: 1, all: 1 }, examples: [ex(['flagged x -', 'fixed y y'])] };
+    r.suggestionInstability = { total: 2, byLang: { ar: 2, all: 2 }, examples: [ex(['flagged a -', 'flagged b -'])] };
+    r.latency = { ar: { checkP95Ms: 0.02, suggestP95Ms: 120, decideP95Ms: 40 } };
+    const md = renderMarkdown(r);
+    expect(md).toContain('Decision instability: tokens whose flag or auto-replacement differed between runs (including the run under CPU load): **1**.');
+    expect(md).toMatch(/Suggestion instability \(no threshold\): .*\*\*2\*\*/);
+    expect(md).toContain('<bdi>flagged a -</bdi> / <bdi>flagged b -</bdi>');
+    expect(md).toContain('| Language | Check p95 (ms) | Correction p95 (ms) | Decision p95 (ms) |');
   });
 
   it('never writes a private dataset’s words', () => {

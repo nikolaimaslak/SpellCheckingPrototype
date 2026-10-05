@@ -48,10 +48,10 @@ handle.detach();         // removes every effect on the host
 ## Auto-correct (`mode: 'auto'`)
 
 - **Trigger:** only the word just completed by a **single typed boundary** (space, punctuation incl. ، ؛ ؟, line break, new paragraph). Never on Enter-to-send (the host cancels it), paste, host insertions (predefined messages, emoji), caret moves, undo or IME composition.
-- **Confidence** (`src/autocorrect/confidence.ts`): exactly one engine suggestion is a single edit away (with adjacent swaps; Arabic compared without diacritics; spaced or hyphenated suggestions disregarded); at least 4 letters for English or 3 for Arabic; same first letter (Arabic alef forms ا أ إ آ count as one for this test only); same script; not all caps, ignored, or a custom word. Capitalization is preserved. Anything less certain stays an underline.
+- **Held words:** a word completed by `.` `@` `:` or `/` (characters that also occur inside addresses) is held until the agent types whitespace or a line break in the same run of text. It's decided then only if it's still a checkable word, so nothing inside "info@gosi.gov.sa" or "https://…" is ever changed (KI-2). Typing elsewhere, or sending the message, drops held words. See `boundaryKind` and `releasable` in `src/autocorrect/trigger.ts`.
+- **Confidence** (`src/autocorrect/confidence.ts`, details in `src/autocorrect/README.md`): either only the case is wrong ("oNly" → "only"), or exactly one dictionary word is a single edit away, from the worker's deterministic `neighbors` request (`SpellService.neighbors`). Also required: at least 4 letters for English or 3 for Arabic; the same first letter (Arabic alef forms ا أ إ آ count as one for this test only); not all caps, ignored, or a custom word. A leading capital is kept. Anything less certain stays an underline, which includes most Arabic typos. The decision doesn't depend on CPU load. The popover's suggestions still come from Hunspell's `suggest()`.
 - **Revert:** one Undo, or click the corrected word and choose "Revert to *original*". Either way the original goes on the session ignore list, so it isn't corrected or underlined again.
-- **Typo corpus:** `test/autocorrect/corpus.test.ts` requires at least the expected fixes (19 of 30 English, 5 of 20 Arabic) and that none is fixed wrongly. Retune against it.
-- **Known issue:** confidence reads Hunspell's time-limited suggestions, so it can get more aggressive under CPU load. See `docs/known-issues.md` (KI-1).
+- **Typo corpus:** `test/autocorrect/corpus.test.ts` pins the exact set of fixes (19 of 30 English, 5 of 25 Arabic) and checks that none is wrong. Retune against it and `npm run eval:check`.
 
 ## Testing seams
 

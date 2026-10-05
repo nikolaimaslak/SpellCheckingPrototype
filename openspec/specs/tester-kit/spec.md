@@ -43,11 +43,12 @@ The repository SHALL include `docs/TESTING.md` with:
 
 #### Scenario: Scenario has expected results
 - **WHEN** a tester follows the auto-correct scenario
-- **THEN** it lists inputs such as "please seperate " → "please separate " and "النضام " → "النظام", and cases that must **not** change, such as "recieve " and "afte " (ambiguous) and "GOSSI " (all caps)
+- **THEN** it lists inputs that change, such as "please seperate " → "please separate ", "المستخذم " → "المستخدم" and "oNly " → "only"
+- **AND** it lists inputs that must **not** change: "recieve " and "afte " (ambiguous), "النضام " (ambiguous in Arabic, underlined with "النظام" offered), "GOSSI " (all caps), and "info@gosi.gov.sa " (email address)
 
 #### Scenario: Known limitations listed
 - **WHEN** a tester reads the known-limitations section
-- **THEN** it explains ambiguous short typos, CPU-load sensitivity (KI-1), Arabic ghost text on the line below in a left-to-right composer, completion latency, and that all customer and knowledge content is synthetic
+- **THEN** it explains ambiguous short typos, that many Arabic typos are only underlined and not auto-corrected, Arabic ghost text on the line below in a left-to-right composer, completion latency, and that all customer and knowledge content is synthetic
 
 ### Requirement: Report template
 The repository SHALL include a test report template (`docs/TEST-REPORT-TEMPLATE.md`, mirrored as `.github/ISSUE_TEMPLATE/test-report.md`) asking for scenario number, steps, exact input text, expected and actual result, browser and version, language, the model banner shown, the version stamp, and an optional screenshot.

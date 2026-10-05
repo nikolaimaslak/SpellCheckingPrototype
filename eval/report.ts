@@ -3,7 +3,7 @@
 // examples), so nothing here can leak their text.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { BenchmarkResult } from './benchmark.ts';
+import type { BenchmarkResult, UnstableToken } from './benchmark.ts';
 import type { Metrics } from './metrics.ts';
 import type { WordOutcome } from './types.ts';
 
@@ -125,15 +125,27 @@ export function renderMarkdown(r: BenchmarkResult): string {
     out.push(`- All corrections: ${dist(ct.distribution)}`, `- Corruptions: ${dist(ct.corruptions)}`, `- Wrong fixes: ${dist(ct.wrongFixes)}`, '');
   }
 
-  out.push('## Stability', '', `Tokens whose decision differed between runs (including the run under CPU load): **${r.instability.total}**.`, '');
-  for (const u of r.instability.examples) out.push(`- ${bdi(u.word)} — ${u.dataset} ${u.messageId}: ${u.runs.map((x) => bdi(x)).join(' / ')}`);
+  const unstable = (u: UnstableToken) => `- ${bdi(u.word)} — ${u.dataset} ${u.messageId}: ${u.runs.map((x) => bdi(x)).join(' / ')}`;
+  out.push(
+    '## Stability',
+    '',
+    `Decision instability: tokens whose flag or auto-replacement differed between runs (including the run under CPU load): **${r.instability.total}**.`,
+    '',
+  );
+  for (const u of r.instability.examples) out.push(unstable(u));
+  out.push(
+    '',
+    `Suggestion instability (no threshold): tokens with the same decision in every run whose top suggestion differed: **${r.suggestionInstability.total}**. Hunspell’s suggestions are time-limited, so their order can change under load; auto-replace doesn’t use them.`,
+    '',
+  );
+  for (const u of r.suggestionInstability.examples) out.push(unstable(u));
   out.push('');
 
   out.push('## Latency (engine, in-process)', '');
   out.push(
     table(
-      ['Language', 'Check p95 (ms)', 'Correction p95 (ms)'],
-      Object.entries(r.latency).map(([l, v]) => [l, num(v?.checkP95Ms ?? null), num(v?.suggestP95Ms ?? null)]),
+      ['Language', 'Check p95 (ms)', 'Correction p95 (ms)', 'Decision p95 (ms)'],
+      Object.entries(r.latency).map(([l, v]) => [l, num(v?.checkP95Ms ?? null), num(v?.suggestP95Ms ?? null), num(v?.decideP95Ms ?? null)]),
     ),
     '',
   );
