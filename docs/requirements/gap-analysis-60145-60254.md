@@ -109,6 +109,8 @@ The rest is Product or integration work: Comm Widget 2.0, KB article bodies, the
 
 ## Questions for SV
 
+Updated and drafted as a message, with the results so far, in [`sv-questions-2026-10-05.md`](sv-questions-2026-10-05.md) (not yet sent). The list below is the original from October 2.
+
 - **Req 3.5:** is 200 ms keystroke-to-render a hard requirement for a hosted LLM, or a target? Would "never show a stale suggestion" plus about 500 ms be acceptable?
 - **Req 3.7 vs. KB grounding:** must a KB-sourced fact like "within 3 working days" be suppressed too? As written, the requirement forbids it.
 - **Req 4.2 and Enter:** should Enter that *sends* a chat message auto-replace first? The prototype sends the text as typed so nothing changes unseen at send time.
