@@ -15,6 +15,7 @@ const outcome = (o: Partial<WordOutcome>): WordOutcome => ({
   errorType: 'hamza',
   rank: 1,
   replacement: null,
+  source: null,
   corrections: [],
   correctionType: null,
   context: '',

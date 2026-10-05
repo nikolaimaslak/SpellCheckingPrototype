@@ -11,7 +11,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
-import { caseFolded, decide } from '../src/autocorrect/confidence';
+import { caseFolded, decide, needsEvidence, withLeadingCapital, type AutoReplaceConfidence, type FixSource } from '../src/autocorrect/confidence';
+import { knownFix } from '../src/autocorrect/misspellings';
 import { boundaryKind, completedWord, releasable, type HeldWord } from '../src/autocorrect/trigger';
 import { loadHunspell } from '../src/spell/engine';
 import { createHandler, type DictionaryLoader } from '../src/spell/handler';
@@ -26,10 +27,12 @@ export interface TokenResult {
   end: number;
   /** Underlined (or auto-replaced): the engine rejects the word. */
   flagged: boolean;
-  /** The engine's suggestions for a flagged word, in order. */
+  /** The suggestions the popover offers for a flagged word, in order (a known misspelling's fix first). */
   suggestions: string[];
   /** The auto-replacement the composer would make in `auto` mode, if any. */
   replacement: string | null;
+  /** The rule that produced the auto-replacement. */
+  replacementSource: FixSource | null;
   /** Engine time for the correctness check and, when flagged, for suggestions. */
   checkMs: number;
   suggestMs: number | null;
@@ -48,6 +51,7 @@ export interface TransientReplacement {
   start: number;
   end: number;
   replacement: string;
+  replacementSource: FixSource;
 }
 
 export interface PipelineResult {
@@ -58,6 +62,8 @@ export interface PipelineResult {
 export interface PipelineOptions {
   languages?: Lang[];
   customWords?: string[];
+  /** The admin's auto-replace confidence; the default, as in the composer. */
+  autoReplace?: AutoReplaceConfidence;
 }
 
 export interface Pipeline {
@@ -101,7 +107,7 @@ function documentForTokenizer(): Document {
 }
 
 export async function createPipeline(options: PipelineOptions = {}): Promise<Pipeline> {
-  const { languages = ['en', 'ar'], customWords = [] } = options;
+  const { languages = ['en', 'ar'], customWords = [], autoReplace = 'list-and-rule' } = options;
   const handle = createHandler(loadRuntime, loadDictionary);
   let id = 0;
   const request = async <C extends SpellCommand>(command: C): Promise<ResultByType[C['type']]> => {
@@ -148,14 +154,28 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
   };
 
   /** The composer's auto-replacement for a completed word (attach.ts autoCorrect), and the decision's engine time. */
-  const autoReplacement = async (t: Token): Promise<{ fix: string | null; ms: number | null }> => {
-    if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return { fix: null, ms: null };
-    const begin = performance.now();
-    const folded = caseFolded(t.text, t.lang);
-    const caseFix = folded && (await request({ type: 'spell', lang: t.lang, word: folded })) ? folded : null;
-    const neighbors = caseFix ? [] : await request({ type: 'neighbors', lang: t.lang, word: t.text });
-    const ms = performance.now() - begin;
-    return { fix: decide(t.text, t.lang, { neighbors, caseFix }, ctx), ms };
+  type Replacement = { fix: string | null; source: FixSource | null; ms: number | null };
+  const autoReplacement = async (t: Token): Promise<Replacement> => {
+    if (custom.has(t.text) || !(await misspelled(t.text, t.lang)).flagged) return { fix: null, source: null, ms: null };
+    let caseFix: string | null = null;
+    let neighbors: string[] = [];
+    let ms: number | null = null;
+    if (needsEvidence(t.text, t.lang, autoReplace)) {
+      const begin = performance.now();
+      const folded = caseFolded(t.text, t.lang);
+      caseFix = folded && (await request({ type: 'spell', lang: t.lang, word: folded })) ? folded : null;
+      if (!caseFix) neighbors = await request({ type: 'neighbors', lang: t.lang, word: t.text });
+      ms = performance.now() - begin;
+    }
+    const d = decide(t.text, t.lang, { neighbors, caseFix }, { ...ctx, confidence: autoReplace });
+    return { fix: d?.fix ?? null, source: d?.source ?? null, ms };
+  };
+
+  /** The popover's suggestions (attach.ts showSuggestions): a known misspelling's fix first. */
+  const popoverSuggestions = (word: string, lang: Lang, engine: string[]) => {
+    const listed = knownFix(word, lang);
+    const known = listed && withLeadingCapital(word, listed);
+    return known ? [known, ...engine.filter((s) => s !== known)] : engine;
   };
 
   return {
@@ -193,7 +213,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
         }
       }
       const suggested = new Map<string, Promise<Suggested>>();
-      const replacements = new Map<string, { fix: string | null; ms: number | null }>();
+      const replacements = new Map<string, Replacement>();
       for (const [key, t] of completed) replacements.set(key, await autoReplacement(t));
 
       const tokens: TokenResult[] = [];
@@ -204,7 +224,11 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
         const { flagged, ms: checkMs } = await misspelled(t.text, t.lang);
         let suggestions: string[] = [];
         let suggestMs: number | null = null;
-        if (flagged) ({ list: suggestions, ms: suggestMs } = await suggestOnce(suggested, t.text, t.lang));
+        if (flagged) {
+          const s = await suggestOnce(suggested, t.text, t.lang);
+          suggestions = popoverSuggestions(t.text, t.lang, s.list);
+          suggestMs = s.ms;
+        }
         tokens.push({
           word: t.text,
           lang: t.lang,
@@ -213,6 +237,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
           flagged,
           suggestions,
           replacement: replacements.get(key)?.fix ?? null,
+          replacementSource: replacements.get(key)?.source ?? null,
           checkMs,
           suggestMs,
           decideMs: replacements.get(key)?.ms ?? null,
@@ -220,8 +245,8 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
       }
       const transient: TransientReplacement[] = [];
       for (const [key, t] of completed) {
-        const replacement = replacements.get(key)?.fix;
-        if (replacement && !final.has(key)) transient.push({ word: t.text, lang: t.lang, start: t.start, end: t.end, replacement });
+        const r = replacements.get(key);
+        if (r?.fix && r.source && !final.has(key)) transient.push({ word: t.text, lang: t.lang, start: t.start, end: t.end, replacement: r.fix, replacementSource: r.source });
       }
       return { tokens, transient };
     },

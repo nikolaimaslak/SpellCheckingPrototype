@@ -68,6 +68,7 @@ export function outcomesFor(dataset: string, message: Message, result: PipelineR
         errorType: null,
         rank: null,
         replacement: r.replacement,
+        source: r.replacementSource,
         corrections: [r.replacement],
         correctionType: classify(r.word, r.replacement, r.lang)?.type ?? null,
       });
@@ -85,6 +86,7 @@ export function outcomesFor(dataset: string, message: Message, result: PipelineR
       errorType: null,
       rank: null,
       replacement: null,
+      source: null,
       corrections: [],
       correctionType: null,
     });
@@ -97,7 +99,7 @@ function outcomeOf(t: TokenResult, label: Label | undefined, base: { dataset: st
   const detected = t.flagged || t.replacement !== null;
   const corrections = detected ? rankedCorrections(t) : [];
   const correctionType = corrections.length ? (classify(t.word, corrections[0], lang)?.type ?? null) : null;
-  const common = { ...base, lang, word: t.word, start: t.start, replacement: t.replacement, corrections, correctionType };
+  const common = { ...base, lang, word: t.word, start: t.start, replacement: t.replacement, source: t.replacementSource, corrections, correctionType };
 
   if (!label || label.gold === 'correct') {
     const outcome = t.replacement ? 'corruption' : t.flagged ? 'false-flag' : 'untouched';

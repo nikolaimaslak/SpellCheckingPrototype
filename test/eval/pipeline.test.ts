@@ -27,6 +27,28 @@ describe('eval pipeline', () => {
     expect(r['النضام'].replacement).toBeNull();
   });
 
+  it('records the rule behind each replacement', async () => {
+    const r = await byWord('teh paymnet oNly');
+    expect([r.teh.replacement, r.teh.replacementSource]).toEqual(['the', 'list']);
+    expect([r.paymnet.replacement, r.paymnet.replacementSource]).toEqual(['payment', 'neighbor']);
+    expect([r.oNly.replacement, r.oNly.replacementSource]).toEqual(['only', 'case']);
+  });
+
+  it('puts a known misspelling first among the suggestions', async () => {
+    const r = await byWord('الى');
+    expect(r['الى'].suggestions[0]).toBe('إلى');
+  });
+
+  it('at list-only confidence replaces only known misspellings', async () => {
+    const listOnly = await createPipeline({ customWords: ['GOSI', 'Absher'], autoReplace: 'list' });
+    const tokens = (await listOnly.run('teh paymnet المستخذم')).tokens;
+    expect(tokens.map((t) => [t.word, t.replacement])).toEqual([
+      ['teh', 'the'],
+      ['paymnet', null],
+      ['المستخذم', null],
+    ]);
+  });
+
   it('fixes only the case of a stray capital', async () => {
     const r = await byWord('oNly this');
     expect(r.oNly.replacement).toBe('only');
@@ -43,9 +65,9 @@ describe('eval pipeline', () => {
   });
 
   it('leaves ambiguous slips as suggestions', async () => {
-    const r = await byWord('I will recieve it');
-    expect(r.recieve.flagged).toBe(true);
-    expect(r.recieve.replacement).toBeNull();
+    const r = await byWord('I will be there afte lunch');
+    expect(r.afte.flagged).toBe(true);
+    expect(r.afte.replacement).toBeNull();
   });
 
   it('produces no tokens for excluded spans', async () => {
@@ -75,11 +97,11 @@ describe('eval pipeline', () => {
     // "-" is not held, so "seperate" is decided before the text becomes an address.
     const { tokens, transient } = await pipeline.run('mail seperate-x@gosi.gov.sa today');
     expect(tokens.map((t) => t.word)).toEqual(['mail', 'today']);
-    expect(transient).toEqual([{ word: 'seperate', lang: 'en', start: 5, end: 13, replacement: 'separate' }]);
+    expect(transient).toEqual([{ word: 'seperate', lang: 'en', start: 5, end: 13, replacement: 'separate', replacementSource: 'list' }]);
   });
 
   it('measures engine time', async () => {
-    const [t] = await run('seperate');
+    const [t] = await run('paymnet');
     expect(t.checkMs).toBeGreaterThanOrEqual(0);
     expect(t.suggestMs).toBeGreaterThanOrEqual(0);
     expect(t.decideMs).toBeGreaterThanOrEqual(0);

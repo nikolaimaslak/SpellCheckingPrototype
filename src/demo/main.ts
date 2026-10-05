@@ -62,7 +62,14 @@ function apply({ policy, preference, agent }: DemoSettings) {
     mode === 'off'
       ? []
       : [chat, email].map((el) =>
-          attachSpellCheck(el, { service: current!, mode, languages: policy.languages, customWords: policy.customDictionary, onEvent: record }),
+          attachSpellCheck(el, {
+            service: current!,
+            mode,
+            autoReplace: policy.autoReplace,
+            languages: policy.languages,
+            customWords: policy.customDictionary,
+            onEvent: record,
+          }),
         );
   completions = resolveCompletion(policy, preference, agent)
     ? [chat, email].map((el) =>

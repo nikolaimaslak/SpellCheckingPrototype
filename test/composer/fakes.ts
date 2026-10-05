@@ -26,6 +26,9 @@ const SUGGESTIONS: Record<string, string[]> = {
   التامينات: ['التأمينات', 'التضمينات'],
   المستخذم: ['المستخدم'],
   حتىى: ['حتى'],
+  afte: ['fate', 'aft', 'ate', 'after', 'ante'],
+  teh: ['the', 'eh', 'tech'],
+  الى: ['ألى', 'إلى'],
 };
 
 // One-edit dictionary neighbors, as the real engine reports them (abridged
@@ -46,6 +49,9 @@ const NEIGHBORS: Record<string, string[]> = {
   https: ['http'],
   info: ['inf', 'into'],
   oNly: ['oily'],
+  afte: ['after', 'aft', 'ate', 'fate', 'ante'],
+  tge: ['the', 'toe', 'tie'],
+  ان: ['أن', 'إن', 'آن'],
 };
 
 /** In-memory SpellService: words listed in `bad` are misspelled. */
@@ -54,6 +60,7 @@ export function fakeService(bad: Record<string, string[]>, ready: Lang[] = ['en'
   const readySet = new Set<Lang>(ready);
   const checked: Partial<Record<Lang, string[]>>[] = [];
   const known = new Map<string, boolean>();
+  const neighborRequests: string[] = [];
   let hold: Promise<void> | undefined;
   const status = (): SpellServiceStatus => ({
     state: readySet.size ? 'ready' : 'loading',
@@ -79,11 +86,15 @@ export function fakeService(bad: Record<string, string[]>, ready: Lang[] = ['en'
       }
     },
     suggest: async (lang, word) => SUGGESTIONS[word] ?? (lang === 'ar' ? ['إذا'] : []),
-    neighbors: async (_lang, word) => NEIGHBORS[word] ?? [],
+    neighbors: async (_lang, word) => {
+      neighborRequests.push(word);
+      return NEIGHBORS[word] ?? [];
+    },
   };
   return {
     service,
     checked,
+    neighborRequests,
     makeReady(lang: Lang) {
       readySet.add(lang);
       listeners.forEach((l) => l(status()));

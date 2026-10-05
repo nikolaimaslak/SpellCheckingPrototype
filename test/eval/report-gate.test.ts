@@ -20,6 +20,7 @@ const o = (over: Partial<WordOutcome> & { outcome: Outcome }): WordOutcome => ({
   errorType: null,
   rank: null,
   replacement: null,
+  source: null,
   corrections: [],
   correctionType: null,
   context: '',
@@ -103,6 +104,19 @@ describe('report', () => {
     expect(md).toMatch(/Suggestion instability \(no threshold\): .*\*\*2\*\*/);
     expect(md).toContain('<bdi>flagged a -</bdi> / <bdi>flagged b -</bdi>');
     expect(md).toContain('| Language | Check p95 (ms) | Correction p95 (ms) | Decision p95 (ms) |');
+  });
+
+  it('shows auto-replace by source per language', () => {
+    const r = result(clean(5));
+    r.byLang.en!.bySource = {
+      list: { fixed: 30, wrongFix: 0, corruption: 2, autoReplacePrecision: 30 / 32, autoReplaceCoverage: 0.3 },
+      case: { fixed: 0, wrongFix: 0, corruption: 0, autoReplacePrecision: null, autoReplaceCoverage: 0 },
+      neighbor: { fixed: 20, wrongFix: 1, corruption: 0, autoReplacePrecision: 20 / 21, autoReplaceCoverage: 0.2 },
+    };
+    const md = renderMarkdown(r);
+    expect(md).toContain('### Auto-replace by source');
+    expect(md).toContain('| list | 30 | 0 | 2 | 93.75% | 30.0% |');
+    expect(toBaseline(r).bySource?.en?.list.fixed).toBe(30);
   });
 
   it('never writes a private dataset’s words', () => {

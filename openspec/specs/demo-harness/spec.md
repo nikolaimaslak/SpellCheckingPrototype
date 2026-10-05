@@ -69,7 +69,17 @@ The demo page SHALL attach composer spell checking to the chat and email compose
 - **THEN** all underlines disappear, and the composers return to native browser spellcheck
 
 ### Requirement: Admin and agent settings panel
-The demo page SHALL provide a settings panel standing in for Contact Center Administrator: admin mode (`off`, `suggest`, `auto`), enabled languages, "agents may choose a less aggressive mode", a custom dictionary (one word per line), completion enablement (`off`, `all`, `listed` with team and user lists), completion context sources (conversation, canned responses, knowledge base), and grammar polish enablement (`off`, `all`, `listed`). It SHALL also provide agent controls: a mode preference, a completion on/off preference and a grammar polish on/off preference, changeable only while agent choice is allowed, plus a "current agent" user and team selector. Applying changes MUST re-attach both composers with the resolved effective mode, completion and polish settings. The settings MUST persist for that browser across page reloads.
+The demo page SHALL provide a settings panel standing in for Contact Center Administrator, with these admin settings:
+- the mode (`off`, `suggest`, `auto`);
+- the auto-replace confidence ("Misspellings list only" or "Misspellings list and single-candidate rule");
+- the enabled languages;
+- "agents may choose a less aggressive mode";
+- a custom dictionary (one word per line);
+- completion enablement (`off`, `all`, `listed` with team and user lists);
+- the completion context sources (conversation, canned responses, knowledge base);
+- grammar polish enablement (`off`, `all`, `listed`).
+
+It SHALL also provide agent controls: a mode preference, a completion on/off preference and a grammar polish on/off preference, changeable only while agent choice is allowed, plus a "current agent" user and team selector. Applying changes MUST re-attach both composers with the resolved effective mode, auto-replace confidence, completion and polish settings. The settings MUST persist for that browser across page reloads.
 
 #### Scenario: Switch to auto
 - **WHEN** the admin mode is set to `auto` and applied
@@ -90,6 +100,10 @@ The demo page SHALL provide a settings panel standing in for Contact Center Admi
 #### Scenario: Grammar polish enabled
 - **WHEN** grammar polish is set to `all` and applied
 - **THEN** both composers show a Polish button
+
+#### Scenario: Misspellings list only
+- **WHEN** the mode is `auto`, the auto-replace confidence is set to "Misspellings list only" and applied
+- **THEN** typing "teh paymnet " in either composer produces "the paymnet " with "paymnet" underlined, and the setting is still selected after a reload
 
 ### Requirement: Assistance event counter
 The demo page SHALL show running counts of auto-corrections, reverts, accepted suggestions and ignores for the session.

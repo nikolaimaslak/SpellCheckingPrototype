@@ -1,4 +1,5 @@
-import { caseFolded, decide } from '../autocorrect/confidence';
+import { caseFolded, decide, needsEvidence, withLeadingCapital, type AutoReplaceConfidence } from '../autocorrect/confidence';
+import { knownFix } from '../autocorrect/misspellings';
 import { boundaryKind, completedWord, releasable } from '../autocorrect/trigger';
 import type { Lang } from '../spell/protocol';
 import type { SpellService } from '../spell/service';
@@ -25,6 +26,8 @@ export interface AttachOptions {
   service: SpellService;
   /** Effective mode; for `off`, don't attach. */
   mode?: 'suggest' | 'auto';
+  /** Admin's auto-replace confidence: only known misspellings, or also the general rules (default). */
+  autoReplace?: AutoReplaceConfidence;
   languages?: Lang[];
   /** Admin custom dictionary: never auto-corrected. */
   customWords?: string[];
@@ -108,6 +111,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   const {
     service,
     mode = 'suggest',
+    autoReplace = 'list-and-rule',
     languages = ['en', 'ar'],
     debounceMs = 150,
     shortcut = 'Ctrl+.',
@@ -217,11 +221,16 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
 
     await service.check({ [lang]: [word] });
     if (service.misspelled(lang, word) !== true) return;
-    const folded = caseFolded(word, lang);
-    if (folded) await service.check({ [lang]: [folded] });
-    const caseFix = folded && service.misspelled(lang, folded) === false ? folded : null;
-    const neighbors = caseFix ? [] : await service.neighbors(lang, word);
-    const fix = decide(word, lang, { neighbors, caseFix }, { ignored, customWords });
+    // A known misspelling, or list-only confidence, needs no engine evidence.
+    let caseFix: string | null = null;
+    let neighbors: string[] = [];
+    if (needsEvidence(word, lang, autoReplace)) {
+      const folded = caseFolded(word, lang);
+      if (folded) await service.check({ [lang]: [folded] });
+      caseFix = folded && service.misspelled(lang, folded) === false ? folded : null;
+      if (!caseFix) neighbors = await service.neighbors(lang, word);
+    }
+    const fix = decide(word, lang, { neighbors, caseFix }, { ignored, customWords, confidence: autoReplace })?.fix;
     // Re-validate: the agent may have edited the word, or sent the message, meanwhile.
     if (!fix || detached || !el.isConnected || token.range.toString() !== word) return;
 
@@ -312,8 +321,12 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   }
 
   async function showSuggestions(token: Token) {
-    const suggestions = await service.suggest(token.lang, token.text);
+    const engine = await service.suggest(token.lang, token.text);
     if (detached || token.range.toString() !== token.text) return;
+    // A known misspelling's fix leads, then the engine's suggestions.
+    const listed = knownFix(token.text, token.lang);
+    const known = listed && withLeadingCapital(token.text, listed);
+    const suggestions = known ? [known, ...engine.filter((s) => s !== known)] : engine;
     openAt(token.range, token.lang, {
       suggestions,
       onPick: (s) => accept(token, s),

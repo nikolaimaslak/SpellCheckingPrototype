@@ -19,6 +19,7 @@ const service = createSpellService(startSpellWorker(), {
 const handle = mode === 'off' ? undefined : attachSpellCheck(composerElement, {
   service,               // shared by every composer (one cache, one worker)
   mode,                  // 'suggest' or 'auto'; don't attach for 'off'
+  autoReplace,           // 'list-and-rule' (default) or 'list': which auto-corrections 'auto' may make
   languages: policy.languages,
   customWords: policy.customDictionary,
   onEvent: (e) => {},    // autocorrect / revert / accept / ignore; nothing is stored or sent
@@ -49,9 +50,14 @@ handle.detach();         // removes every effect on the host
 
 - **Trigger:** only the word just completed by a **single typed boundary** (space, punctuation incl. ، ؛ ؟, line break, new paragraph). Never on Enter-to-send (the host cancels it), paste, host insertions (predefined messages, emoji), caret moves, undo or IME composition.
 - **Held words:** a word completed by `.` `@` `:` or `/` (characters that also occur inside addresses) is held until the agent types whitespace or a line break in the same run of text. It's decided then only if it's still a checkable word, so nothing inside "info@gosi.gov.sa" or "https://…" is ever changed (KI-2). Typing elsewhere, or sending the message, drops held words. See `boundaryKind` and `releasable` in `src/autocorrect/trigger.ts`.
-- **Confidence** (`src/autocorrect/confidence.ts`, details in `src/autocorrect/README.md`): either only the case is wrong ("oNly" → "only"), or exactly one dictionary word is a single edit away, from the worker's deterministic `neighbors` request (`SpellService.neighbors`). Also required: at least 4 letters for English or 3 for Arabic; the same first letter (Arabic alef forms ا أ إ آ count as one for this test only); not all caps, ignored, or a custom word. A leading capital is kept. Anything less certain stays an underline, which includes most Arabic typos. The decision doesn't depend on CPU load. The popover's suggestions still come from Hunspell's `suggest()`.
+- **Confidence** (`src/autocorrect/confidence.ts`, details in `src/autocorrect/README.md`), in this order:
+  1. a **known misspelling** from the curated list ("teh" → "the", "اذا" → "إذا"), whatever its length;
+  2. unless the `autoReplace` option is `'list'`: a **case-only** fix ("oNly" → "only");
+  3. unless the `autoReplace` option is `'list'`: exactly **one dictionary word** a single edit away, from the worker's deterministic `neighbors` request (`SpellService.neighbors`, requested only when needed).
+
+  Steps 2 and 3 also require at least 4 letters for English or 3 for Arabic, and the same first letter (Arabic alef forms ا أ إ آ count as one for this test only). No step applies to an all-caps word, an ignored word or a custom word. A leading capital is kept. Anything less certain stays an underline. The decision doesn't depend on CPU load. The popover's suggestions come from Hunspell's `suggest()`, with a known misspelling's fix first.
 - **Revert:** one Undo, or click the corrected word and choose "Revert to *original*". Either way the original goes on the session ignore list, so it isn't corrected or underlined again.
-- **Typo corpus:** `test/autocorrect/corpus.test.ts` pins the exact set of fixes (19 of 30 English, 5 of 25 Arabic) and checks that none is wrong. Retune against it and `npm run eval:check`.
+- **Typo corpus:** `test/autocorrect/corpus.test.ts` pins the exact set of fixes (26 of 30 English, 15 of 25 Arabic) and checks that none is wrong. Retune against it and `npm run eval:check`.
 
 ## Testing seams
 

@@ -1,10 +1,15 @@
+import type { AutoReplaceConfidence } from '../autocorrect/confidence';
 import type { Lang } from '../spell/protocol';
 
 export type AssistMode = 'off' | 'suggest' | 'auto';
 
+export type { AutoReplaceConfidence } from '../autocorrect/confidence';
+
 /** Tenant-wide settings an administrator controls (stand-in for Contact Center Administrator). */
 export interface AdminPolicy {
   mode: AssistMode;
+  /** Only affects `auto`; agents can't change it. */
+  autoReplace: AutoReplaceConfidence;
   languages: Lang[];
   /** Agents may pick a less aggressive mode than the admin's (never a more aggressive one). */
   agentMayLower: boolean;
@@ -45,6 +50,7 @@ export interface AgentIdentity {
 /** Auto-correct must be an explicit admin choice, so the default only suggests. */
 export const DEFAULT_POLICY: AdminPolicy = {
   mode: 'suggest',
+  autoReplace: 'list-and-rule',
   languages: ['en', 'ar'],
   agentMayLower: true,
   customDictionary: [],
@@ -86,6 +92,7 @@ export function parsePolicy(input: unknown): AdminPolicy {
     : undefined;
   return {
     mode: isMode(o.mode) ? o.mode : DEFAULT_POLICY.mode,
+    autoReplace: o.autoReplace === 'list' || o.autoReplace === 'list-and-rule' ? o.autoReplace : DEFAULT_POLICY.autoReplace,
     languages: languages ?? [...DEFAULT_POLICY.languages],
     agentMayLower: typeof o.agentMayLower === 'boolean' ? o.agentMayLower : DEFAULT_POLICY.agentMayLower,
     customDictionary: words ?? [],

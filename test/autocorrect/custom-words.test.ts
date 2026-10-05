@@ -32,7 +32,7 @@ describe('custom dictionary words in the real engine', () => {
 
   it('makes a custom word an auto-correct target when it is the only one-edit neighbor', async () => {
     const neighbors = result(await handle({ id: id++, type: 'neighbors', lang: 'en', word: 'Abshr' })) as string[];
-    const fix = decide('Abshr', 'en', { neighbors, caseFix: null }, { ignored: new Set(), customWords: new Set(['GOSI', 'Absher']) });
+    const fix = decide('Abshr', 'en', { neighbors, caseFix: null }, { ignored: new Set(), customWords: new Set(['GOSI', 'Absher']) })?.fix;
     expect(neighbors).toEqual(['absher']);
     expect(fix).toBe('Absher');
   });

@@ -12,7 +12,7 @@ import { judge, type Criterion, type RunSummary, type Scope, type Verdict } from
 import type { Dataset, LoadedData } from './datasets.ts';
 import { TYPES, type ErrorType, type Lang } from './error-types.ts';
 import { injectWords, type InjectStats } from './inject.ts';
-import { byErrorType, computeMetrics, correctionTypes, groupBy, matrixRows, percentile, type CorrectionTypes, type MatrixRow, type Metrics } from './metrics.ts';
+import { byErrorType, bySource, computeMetrics, correctionTypes, groupBy, matrixRows, percentile, type CorrectionTypes, type FixSource, type MatrixRow, type Metrics, type SourceMetrics } from './metrics.ts';
 import { outcomesFor } from './outcomes.ts';
 import { createPipeline, type Pipeline } from './pipeline.ts';
 import type { WordOutcome } from './types.ts';
@@ -68,7 +68,7 @@ export interface BenchmarkResult {
   datasets: DatasetSummary[];
   summary: RunSummary;
   verdicts: Verdict[];
-  byLang: Partial<Record<Lang, { metrics: Metrics; byType: Record<string, Metrics>; correctionTypes: CorrectionTypes }>>;
+  byLang: Partial<Record<Lang, { metrics: Metrics; byType: Record<string, Metrics>; correctionTypes: CorrectionTypes; bySource?: Record<FixSource, SourceMetrics> }>>;
   matrix: Partial<Record<Lang, MatrixSummary>>;
   /** Flag or auto-replace decisions that differ between runs (the gated criterion). */
   instability: Instability;
@@ -295,7 +295,7 @@ export async function runBenchmark(data: LoadedData, criteria: Criterion[], opti
   const byLang: BenchmarkResult['byLang'] = {};
   for (const lang of LANGS) {
     const own = committed.filter((o) => o.lang === lang);
-    byLang[lang] = { metrics: computeMetrics(own), byType: Object.fromEntries(byErrorType(own)), correctionTypes: correctionTypes(own) };
+    byLang[lang] = { metrics: computeMetrics(own), byType: Object.fromEntries(byErrorType(own)), correctionTypes: correctionTypes(own), bySource: bySource(own) };
   }
 
   return {

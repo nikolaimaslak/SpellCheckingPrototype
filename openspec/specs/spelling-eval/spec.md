@@ -160,7 +160,8 @@ The report SHALL compute, per language, per dataset and per error type, in three
 **Auto-replace:**
 - **auto-replace precision:** `fixed` ÷ (`fixed` + `wrong-fix` + `corruption`);
 - **auto-replace coverage:** `fixed` ÷ gold-misspelled tokens;
-- **corruption rate:** `corruption` per 10,000 gold-correct tokens, with its 95% upper bound.
+- **corruption rate:** `corruption` per 10,000 gold-correct tokens, with its 95% upper bound;
+- **by source:** auto-replace precision and coverage, and the counts of `fixed`, `wrong-fix` and `corruption`, for each source of the replacement: `list` (a known misspelling), `case` (the case-only fix) and `neighbor` (the single-neighbor rule).
 
 **Also reported:** exclusion leaks, and engine latency p50 and p95 for the correctness check and for corrections.
 
@@ -173,6 +174,10 @@ Error type comes from the label, or from the classifier when the label has none.
 #### Scenario: Type breakdown on unlabelled data
 - **WHEN** a curated typo set has no type labels
 - **THEN** the report still breaks every metric down by type, using the classifier
+
+#### Scenario: Breakdown by source
+- **WHEN** an English dataset has 30 `fixed` tokens from the list, 20 `fixed` and 1 `wrong-fix` from the single-neighbor rule, and 2 `corruption` from the list
+- **THEN** the report shows list precision 30 ÷ 32 and neighbor precision 20 ÷ 21, with each source's counts
 
 ### Requirement: Error-type matrix
 For each language, the benchmark SHALL evaluate the committed word list in per-word mode across every error type of that language. Each variant is evaluated as a single word followed by a typed boundary. It MUST produce a matrix with one row per error type and these columns:

@@ -48,6 +48,8 @@ export interface WordOutcome {
   rank: number | null;
   /** The auto-replacement, if any. */
   replacement: string | null;
+  /** The rule that produced the auto-replacement: a known misspelling, a case-only fix or the single-neighbor rule. */
+  source: 'list' | 'case' | 'neighbor' | null;
   /** The system's ranked corrections: the auto-replacement first, then the suggestions. */
   corrections: string[];
   /** Type of the edit the top correction makes (typed word → correction), when there is one. */

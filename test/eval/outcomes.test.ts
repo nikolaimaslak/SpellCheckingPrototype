@@ -7,7 +7,7 @@ import type { Message } from '../../eval/types';
 function tok(text: string, word: string, over: Partial<TokenResult> = {}): TokenResult {
   const start = text.indexOf(word);
   const lang = /\p{Script=Arabic}/u.test(word) ? 'ar' : 'en';
-  return { word, lang, start, end: start + word.length, flagged: false, suggestions: [], replacement: null, checkMs: 0, suggestMs: null, decideMs: null, ...over };
+  return { word, lang, start, end: start + word.length, flagged: false, suggestions: [], replacement: null, replacementSource: null, checkMs: 0, suggestMs: null, decideMs: null, ...over };
 }
 
 const result = (tokens: TokenResult[], transient: PipelineResult['transient'] = []): PipelineResult => ({ tokens, transient });
@@ -78,7 +78,7 @@ describe('word outcomes', () => {
     const out = one(
       { id: '1', text, labels },
       result([tok(text, 'case'), tok(text, 'CS'), tok(text, 'and'), tok(text, 'mail')], [
-        { word: 'gosi', lang: 'en', start: 35, end: 39, replacement: 'gosh' },
+        { word: 'gosi', lang: 'en', start: 35, end: 39, replacement: 'gosh', replacementSource: 'neighbor' },
       ]),
     );
     expect(out.filter((o) => o.gold === 'excluded').map((o) => [o.word, o.outcome])).toEqual([
@@ -91,7 +91,7 @@ describe('word outcomes', () => {
 
   it('counts a replacement while typing outside any excluded span as a corruption', () => {
     const text = 'see gosi.gov.sa now';
-    const out = one({ id: '1', text }, result([tok(text, 'see'), tok(text, 'now')], [{ word: 'gosi', lang: 'en', start: 4, end: 8, replacement: 'gosh' }]));
+    const out = one({ id: '1', text }, result([tok(text, 'see'), tok(text, 'now')], [{ word: 'gosi', lang: 'en', start: 4, end: 8, replacement: 'gosh', replacementSource: 'neighbor' }]));
     expect(out.find((o) => o.word === 'gosi')).toMatchObject({ outcome: 'corruption', gold: 'correct' });
   });
 

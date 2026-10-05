@@ -48,6 +48,7 @@ This catches replacements that happen mid-typing. Such a replacement inside a fi
   - precision: fixed ÷ all automatic changes;
   - coverage: fixed ÷ misspellings;
   - corruption rate per 10,000 correct words, with its 95% upper bound.
+  - **by source:** the same precision and coverage, with counts, for each rule that made the change: `list` (a known misspelling from the curated lists in `src/autocorrect/lists/`), `case` (the case-only fix) and `neighbor` (the single-neighbor rule).
 - **Also reported:**
   - exclusion leaks;
   - engine latency p95: correctness check, correction (suggestions) and, for information, the auto-replace decision (the worker's neighbors request);
@@ -75,6 +76,8 @@ This catches replacements that happen mid-typing. Such a replacement inside a fi
 - **Auto-replace precision:** a wrong automatic change costs more than a missed one.
 - **Arabic recall and correction thresholds:** these are lower, reflecting Hunspell's weaker Arabic morphology.
 - **Latency:** the composer checks on a 150 ms debounce, so engine calls must leave headroom.
+
+**List overlap caution:** the curated `typos-*` datasets contain classic misspellings by construction ("seperate", "recieve"), and so do the misspellings lists. Coverage on those sets overstates what the list does for real agent text. The "Auto-replace by source" table shows the list's share. The generated `injected-*` sets and the error-type matrix, whose typos are random edits, are the fairer measure.
 
 **Statistical caution:** about 5,000 clean words per language can only show a corruption rate below about 6 in 10,000 when none are seen. The report prints that upper bound, and the gate uses counts. Deciding to turn auto-replace on by default needs a large private pilot set.
 
@@ -195,3 +198,17 @@ Same data and thresholds. Auto-replace now uses the deterministic one-edit rule,
 | Decision latency p95 (informational) | 8 ms | 25 ms |
 
 The remaining gap to the 🔒 gate is the clean-text corruptions: names (planned change `autocorrect-revert-backspace-and-names`) and British spellings (a dictionary question for SV). The single wrong fixes are "contaction" → "contraction" and "ارقاف" → "القاف". Arabic auto-replace is deliberately conservative: most Arabic typos have several dictionary words one edit away, so they stay suggestions.
+
+### Baseline after `autocorrect-misspellings-list` (October 5, 2026)
+
+The curated misspellings lists come first, then the case-only fix and the single-neighbor rule. The lists are 350 EN and 84 AR entries, with human review still pending (KI-5).
+
+| Criterion | English | Arabic |
+|---|---|---|
+| 🔒 Corruption rate, clean text (per 10,000) | 11.5 ❌ (unchanged) | 2.0 ❌ (unchanged) |
+| 🔒 Auto-replace precision | 95.7% ❌ (was 95.3%) | 94.9% ❌ (was 91.2%) |
+| Auto-replace coverage | 50.0% (was 46.0%) | 11.8% (was 6.5%) |
+| Correction@1 | 72.1% ✅ (was 71.6%) | 38.8% ❌ (was 36.1%) |
+| Decision instability | 0 ✅ | 0 ✅ |
+
+By source, the lists made 58 English and 25 Arabic fixes with no wrong fix and no corruption. Every remaining corruption and wrong fix comes from the single-neighbor rule. Arabic `hamza` coverage in the matrix went from 7% to 44%. Remember the overlap caution above: some of the list's English gain on the curated `typos-en` set comes from classic misspellings that both contain.

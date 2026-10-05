@@ -28,6 +28,8 @@ const MESSAGES = [
   'راسلنا على info@gosi.gov.sa بخصوص المستخذم',
   'please seperate. Thanks',
   'oNly thiS dOcument',
+  'teh customer said Teh form is ready',
+  'اذا كان الطلب جاهزا سنرسله الى بريدك',
 ];
 
 let pipeline: Pipeline;

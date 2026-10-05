@@ -33,10 +33,17 @@ const AR: Record<string, string> = {
 const EXPECTED_EN = [
   'seperate', 'definately', 'occured', 'untill', 'beleive', 'accomodate', 'goverment', 'freind', 'becuase', 'calender',
   'enviroment', 'necesary', 'sucess', 'thnak', 'reqeust', 'informaton', 'paymnet', 'registraiton', 'pensoin',
+  // from the misspellings list
+  'teh', 'adress', 'recieve', 'thier', 'tommorow', 'wich', 'wierd',
 ];
 // Arabic morphology gives most typos several one-edit dictionary words, so
-// the common hamza and ta-marbuta slips above stay suggestions.
-const EXPECTED_AR = ['المستخذم', 'حتىى', 'البيانلت', 'التباصيل', 'يسطغرق'];
+// the common hamza and ta-marbuta slips are fixed only through the
+// misspellings list; the others above stay suggestions.
+const EXPECTED_AR = [
+  'المستخذم', 'حتىى', 'البيانلت', 'التباصيل', 'يسطغرق',
+  // from the misspellings list
+  'اذا', 'انا', 'الى', 'اسرة', 'اريد', 'اسئلة', 'التامينات', 'الاجتماعيه', 'شكرأ', 'مسؤل',
+];
 
 const ctx = { ignored: new Set<string>(), customWords: new Set<string>() };
 let fixes: Record<Lang, Record<string, string>>;
@@ -53,7 +60,7 @@ beforeAll(async () => {
       const folded = caseFolded(typo, lang);
       const spelled = folded && (await handle({ id: id++, type: 'spell', lang, word: folded }));
       const caseFix = spelled && spelled.ok && spelled.result ? folded : null;
-      const fix = decide(typo, lang, { neighbors: reply.result as string[], caseFix }, ctx);
+      const fix = decide(typo, lang, { neighbors: reply.result as string[], caseFix }, ctx)?.fix;
       if (fix) fixes[lang][typo] = fix;
     }
   }

@@ -42,8 +42,20 @@ describe('parsePolicy', () => {
   });
 
   it('round-trips a valid policy', () => {
-    const p: AdminPolicy = { mode: 'off', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'], completion: { enabled: 'listed', teams: ['Pensions'], users: [], sources: { transcript: true, canned: false, kb: true } }, grammar: { enabled: 'all', teams: [], users: [] } };
+    const p: AdminPolicy = { mode: 'off', autoReplace: 'list', languages: ['en'], agentMayLower: false, customDictionary: ['Absher'], completion: { enabled: 'listed', teams: ['Pensions'], users: [], sources: { transcript: true, canned: false, kb: true } }, grammar: { enabled: 'all', teams: [], users: [] } };
     expect(parsePolicy(JSON.parse(JSON.stringify(p)))).toEqual(p);
+  });
+});
+
+describe('parsePolicy autoReplace', () => {
+  it('defaults to list-and-rule, also for unknown values', () => {
+    expect(DEFAULT_POLICY.autoReplace).toBe('list-and-rule');
+    expect(parsePolicy({}).autoReplace).toBe('list-and-rule');
+    expect(parsePolicy({ autoReplace: 'aggressive' }).autoReplace).toBe('list-and-rule');
+  });
+
+  it('keeps list', () => {
+    expect(parsePolicy({ mode: 'auto', autoReplace: 'list' }).autoReplace).toBe('list');
   });
 });
 

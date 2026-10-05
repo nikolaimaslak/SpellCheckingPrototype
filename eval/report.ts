@@ -73,6 +73,25 @@ export function renderMarkdown(r: BenchmarkResult): string {
   out.push('### By language (committed data)', '', table(METRIC_HEAD, Object.entries(r.byLang).map(([l, b]) => metricRow(l, b.metrics))), '');
   out.push('### By dataset', '', table(METRIC_HEAD, r.datasets.map((d) => metricRow(d.name, d.metrics))), '');
 
+  out.push(
+    '### Auto-replace by source',
+    '',
+    'Which rule made each automatic change: a known misspelling from the curated list, a case-only fix, or the single-neighbor rule. Coverage is over all misspellings of the language. The curated typo sets contain classic misspellings by construction, so the list’s share is highest there.',
+    '',
+  );
+  for (const [lang, b] of Object.entries(r.byLang)) {
+    if (!b.bySource) continue;
+    out.push(
+      `#### ${lang}`,
+      '',
+      table(
+        ['Source', 'Fixed', 'Wrong fixes', 'Corruptions', 'Precision', 'Coverage'],
+        Object.entries(b.bySource).map(([src, m]) => [src, String(m.fixed), String(m.wrongFix), String(m.corruption), pct(m.autoReplacePrecision, 2), pct(m.autoReplaceCoverage, 1)]),
+      ),
+      '',
+    );
+  }
+
   out.push('## Error types', '');
   for (const [lang, b] of Object.entries(r.byLang)) out.push(`### ${lang}: misspellings by error type`, '', table(TYPE_HEAD, typeRows(b.byType)), '');
   out.push('### Error-type distribution per dataset', '');

@@ -68,6 +68,7 @@ describe('settings panel', () => {
     expect(onApply).toHaveBeenCalledWith({
       policy: {
         mode: 'auto',
+        autoReplace: 'list-and-rule',
         languages: ['ar'],
         agentMayLower: true,
         customDictionary: ['GOSI', 'التأمينات'],
@@ -77,6 +78,27 @@ describe('settings panel', () => {
       preference: { completion: false },
       agent: DEFAULT_AGENT,
     });
+  });
+});
+
+describe('auto-replace confidence', () => {
+  it('reflects the stored policy, applies a change and names the level', () => {
+    const onApply = vi.fn();
+    mountSettings(form, settings({ policy: { ...DEFAULT_POLICY, mode: 'auto', autoReplace: 'list' } }), onApply);
+    expect(field<HTMLSelectElement>('autoReplace').value).toBe('list');
+    expect(effective()).toBe('Effective: Auto-replace known misspellings and suggest · completion off · polish off');
+    field<HTMLSelectElement>('autoReplace').value = 'list-and-rule';
+    change(field('autoReplace'));
+    expect(effective()).toBe('Effective: Auto-replace and suggest · completion off · polish off');
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    expect(onApply.mock.calls[0][0].policy.autoReplace).toBe('list-and-rule');
+  });
+
+  it('persists across a reload', () => {
+    const store = new Map<string, string>();
+    const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) };
+    saveSettings(storage, settings({ policy: { ...DEFAULT_POLICY, autoReplace: 'list' } }));
+    expect(loadSettings(storage).policy.autoReplace).toBe('list');
   });
 });
 
@@ -99,18 +121,21 @@ describe('presets and reset', () => {
     mountSettings(form, settings({ policy: parsePolicy({ mode: 'auto', completion: { enabled: 'all' }, grammar: { enabled: 'all' } }) }), onApply);
     click('[data-preset="spell"]');
     expect(effective()).toBe('Effective: Suggest only · completion off · polish off');
+    field<HTMLSelectElement>('autoReplace').value = 'list';
     click('[data-preset="autocorrect"]');
     expect(effective()).toBe('Effective: Auto-replace and suggest · completion off · polish off');
+    expect(field<HTMLSelectElement>('autoReplace').value).toBe('list-and-rule');
   });
 
   it('reset clears storage and restores the defaults', () => {
-    const store = new Map<string, string>([['bp-spell-demo-settings', '{"policy":{"mode":"auto"}}']]);
+    const store = new Map<string, string>([['bp-spell-demo-settings', '{"policy":{"mode":"auto","autoReplace":"list"}}']]);
     const storage = { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v), removeItem: (k: string) => void store.delete(k) };
     const onApply = vi.fn((s: DemoSettings) => saveSettings(storage, s));
     mountSettings(form, loadSettings(storage), onApply, () => clearSettings(storage));
-    expect(effective()).toMatch(/^Effective: Auto-replace/);
+    expect(effective()).toMatch(/^Effective: Auto-replace known misspellings/);
     click('[data-reset]');
     expect(effective()).toBe('Effective: Suggest only · completion off · polish off');
+    expect(field<HTMLSelectElement>('autoReplace').value).toBe('list-and-rule');
     expect(loadSettings(storage)).toEqual({ policy: DEFAULT_POLICY, preference: {}, agent: DEFAULT_AGENT });
   });
 });

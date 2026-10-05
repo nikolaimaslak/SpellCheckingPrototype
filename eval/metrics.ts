@@ -131,6 +131,40 @@ export function computeMetrics(outcomes: WordOutcome[]): Metrics {
   };
 }
 
+export type FixSource = 'list' | 'case' | 'neighbor';
+export const FIX_SOURCES: FixSource[] = ['list', 'case', 'neighbor'];
+
+export interface SourceMetrics {
+  fixed: number;
+  wrongFix: number;
+  corruption: number;
+  /** fixed ÷ (fixed + wrong fixes + corruptions) made by this source. */
+  autoReplacePrecision: number | null;
+  /** fixed by this source ÷ all gold-misspelled tokens. */
+  autoReplaceCoverage: number | null;
+}
+
+/** Auto-replace precision and coverage per rule: known misspelling, case-only fix, single neighbor. */
+export function bySource(outcomes: WordOutcome[]): Record<FixSource, SourceMetrics> {
+  const misspelled = outcomes.filter((o) => o.gold === 'misspelled').length;
+  const out = {} as Record<FixSource, SourceMetrics>;
+  for (const source of FIX_SOURCES) {
+    const own = outcomes.filter((o) => o.source === source);
+    const n = (outcome: WordOutcome['outcome']) => own.filter((o) => o.outcome === outcome).length;
+    const fixed = n('fixed');
+    const wrongFix = n('wrong-fix');
+    const corruption = n('corruption');
+    out[source] = {
+      fixed,
+      wrongFix,
+      corruption,
+      autoReplacePrecision: ratio(fixed, fixed + wrongFix + corruption),
+      autoReplaceCoverage: ratio(fixed, misspelled),
+    };
+  }
+  return out;
+}
+
 /** Groups outcomes by a key, in first-seen order. */
 export function groupBy<K extends string>(outcomes: WordOutcome[], key: (o: WordOutcome) => K | null): Map<K, WordOutcome[]> {
   const groups = new Map<K, WordOutcome[]>();

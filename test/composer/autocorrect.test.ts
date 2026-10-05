@@ -11,11 +11,11 @@ afterEach(() => {
 });
 
 const BAD = {
-  en: ['seperate', 'Seperate', 'recieve', 'paymnet', 'GOSSI', 'teh', 'oNly', 'info', 'gosi', 'https', 'www'],
-  ar: ['النضام', 'اذا', 'التامينات', 'المستخذم', 'حتىى'],
+  en: ['seperate', 'Seperate', 'recieve', 'paymnet', 'GOSSI', 'teh', 'Teh', 'TEH', 'tge', 'afte', 'oNly', 'info', 'gosi', 'https', 'www'],
+  ar: ['النضام', 'اذا', 'الى', 'ان', 'التامينات', 'المستخذم', 'حتىى'],
 };
 
-function setup(opts: { customWords?: string[] } = {}) {
+function setup(opts: { customWords?: string[]; mode?: 'suggest' | 'auto'; autoReplace?: 'list' | 'list-and-rule' } = {}) {
   const el = composer('');
   const hl = fakeHighlightEnv();
   const svc = fakeService(BAD);
@@ -23,7 +23,8 @@ function setup(opts: { customWords?: string[] } = {}) {
   const replace = vi.fn(textReplace(el));
   const handle = attachSpellCheck(el, {
     service: svc.service,
-    mode: 'auto',
+    mode: opts.mode ?? 'auto',
+    autoReplace: opts.autoReplace,
     debounceMs: 1,
     flashMs: 30,
     customWords: opts.customWords,
@@ -49,11 +50,11 @@ describe('auto-correct in the composer', () => {
 
   it('corrects clear Arabic slips and leaves words with many neighbors underlined', async () => {
     const { el, hl, handle } = setup();
-    typeChars(el, 'المستخذم حتىى النضام اذا ');
+    typeChars(el, 'المستخذم حتىى النضام ان ');
     await handle.settled();
-    expect(el.textContent).toBe('المستخدم حتى النضام اذا ');
+    expect(el.textContent).toBe('المستخدم حتى النضام ان ');
     await handle.recheck();
-    expect(hl.words()).toEqual(['النضام', 'اذا']);
+    expect(hl.words()).toEqual(['النضام', 'ان']);
   });
 
   it('fixes only the case of a stray capital', async () => {
@@ -65,9 +66,9 @@ describe('auto-correct in the composer', () => {
 
   it('leaves ambiguous, short and all-caps words as typed', async () => {
     const { el, replace, handle } = setup();
-    typeChars(el, 'recieve teh GOSSI التامينات ');
+    typeChars(el, 'afte tge GOSSI TEH ان ');
     await handle.settled();
-    expect(el.textContent).toBe('recieve teh GOSSI التامينات ');
+    expect(el.textContent).toBe('afte tge GOSSI TEH ان ');
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -125,6 +126,67 @@ describe('auto-correct in the composer', () => {
     typeChars(el, 'seperate ');
     await handle.settled();
     expect(replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('known misspellings', () => {
+  const popover = () => document.querySelector<HTMLElement>('[data-bp-spell-popover]');
+  const optionTexts = () => [...document.querySelectorAll<HTMLElement>('[data-bp-spell-popover] [role=option]')].map((o) => o.textContent);
+
+  it('fixes listed words whatever their length, keeping a leading capital', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'teh Teh ');
+    await handle.settled();
+    expect(el.textContent).toBe('the The ');
+  });
+
+  it('fixes a listed Arabic hamza slip', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'اذا كان');
+    await handle.settled();
+    expect(el.textContent).toBe('إذا كان');
+  });
+
+  it('at list-only confidence fixes only listed words', async () => {
+    const { el, hl, handle } = setup({ autoReplace: 'list' });
+    typeChars(el, 'teh paymnet ');
+    await handle.settled();
+    expect(el.textContent).toBe('the paymnet ');
+    await handle.recheck();
+    expect(hl.words()).toEqual(['paymnet']);
+  });
+
+  it('sends no neighbors request for a listed word', async () => {
+    const { el, svc, handle } = setup();
+    typeChars(el, 'teh paymnet ');
+    await handle.settled();
+    expect(svc.neighborRequests).toEqual(['paymnet']);
+  });
+
+  it('does not fix a reverted listed word again', async () => {
+    const { el, handle } = setup();
+    typeChars(el, 'teh ');
+    await handle.settled();
+    (el.firstChild as Text).replaceData(0, 3, 'teh');
+    el.dispatchEvent(new InputEvent('input', { inputType: 'historyUndo' }));
+    typeChars(el, 'teh ');
+    await handle.settled();
+    expect(el.textContent).toBe('teh teh ');
+  });
+
+  it.each([
+    ['teh ', 'the', 'ltr'],
+    ['الى ', 'إلى', 'rtl'],
+  ])('offers the list fix first in suggest mode: %s', async (typed, first, dir) => {
+    const { el, handle } = setup({ mode: 'suggest' });
+    typeChars(el, typed);
+    await handle.recheck();
+    placeCaret(el.firstChild!, 1);
+    el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await vi.waitFor(() => expect(popover()).not.toBeNull());
+    expect(optionTexts()[0]).toBe(first);
+    expect(optionTexts().filter((t) => t === first)).toHaveLength(1);
+    expect(popover()!.dir).toBe(dir);
   });
 });
 
@@ -258,26 +320,26 @@ describe('reverting an auto-correction', () => {
 
   it('emits accept and ignore from the suggestion popover', async () => {
     const { el, events, handle } = setup();
-    typeChars(el, 'recieve ');
+    typeChars(el, 'afte ');
     await handle.settled();
     await handle.recheck();
     placeCaret(el.firstChild!, 2);
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     await vi.waitFor(() => expect(popover()).not.toBeNull());
     options().find((o) => o.textContent === 'Ignore')!.click();
-    expect(events).toEqual([{ type: 'ignore', lang: 'en', original: 'recieve' }]);
+    expect(events).toEqual([{ type: 'ignore', lang: 'en', original: 'afte' }]);
   });
 
   it('emits accept when a suggestion is chosen', async () => {
     const { el, events, handle } = setup();
-    typeChars(el, 'recieve ');
+    typeChars(el, 'afte ');
     await handle.settled();
     await handle.recheck();
     placeCaret(el.firstChild!, 2);
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     await vi.waitFor(() => expect(popover()).not.toBeNull());
-    options().find((o) => o.textContent === 'receive')!.click();
-    expect(el.textContent).toBe('receive ');
-    expect(events).toEqual([{ type: 'accept', lang: 'en', original: 'recieve', replacement: 'receive' }]);
+    options().find((o) => o.textContent === 'after')!.click();
+    expect(el.textContent).toBe('after ');
+    expect(events).toEqual([{ type: 'accept', lang: 'en', original: 'afte', replacement: 'after' }]);
   });
 });

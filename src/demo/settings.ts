@@ -46,10 +46,11 @@ export function clearSettings(storage: Pick<Storage, 'removeItem'> | undefined):
 /** Quick configurations for testers; anything not listed keeps its default. */
 export const PRESETS: Record<'spell' | 'autocorrect' | 'all', (base: AdminPolicy) => AdminPolicy> = {
   spell: (p) => ({ ...p, mode: 'suggest', completion: { ...p.completion, enabled: 'off' }, grammar: { ...p.grammar, enabled: 'off' } }),
-  autocorrect: (p) => ({ ...p, mode: 'auto', completion: { ...p.completion, enabled: 'off' }, grammar: { ...p.grammar, enabled: 'off' } }),
+  autocorrect: (p) => ({ ...p, mode: 'auto', autoReplace: 'list-and-rule', completion: { ...p.completion, enabled: 'off' }, grammar: { ...p.grammar, enabled: 'off' } }),
   all: (p) => ({
     ...p,
     mode: 'auto',
+    autoReplace: 'list-and-rule',
     completion: { ...p.completion, enabled: 'all', sources: { transcript: true, canned: true, kb: true } },
     grammar: { ...p.grammar, enabled: 'all' },
   }),
@@ -64,6 +65,8 @@ export function saveSettings(storage: Pick<Storage, 'setItem'> | undefined, sett
 }
 
 const MODE_LABEL = { off: 'Off', suggest: 'Suggest only', auto: 'Auto-replace and suggest' } as const;
+const modeLabel = (mode: keyof typeof MODE_LABEL, autoReplace: AdminPolicy['autoReplace']) =>
+  mode === 'auto' && autoReplace === 'list' ? 'Auto-replace known misspellings and suggest' : MODE_LABEL[mode];
 const list = (v: string) => v.split(',').map((x) => x.trim()).filter(Boolean);
 
 /** Wires the settings form: fills it, keeps agent controls and the effective settings in sync, applies on submit. */
@@ -75,6 +78,7 @@ export function mountSettings(
 ): void {
   const field = <T extends Element>(name: string) => form.querySelector<T>(`[name="${name}"]`)!;
   const mode = field<HTMLSelectElement>('mode');
+  const autoReplace = field<HTMLSelectElement>('autoReplace');
   const langBoxes = [...form.querySelectorAll<HTMLInputElement>('input[name="lang"]')];
   const agentMayLower = field<HTMLInputElement>('agentMayLower');
   const dictionary = field<HTMLTextAreaElement>('customDictionary');
@@ -96,6 +100,7 @@ export function mountSettings(
 
   const fill = ({ policy, preference, agent }: DemoSettings) => {
     mode.value = policy.mode;
+    autoReplace.value = policy.autoReplace;
     langBoxes.forEach((b) => (b.checked = policy.languages.includes(b.value as 'en' | 'ar')));
     agentMayLower.checked = policy.agentMayLower;
     dictionary.value = policy.customDictionary.join('\n');
@@ -119,6 +124,7 @@ export function mountSettings(
   const read = (): DemoSettings => ({
     policy: parsePolicy({
       mode: mode.value,
+      autoReplace: autoReplace.value,
       languages: langBoxes.filter((b) => b.checked).map((b) => b.value),
       agentMayLower: agentMayLower.checked,
       customDictionary: dictionary.value.split('\n'),
@@ -145,7 +151,7 @@ export function mountSettings(
     agentGrammar.disabled = !s.policy.agentMayLower;
     const completion = resolveCompletion(s.policy, s.preference, s.agent) ? 'on' : 'off';
     const polish = resolveGrammar(s.policy, s.preference, s.agent) ? 'on' : 'off';
-    effective.value = `Effective: ${MODE_LABEL[resolveMode(s.policy, s.preference)]} · completion ${completion} · polish ${polish}`;
+    effective.value = `Effective: ${modeLabel(resolveMode(s.policy, s.preference), s.policy.autoReplace)} · completion ${completion} · polish ${polish}`;
   };
   form.addEventListener('input', sync);
   form.addEventListener('change', sync);

@@ -87,6 +87,7 @@ describe('stability', () => {
     errorType: 'keyboard-sub',
     rank: null,
     replacement: null,
+    source: null,
     corrections: [],
     correctionType: null,
     context: '',

@@ -56,3 +56,21 @@
 2. Run `npm run eval:build`, then regenerate `injected-*` and `words-*` with the commands recorded in `eval/datasets/MANIFEST.json`.
 3. Change "human review: pending" to name the reviewer and the date, then run `npm run eval:manifest -- --write`.
 4. Run `npm run eval:baseline` and commit the reviewed baseline.
+
+## KI-5: The misspellings lists still need a human review
+
+**Status:** open, opened October 5, 2026 by the `autocorrect-misspellings-list` change. Close this before the lists reach testers or a pilot.
+
+**What is pending.** Claude drafted the project lists in `src/autocorrect/lists/` from general knowledge, without consulting the eval datasets:
+- `EN_PROJECT`: 350 English typing slips;
+- `AR_PROJECT`: 76 Arabic slips, mostly a missing hamza and ة/ه.
+
+Every entry passes the automatic checks (`test/autocorrect/misspellings.test.ts`): the typo is rejected, the fix is accepted, both are in the same script, and so on. The checks can't judge **plausibility**, though. Req 4.2.3 says a word with more than one plausible fix must never be auto-replaced. No person has yet confirmed that each entry has only one.
+
+For Arabic, the alef-form check lists every other ا/أ/إ/آ spelling that the dictionary accepts. The drafter judged each of those "not plausible" in the entry's `not:` column, 52 entries in all (mostly the question prefix أ, as in "ألتأمينات"). AyaSpell's 4 rules have their judgments in `AYASPELL_NOT`. A fluent reader should confirm each one, in particular "انا" (not: إنا) and "اي" (not: إي), which are rare but real words.
+
+**To close it:**
+1. An English reviewer reads `EN_PROJECT` and removes any entry with a second plausible fix, any en-GB/en-US variant, and any name or product term.
+2. A fluent Arabic reviewer does the same for `AR_PROJECT`, and confirms or rejects every `not:` judgment there and in `AYASPELL_NOT`. If a judgment is rejected, the entry is removed.
+3. Run `npm run lists:ayaspell` if `AYASPELL_NOT` changed, then `npm test` and `npm run eval:check`.
+4. Change "human review: pending" in each list header to name the reviewer and the date, then run `npm run eval:baseline` if the results changed.

@@ -68,31 +68,37 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T2.1 | `please seperate␣` | becomes "please separate" |
 | T2.2 | `paymnet␣` · `freind␣` · `goverment␣` | "payment" · "friend" · "government" |
 | T2.3 | `Seperate␣` at the start | "Separate" (capital kept) |
-| T2.4 | `المستخذم␣` | "المستخدم" |
-| T2.5 | `حتىى␣` | "حتى" |
-| T2.6 | `oNly␣` · `thiS␣` | "only" · "this" (only the stray capital is fixed, never "oily" or "thin") |
-| T2.7 | `please seperate.␣` | Still "seperate." right after the full stop; "separate." once you type the space |
+| T2.4 | `teh␣` · `Teh␣` | "the" · "The" (a known common misspelling, fixed even though it's short) |
+| T2.5 | `اذا كان` (the space after "اذا" triggers it) · `سنرسل الرد الى بريدك␣` | "إذا كان" · "الى" becomes "إلى" (known misspellings) |
+| T2.6 | `المستخذم␣` · `حتىى␣` | "المستخدم" · "حتى" |
+| T2.7 | `oNly␣` · `thiS␣` | "only" · "this" (only the stray capital is fixed, never "oily" or "thin") |
+| T2.8 | `please seperate.␣` | Still "seperate." right after the full stop; "separate." once you type the space |
 
 **Must not change (only underlined):**
 
 | # | Type | Why |
 |---|---|---|
-| T2.8 | `I will recieve␣` | Ambiguous: both "receive" and "relieve" are one typo away |
 | T2.9 | `afte␣` | Ambiguous: after, aft, ate, fate and ante are all one typo away |
-| T2.10 | `teh␣` | Too short to auto-correct safely |
-| T2.11 | `GOSSI␣` | All capitals (codes and names are left alone) |
-| T2.12 | `التامينات␣` | Ambiguous in Arabic |
+| T2.10 | `tge␣` | Too short to auto-correct safely, and not a known misspelling |
+| T2.11 | `GOSSI␣` · `TEH␣` | All capitals (codes and names are left alone) |
+| T2.12 | `ان␣` | Ambiguous in Arabic: both "أن" and "إن" are words |
 | T2.13 | `النضام␣` | Ambiguous in Arabic: several Arabic words are one typo away. Its menu offers "النظام". |
-| T2.14 | `اذا كان` | Ambiguous in Arabic. "اذا" is underlined and its menu offers "إذا". |
-| T2.15 | `email info@gosi.gov.sa␣` · `visit https://www.gosi.gov.sa/en␣` | Nothing in the address changes at any moment while you type it (watch "gosi" and "https") |
+| T2.14 | `email info@gosi.gov.sa␣` · `visit https://www.gosi.gov.sa/en␣` | Nothing in the address changes at any moment while you type it (watch "gosi" and "https") |
 
 **When it must not fire:**
 
 | # | Do | Expected |
 |---|---|---|
-| T2.16 | In chat, type `please seperate` (or `please seperate.`) and press **Enter** immediately | The message is sent exactly as typed ("seperate"). Nothing is ever changed as it's sent. |
-| T2.17 | Type `please seperate`, then press **Shift+Enter** | Corrected to "separate" (a new line counts as finishing the word). |
-| T2.18 | Paste `please seperate them` from elsewhere | Not corrected; "seperate" is only underlined. |
+| T2.15 | In chat, type `please seperate` (or `please seperate.`) and press **Enter** immediately | The message is sent exactly as typed ("seperate"). Nothing is ever changed as it's sent. |
+| T2.16 | Type `please seperate`, then press **Shift+Enter** | Corrected to "separate" (a new line counts as finishing the word). |
+| T2.17 | Paste `please seperate them` from elsewhere | Not corrected; "seperate" is only underlined. |
+
+**Auto-replace confidence (admin setting):**
+
+| # | Do | Expected |
+|---|---|---|
+| T2.18 | In the settings, set **Auto-replace confidence** to "Misspellings list only" and apply. Type `teh paymnet␣` | "the paymnet": only the known misspelling is fixed, and "paymnet" is underlined. The effective-settings line reads "Auto-replace known misspellings and suggest", and the choice survives a reload. Set it back with **Auto-correct**. |
+| T2.19 | With the preset **Spell check only**, type `teh␣` and click it | Not changed; its menu offers "the" first. |
 
 ### T3. Reverting an auto-correction (preset **Auto-correct**)
 
@@ -153,8 +159,9 @@ With the offline test model, the suggestions are canned and may not fit perfectl
 
 ## 4. Known limitations (not bugs)
 
-- **Short or ambiguous typos aren't auto-corrected** (T2.8–T2.14). Auto-correct only fixes a word when exactly one dictionary word is one typo away (or only a capital letter is wrong), to avoid wrong changes. They're still underlined with suggestions.
-- **Many Arabic typos are only underlined, not auto-corrected** (T2.12–T2.14). Arabic words often have several dictionary words one typo away, because of prefixes and suffixes, so auto-correct leaves them to you. Pick the fix from the menu. Common slips such as "اذا" → "إذا" are planned for a later version.
+- **Short or ambiguous typos aren't auto-corrected** (T2.9–T2.13). Auto-correct only fixes a word when it's a known common misspelling, when exactly one dictionary word is one typo away, or when only a capital letter is wrong. This avoids wrong changes. The other typos are still underlined with suggestions.
+- **Many Arabic typos are only underlined, not auto-corrected** (T2.12, T2.13). Arabic words often have several dictionary words one typo away, because of prefixes and suffixes. Common slips such as "اذا" → "إذا" are fixed through the curated list. For the others, pick the fix from the menu.
+- **The misspellings lists are drafts** awaiting human review (known issue KI-5). If you see a word changed that shouldn't have been, please report it with the exact word.
 - **Arabic in a left-to-right composer:** Agent Desktop's chat composer is left to right, so Arabic suggestions appear on the line below (T4.8). This follows from that composer's layout.
 - **Completion and polish take about half a second to a second** with the live model.
 - **All data is synthetic:** customer messages, canned responses and knowledge-base articles were written for this demo. They are **not** real policies or figures.

@@ -1,8 +1,49 @@
 import { describe, expect, it } from 'vitest';
-import { caseFolded, decide } from '../../src/autocorrect/confidence';
+import { caseFolded, decide as decideWithSource, type AutoReplaceConfidence } from '../../src/autocorrect/confidence';
+import type { Lang } from '../../src/spell/protocol';
 
-const ctx = (ignored: string[] = [], custom: string[] = []) => ({ ignored: new Set(ignored), customWords: new Set(custom) });
+const ctx = (ignored: string[] = [], custom: string[] = [], confidence?: AutoReplaceConfidence) => ({
+  ignored: new Set(ignored),
+  customWords: new Set(custom),
+  confidence,
+});
 const n = (...neighbors: string[]) => ({ neighbors, caseFix: null });
+/** The replacement only, as most cases need. */
+const decide = (...args: Parameters<typeof decideWithSource>) => decideWithSource(...args)?.fix ?? null;
+
+describe('decide: known misspellings', () => {
+  it('fixes a listed word whatever its length or neighbors, keeping a leading capital', () => {
+    expect(decide('teh', 'en', n('the', 'tea', 'ten'), ctx())).toBe('the');
+    expect(decide('Teh', 'en', n(), ctx())).toBe('The');
+    expect(decide('TEH', 'en', n(), ctx())).toBeNull();
+  });
+
+  it('fixes listed Arabic hamza slips, but not an ambiguous word', () => {
+    expect(decide('اذا', 'ar', n('إذا', 'ذا', 'هذا'), ctx())).toBe('إذا');
+    expect(decide('الى', 'ar', n(), ctx())).toBe('إلى');
+    expect(decide('ان', 'ar', n('أن', 'إن'), ctx())).toBeNull();
+  });
+
+  it('respects the ignore list and the custom dictionary', () => {
+    expect(decide('teh', 'en', n(), ctx(['en:teh']))).toBeNull();
+    expect(decide('teh', 'en', n(), ctx([], ['teh']))).toBeNull();
+  });
+
+  it('at list-only confidence fixes only listed words', () => {
+    const only = ctx([], [], 'list');
+    expect(decide('teh', 'en', n(), only)).toBe('the');
+    expect(decide('paymnet', 'en', n('payment'), only)).toBeNull();
+    expect(decide('المستخذم', 'ar', n('المستخدم'), only)).toBeNull();
+    expect(decide('oNly', 'en', { neighbors: [], caseFix: 'only' }, only)).toBeNull();
+  });
+
+  it('reports the rule that produced each fix', () => {
+    const src = (w: string, l: Lang, e: { neighbors: string[]; caseFix: string | null }) => decideWithSource(w, l, e, ctx())?.source;
+    expect(src('teh', 'en', n())).toBe('list');
+    expect(src('oNly', 'en', { neighbors: ['oily'], caseFix: 'only' })).toBe('case');
+    expect(src('paymnet', 'en', n('payment'))).toBe('neighbor');
+  });
+});
 
 describe('decide', () => {
   it('fixes a clear English slip', () => {
@@ -10,7 +51,7 @@ describe('decide', () => {
   });
 
   it('leaves a word with two dictionary neighbors as a suggestion', () => {
-    expect(decide('recieve', 'en', n('receive', 'relieve'), ctx())).toBeNull();
+    expect(decide('afte', 'en', n('after', 'aft', 'ate', 'fate', 'ante'), ctx())).toBeNull();
   });
 
   it('fixes a clear Arabic slip and a doubled Arabic letter', () => {
@@ -20,16 +61,15 @@ describe('decide', () => {
 
   it('leaves Arabic words with many neighbors as suggestions', () => {
     expect(decide('النضام', 'ar', n('الضام', 'النظام', 'لنضام'), ctx())).toBeNull();
-    expect(decide('اذا', 'ar', n('إذا', 'ذا', 'هذا'), ctx())).toBeNull();
-    expect(decide('التامينات', 'ar', n('التأمينات', 'التضمينات', 'التثمينات'), ctx())).toBeNull();
+    expect(decide('ان', 'ar', n('أن', 'إن', 'آن'), ctx())).toBeNull();
   });
 
   it('treats the alef forms as one first letter', () => {
-    expect(decide('اسرة', 'ar', n('أسرة'), ctx())).toBe('أسرة');
+    expect(decide('امانة', 'ar', n('أمانة'), ctx())).toBe('أمانة');
   });
 
-  it('enforces minimum length: 4 for English, 3 for Arabic', () => {
-    expect(decide('teh', 'en', n('the'), ctx())).toBeNull();
+  it('enforces minimum length for the general rules: 4 for English, 3 for Arabic', () => {
+    expect(decide('tge', 'en', n('the'), ctx())).toBeNull();
     expect(decide('اب', 'ar', n('أب'), ctx())).toBeNull();
   });
 

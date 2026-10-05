@@ -9,12 +9,15 @@ Defines how an administrator controls composer assistance tenant-wide, which cho
 ### Requirement: Admin policy
 An admin policy SHALL define:
 - the assistance mode: `off`, `suggest` or `auto`;
+- the auto-replace confidence: `list` (only known misspellings) or `list-and-rule` (known misspellings, the case-only fix and the single-neighbor rule). The default is `list-and-rule`, and a missing or invalid value falls back to it;
 - the enabled languages (any of English and Arabic);
 - whether agents may choose a less aggressive mode;
 - a custom dictionary of words;
 - inline completion enablement: `off`, `all` (everyone), or `listed` (only the listed teams and users);
 - the completion context sources: transcript, canned responses and knowledge base, each on or off;
 - grammar polish enablement: `off`, `all`, or `listed` (only the listed teams and users).
+
+The auto-replace confidence only affects `auto` mode, and agents cannot change it.
 
 #### Scenario: Off
 - **WHEN** the admin mode is `off`
@@ -35,6 +38,14 @@ An admin policy SHALL define:
 #### Scenario: Grammar polish for everyone
 - **WHEN** grammar polish is `all`
 - **THEN** every agent gets the Polish button
+
+#### Scenario: Confidence defaults to list-and-rule
+- **WHEN** a stored policy has no auto-replace confidence, or an unknown value
+- **THEN** the effective confidence is `list-and-rule`
+
+#### Scenario: List-only confidence
+- **WHEN** the mode is `auto` and the auto-replace confidence is `list`
+- **THEN** only known misspellings such as "teh" and "اذا" are auto-replaced; "paymnet" and "المستخذم" (not on the list) are underlined
 
 ### Requirement: Admin settings take precedence
 The effective mode SHALL be the admin mode, unless the admin allows agent choice and the agent has chosen a mode that is less aggressive (`off` < `suggest` < `auto`). An agent preference MUST NOT raise the mode above the admin's. Likewise, inline completion and grammar polish SHALL each be effective only if the admin enables it for the agent and, when the admin allows agent choice, the agent hasn't turned it off. An agent MUST NOT be able to enable completion or grammar polish the admin hasn't enabled for them.

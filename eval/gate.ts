@@ -5,6 +5,7 @@
 import type { BenchmarkResult } from './benchmark.ts';
 import type { Criterion } from './criteria.ts';
 import type { Lang } from './error-types.ts';
+import type { FixSource, SourceMetrics } from './metrics.ts';
 
 const LANGS: Lang[] = ['en', 'ar'];
 
@@ -18,6 +19,8 @@ export interface Baseline {
   identities: BenchmarkResult['identities'];
   /** Per language and error type: detection recall, correction@1, auto-replace coverage. */
   byType: Partial<Record<Lang, Record<string, { detectionRecall: number | null; correctionAt1: number | null; autoReplaceCoverage: number | null }>>>;
+  /** Per language and auto-replace source, for information only: never compared by the gate. */
+  bySource?: Partial<Record<Lang, Record<FixSource, SourceMetrics>>>;
 }
 
 export interface GateResult {
@@ -44,6 +47,7 @@ export function toBaseline(r: BenchmarkResult): Baseline {
     exclusionLeaks: r.summary.scopes.all.all?.counts.exclusionLeaks ?? 0,
     identities: r.identities,
     byType,
+    bySource: Object.fromEntries(LANGS.flatMap((lang) => (r.byLang[lang]?.bySource ? [[lang, r.byLang[lang]!.bySource]] : []))),
   };
 }
 

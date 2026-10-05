@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { byErrorType, computeMetrics, correctionTypes, matrixRows, percentile, upper95 } from '../../eval/metrics';
+import { byErrorType, bySource, computeMetrics, correctionTypes, matrixRows, percentile, upper95 } from '../../eval/metrics';
 import type { Outcome, WordOutcome } from '../../eval/types';
 
 const make = (n: number, o: Partial<WordOutcome> & { outcome: Outcome }): WordOutcome[] =>
@@ -14,6 +14,7 @@ const make = (n: number, o: Partial<WordOutcome> & { outcome: Outcome }): WordOu
     errorType: null,
     rank: null,
     replacement: null,
+    source: null,
     corrections: [],
     correctionType: null,
     context: '',
@@ -95,5 +96,22 @@ describe('metrics', () => {
     expect(percentile([5, 1, 3, 2, 4], 50)).toBe(3);
     expect(percentile([1, 2, 3, 4, 100], 95)).toBe(100);
     expect(percentile([], 50)).toBeNull();
+  });
+});
+
+describe('bySource', () => {
+  it('breaks auto-replace down by rule (spec: Breakdown by source)', () => {
+    const fixed = (source: 'list' | 'neighbor', n: number) => make(n, { outcome: 'fixed', gold: 'misspelled', source });
+    const outcomes = [
+      ...fixed('list', 30),
+      ...fixed('neighbor', 20),
+      ...make(1, { outcome: 'wrong-fix', gold: 'misspelled', source: 'neighbor' }),
+      ...make(2, { outcome: 'corruption', gold: 'correct', source: 'list' }),
+      ...make(49, { outcome: 'flagged', gold: 'misspelled' }),
+    ];
+    const s = bySource(outcomes);
+    expect(s.list).toMatchObject({ fixed: 30, corruption: 2, autoReplacePrecision: 30 / 32, autoReplaceCoverage: 0.3 });
+    expect(s.neighbor).toMatchObject({ fixed: 20, wrongFix: 1, autoReplacePrecision: 20 / 21, autoReplaceCoverage: 0.2 });
+    expect(s.case).toMatchObject({ fixed: 0, autoReplacePrecision: null });
   });
 });

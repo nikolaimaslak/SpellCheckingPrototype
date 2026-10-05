@@ -43,8 +43,12 @@ The repository SHALL include `docs/TESTING.md` with:
 
 #### Scenario: Scenario has expected results
 - **WHEN** a tester follows the auto-correct scenario
-- **THEN** it lists inputs that change, such as "please seperate " → "please separate ", "المستخذم " → "المستخدم" and "oNly " → "only"
-- **AND** it lists inputs that must **not** change: "recieve " and "afte " (ambiguous), "النضام " (ambiguous in Arabic, underlined with "النظام" offered), "GOSSI " (all caps), and "info@gosi.gov.sa " (email address)
+- **THEN** it lists inputs that change, such as "please seperate " → "please separate ", "teh " → "the", "اذا كان" → "إذا كان", "المستخذم " → "المستخدم" and "oNly " → "only"
+- **AND** it lists inputs that must **not** change: "afte " (ambiguous), "ان " and "النضام " (ambiguous in Arabic, underlined), "GOSSI " and "TEH " (all caps), and "info@gosi.gov.sa " (email address)
+
+#### Scenario: Confidence setting scenario
+- **WHEN** a tester follows the auto-replace confidence scenario
+- **THEN** it has them set "Misspellings list only", type "teh paymnet ", and expect "the paymnet " with "paymnet" underlined
 
 #### Scenario: Known limitations listed
 - **WHEN** a tester reads the known-limitations section
