@@ -11,10 +11,14 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function setup(reply: string | null = ' will be processed within 3 working days.', fetchImpl?: CompletionFetcher) {
-  document.body.innerHTML = '<div id="c" contenteditable="true"></div>';
+function setup(
+  reply: string | null = ' will be processed within 3 working days.',
+  fetchImpl?: CompletionFetcher,
+  opts: { text?: string; isMac?: boolean; dir?: 'ltr' } = {},
+) {
+  document.body.innerHTML = `<div id="c" contenteditable="true"${opts.dir ? ` dir="${opts.dir}"` : ''}></div>`;
   const el = document.getElementById('c')!;
-  el.textContent = 'Thank you, your request';
+  el.textContent = opts.text ?? 'Thank you, your request';
   el.focus();
   document.getSelection()!.collapse(el.firstChild!, el.textContent.length);
   const fetcher = vi.fn(fetchImpl ?? (async () => (reply === null ? null : { completion: reply, lang: 'en' as const, latencyMs: 1, model: 'fake', sources: [] })));
@@ -30,7 +34,7 @@ function setup(reply: string | null = ' will be processed within 3 working days.
     debounceMs: 5,
     transcript: () => [{ role: 'customer', text: 'when will it be processed?' }],
     onEvent: (e) => events.push(e),
-    env: { replace, measure },
+    env: { replace, measure, isMac: opts.isMac ?? false },
   });
   handles.push(handle);
   return { el, fetcher, events, replace, handle };
@@ -174,5 +178,139 @@ describe('inline completion controller', () => {
     await handle.requestNow();
     expect(fetcher).toHaveBeenCalled();
     expect(ghostText()).toBe('');
+  });
+
+  describe('forward arrow and word accept (Req 3.2)', () => {
+    const AR_PREFIX = 'شكراً لتواصلك معنا، تم استلام طلبك';
+    const AR_REPLY = ' وسيتم الرد عليك قريباً';
+    const pause = () => new Promise((r) => setTimeout(r, 30));
+
+    it('Right Arrow accepts an English suggestion, unseen by the host', async () => {
+      const { el, replace, handle } = setup();
+      await handle.requestNow();
+      const hostSaw = vi.fn();
+      el.addEventListener('keydown', hostSaw);
+      const e = key('ArrowRight', el);
+      expect(e.defaultPrevented).toBe(true);
+      expect(hostSaw).not.toHaveBeenCalled();
+      expect(replace).toHaveBeenCalledWith(expect.anything(), ' will be processed within 3 working days.');
+      expect(ghostText()).toBe('');
+    });
+
+    it.each([[undefined], ['ltr' as const]])('Left Arrow accepts an Arabic suggestion (composer dir %s)', async (dir) => {
+      const { el, replace, handle } = setup(AR_REPLY, undefined, { text: AR_PREFIX, dir });
+      await handle.requestNow();
+      expect(ghostText()).toBe(AR_REPLY);
+      expect(key('ArrowLeft', el).defaultPrevented).toBe(true);
+      expect(replace).toHaveBeenCalledWith(expect.anything(), AR_REPLY);
+      expect(el.textContent).toBe(AR_PREFIX + AR_REPLY);
+    });
+
+    it('the backward arrow and Shift+Right dismiss without being prevented', async () => {
+      const { el, replace, handle } = setup();
+      await handle.requestNow();
+      expect(key('ArrowLeft', el).defaultPrevented).toBe(false);
+      expect(ghostText()).toBe('');
+      await handle.requestNow();
+      expect(key('ArrowRight', el, { shiftKey: true }).defaultPrevented).toBe(false);
+      expect(ghostText()).toBe('');
+      const ar = setup(AR_REPLY, undefined, { text: AR_PREFIX });
+      await ar.handle.requestNow();
+      expect(key('ArrowRight', ar.el).defaultPrevented).toBe(false);
+      expect(ghostText()).toBe('');
+      expect(replace).not.toHaveBeenCalled();
+      expect(ar.replace).not.toHaveBeenCalled();
+    });
+
+    it('arrows are not intercepted without ghost text', () => {
+      const { el } = setup();
+      expect(key('ArrowRight', el).defaultPrevented).toBe(false);
+      expect(key('ArrowRight', el, { ctrlKey: true }).defaultPrevented).toBe(false);
+    });
+
+    it('Ctrl+Right accepts word by word, each through its own replace', async () => {
+      const { el, replace, fetcher, handle } = setup();
+      await handle.requestNow();
+      expect(key('ArrowRight', el, { ctrlKey: true }).defaultPrevented).toBe(true);
+      key('ArrowRight', el, { ctrlKey: true });
+      expect(replace.mock.calls.map((c) => c[1])).toEqual([' will', ' be']);
+      expect(el.textContent).toBe('Thank you, your request will be');
+      expect(ghostText()).toBe(' processed within 3 working days.');
+      await pause();
+      expect(fetcher).toHaveBeenCalledTimes(1); // no new request while words remain
+    });
+
+    it('Ctrl+Left accepts an Arabic word', async () => {
+      const { el, replace, handle } = setup(AR_REPLY, undefined, { text: AR_PREFIX });
+      await handle.requestNow();
+      key('ArrowLeft', el, { ctrlKey: true });
+      expect(replace).toHaveBeenCalledWith(expect.anything(), ' وسيتم');
+      expect(ghostText()).toBe(' الرد عليك قريباً');
+    });
+
+    it('on macOS, Option+Right accepts a word and Ctrl+Right dismisses', async () => {
+      const { el, replace, handle } = setup(undefined, undefined, { isMac: true });
+      await handle.requestNow();
+      key('ArrowRight', el, { altKey: true });
+      expect(replace).toHaveBeenCalledWith(expect.anything(), ' will');
+      expect(key('ArrowRight', el, { ctrlKey: true }).defaultPrevented).toBe(false);
+      expect(ghostText()).toBe('');
+    });
+
+    it('mixes word accept, typing through and Tab', async () => {
+      const { el, replace, handle } = setup();
+      await handle.requestNow();
+      key('ArrowRight', el, { ctrlKey: true });
+      for (const ch of ' be') typeChar(el, ch);
+      expect(ghostText()).toBe(' processed within 3 working days.');
+      key('Tab', el);
+      expect(replace.mock.calls.at(-1)![1]).toBe(' processed within 3 working days.');
+      expect(el.textContent).toBe('Thank you, your request will be processed within 3 working days.');
+    });
+
+    it('after the last word, the next pause requests a new completion', async () => {
+      const { el, fetcher, handle } = setup(' is received'); // no full stop: the sentence can continue
+      await handle.requestNow();
+      key('ArrowRight', el, { ctrlKey: true });
+      key('ArrowRight', el, { ctrlKey: true });
+      expect(ghostText()).toBe('');
+      await vi.waitFor(() => expect(fetcher).toHaveBeenCalledTimes(2));
+    });
+  });
+
+  describe('events for partial accepts', () => {
+    it('a partly accepted suggestion ends as accepted with the accepted length', async () => {
+      const { el, events, handle } = setup(' will be processed within 3 working days');
+      await handle.requestNow();
+      key('ArrowRight', el, { ctrlKey: true });
+      typeChar(el, 'X');
+      expect(events.map((e) => e.type)).toEqual(['completion-shown', 'completion-accepted']);
+      expect(events[1]).toMatchObject({ shownLength: 40, acceptedLength: 5 });
+    });
+
+    it('the forward arrow reports the full length', async () => {
+      const { el, events, handle } = setup();
+      await handle.requestNow();
+      key('ArrowRight', el);
+      expect(events[1]).toMatchObject({ type: 'completion-accepted', shownLength: 41, acceptedLength: 41 });
+    });
+
+    it('typing through then Tab reports the full length', async () => {
+      const { el, events, handle } = setup();
+      await handle.requestNow();
+      for (const ch of ' wi') typeChar(el, ch);
+      key('Tab', el);
+      expect(events.at(-1)).toMatchObject({ type: 'completion-accepted', shownLength: 41, acceptedLength: 41 });
+    });
+
+    it('word-accept events contain no text', async () => {
+      const { el, events, handle } = setup();
+      await handle.requestNow();
+      key('ArrowRight', el, { ctrlKey: true });
+      key('Escape', el);
+      const json = JSON.stringify(events);
+      expect(json).not.toContain('will');
+      expect(json).not.toContain('request');
+    });
   });
 });

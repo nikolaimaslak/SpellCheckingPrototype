@@ -34,11 +34,11 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 | # | Requirement | Status | Prototype today |
 |---|---|---|---|
 | 3.1 | Inline ghost text after the cursor, low contrast, not editable | Met | `inline-completion` "Ghost text display", including the Arabic RTL and fixed-LTR handling. |
-| 3.2.1 | Accept all with Tab **and Right Arrow at end of line** | Partial | Tab works. Right Arrow is in `NAV_KEYS` (`src/completion/controller.ts:43`), so it **dismisses** the ghost text. In RTL lines the "forward" key is Left Arrow, which needs a bidi-aware mapping. |
-| 3.2.2 | Accept one word at a time (Ctrl+Right Arrow) | Gap | Not implemented. |
+| 3.2.1 | Accept all with Tab **and Right Arrow at end of line** | Met | Tab, or the forward arrow of the suggestion's direction: Right for English, Left for Arabic, also in the fixed-LTR composer (`completion-keys`). Ghost text only shows at the end of a line. |
+| 3.2.2 | Accept one word at a time (Ctrl+Right Arrow) | Met | Ctrl + forward arrow (Option + forward arrow on macOS, where Ctrl+arrow switches desktops). One undo step per word (`completion-keys`). |
 | 3.2.3 | Dismiss by typing another character, Escape or caret move | Met | Typing matching characters consumes the ghost text instead of dismissing it, which is an improvement over the requirement. |
 | 3.3 | Never insert without explicit action | Met | |
-| 3.4 | Regenerate as typing continues and after a partial accept | Partial | Regenerates after each 400 ms pause. There's no partial accept to regenerate after. Requests need the caret at the end of the line and at least 3 words in the sentence, which is narrower than the requirement implies. |
+| 3.4 | Regenerate as typing continues and after a partial accept | Met | Regenerates after each 400 ms pause. A partial accept keeps the rest of the current suggestion; once it's used up, the next pause requests a new one (`completion-keys`). Requests still need the caret at the end of the line and at least 3 words in the sentence. |
 | 3.5 | **≤ 200 ms from keystroke to render; otherwise show nothing for that keystroke** | Conflict | 400 ms debounce, then up to 2.5 s client timeout (`src/completion/client.ts:26`) and 2 s server timeout. A late answer still shows if nothing was typed in between. Meeting 200 ms needs a hard client deadline and probably a different architecture: a local or small model, prefix caching, or predicting while the agent is still typing. |
 | 3.6.1 | General language patterns | Met | Through the LLM. |
 | 3.6.2 | Interaction context: thread, **case/ticket fields, customer profile, activity history** | Partial | Uses the transcript only (last 6 turns). No case, profile or history fields. |
@@ -93,6 +93,7 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 **Done:**
 - `autocorrect-reliability` (added after this analysis, ahead of item 2): KI-1, KI-2 and KI-3. Auto-replace is deterministic, never edits inside an email or URL being typed, and fixes a stray capital without picking another word. See `docs/known-issues.md`.
 - `autocorrect-misspellings-list` (item 2, without its KI-1 part, done above): curated EN and AR misspellings lists (no third-party English source; Arabic includes AyaSpell's rules under MPL 1.1) and the auto-replace confidence setting. The configurable threshold is two levels: `list` and `list-and-rule`. The lists' human review is KI-5.
+- `completion-keys` (item 3): the forward arrow accepts a suggestion (Right for English, Left for Arabic), Ctrl/Option + forward arrow accepts one word, and the next suggestion follows once the current one is used up.
 
 1. **`completion-safety-filter`**: Req 3.7. Prompt forbids amounts, dates, identifiers and PII outright, and a deterministic post-filter drops any completion that contains them. Update the spec example. Small, and it removes a compliance conflict.
 2. **`autocorrect-misspellings-list`**: Req 4.2 and 4.2.3, plus KI-1. Add a curated common-misspellings list for EN and AR (source license to be checked) that bypasses the length rule, so "teh" → "the" works. Replace suggestion-based confidence with the deterministic one-edit check from KI-1. Add a configurable threshold.

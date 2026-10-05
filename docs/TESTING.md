@@ -120,6 +120,11 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T4.6 | With a suggestion showing, press **Enter** | The message is sent **without** the grey text. |
 | T4.7 | Switch the scenario to Arabic, click **Next customer message**, type `شكراً لتواصلك معنا، تم استلام طلبك` and pause | An Arabic suggestion appears to the left of the caret, continuing right to left. |
 | T4.8 | Tick **Agent Desktop fidelity** and repeat T4.7 | The Arabic suggestion appears on the line **below**, starting at the left edge. This mimics Agent Desktop's left-to-right composer; see the limitations. |
+| T4.9 | Get an English suggestion (as in T4.2) and press **Right Arrow** | The whole suggestion is inserted, as with Tab. |
+| T4.10 | Get an English suggestion and press **Ctrl+Right Arrow** twice (**Option+Right Arrow** on a Mac) | The next two words are inserted one at a time; the rest of the grey text stays. One Ctrl+Z removes only the last word. |
+| T4.11 | Get an English suggestion and press **Left Arrow** | The suggestion disappears and the caret moves left as usual. |
+| T4.12 | Get an Arabic suggestion (as in T4.7) and press **Left Arrow**; get another and press **Ctrl+Left Arrow** (Option+Left on a Mac) | Left Arrow inserts the whole Arabic suggestion; Ctrl+Left inserts its first word only. Right Arrow would dismiss it instead. |
+| T4.13 | Repeat T4.12 with **Agent Desktop fidelity** ticked | Same result, although the suggestion is shown on the line below. |
 
 With the offline test model, the suggestions are canned and may not fit perfectly. With Gemini they vary, but should always be a single sentence in the language you're typing.
 
