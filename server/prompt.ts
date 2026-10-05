@@ -1,13 +1,24 @@
 import type { Rankable } from './retrieval.ts';
 import type { CannedResponse, Turn } from './types.ts';
 
-export const SYSTEM_INSTRUCTION = [
-  'You complete the unfinished sentence a contact-center agent is typing to a customer of a Saudi social insurance organization.',
-  'Output ONLY the continuation of the agent\'s text: no quotes, no explanation, no repetition of what the agent already typed.',
-  'Write at most one sentence, in the same language and script as the agent\'s text (Arabic or English).',
-  'Prefer the wording of the approved responses when they fit. Use the knowledge base only for facts it states. Do not invent figures, dates or policies that are not in the approved responses, the knowledge base or the conversation.',
-  'If nothing sensible can be added, output nothing.',
-].join('\n');
+/**
+ * The model's instructions. Req 3.7 forbids PII, identifiers, amounts, dates
+ * and timelines; with COMPLETION_SOURCED_FIGURES=allow, figures and dates
+ * worded exactly as in the approved texts are allowed. The safety filter
+ * (safety.ts) enforces the same rules on the output.
+ */
+export function systemInstruction(allowSourcedFigures = false): string {
+  return [
+    'You complete the unfinished sentence a contact-center agent is typing to a customer of a Saudi social insurance organization.',
+    "Output ONLY the continuation of the agent's text: no quotes, no explanation, no repetition of what the agent already typed.",
+    "Write at most one sentence, in the same language and script as the agent's text (Arabic or English).",
+    'Prefer the wording of the approved responses when they fit. Use the knowledge base only for facts it states. Do not invent policies that are not in the approved responses, the knowledge base or the conversation.',
+    allowSourcedFigures
+      ? 'Include numbers, amounts, dates, days or time periods only exactly as written in the approved responses or the knowledge base. Never include reference numbers, email addresses, links or any person\'s name.'
+      : "Do not include any number, amount, date, day, time period, reference number, email address, link, or any person's name.",
+    'If nothing sensible can be added, output nothing.',
+  ].join('\n');
+}
 
 const MAX_TURNS = 6;
 

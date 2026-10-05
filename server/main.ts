@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { complete } from './complete.ts';
 import { polish } from './polish.ts';
-import { selectModel } from './model-select.ts';
+import { selectModel, sourcedFigures } from './model-select.ts';
 import { appendEvents, readEvents, renderSummary, summarize } from './telemetry.ts';
 import { kbPassages, type KbArticle } from './retrieval.ts';
 import type { CannedResponse } from './types.ts';
@@ -29,6 +29,7 @@ const kb = kbPassages((JSON.parse(readFileSync(join(ROOT, 'server/data/kb.json')
 
 const selection = selectModel(process.env);
 const { model } = selection;
+const figures = sourcedFigures(process.env);
 if (selection.warning) console.warn(`warning: ${selection.warning}`);
 
 async function readJson(req: IncomingMessage): Promise<unknown> {
@@ -56,7 +57,14 @@ createServer(async (req, res) => {
   const path = (req.url ?? '').split('?')[0];
   try {
     if (req.method === 'POST' && path === '/v1/complete') {
-      const result = await complete(await readJson(req), { model, library, kb });
+      const result = await complete(await readJson(req), {
+        model,
+        library,
+        kb,
+        allowSourcedFigures: figures === 'allow',
+        // The reason only: the withheld text never reaches the log.
+        onWithheld: (reason, lang) => appendEvents(EVENTS, [{ type: 'completion-withheld', reason, ...(lang ? { lang } : {}) }]),
+      });
       return send(res, result.status, result.body);
     }
     if (req.method === 'POST' && path === '/v1/polish') {
@@ -70,7 +78,7 @@ createServer(async (req, res) => {
       return send(res, 200, renderSummary(summarize(readEvents(EVENTS))), 'text/html; charset=utf-8');
     }
     if (req.method === 'GET' && path === '/health') {
-      return send(res, 200, { ok: true, model: model?.name ?? null, mode: selection.mode, external: selection.external });
+      return send(res, 200, { ok: true, model: model?.name ?? null, mode: selection.mode, external: selection.external, sourcedFigures: figures });
     }
     send(res, 404, { error: 'not found' });
   } catch {

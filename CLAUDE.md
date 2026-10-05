@@ -26,7 +26,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run build` | Typecheck + production build to `dist/` (both dictionaries) |
 | `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
-| `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. The demo reaches it via the Vite `/api` proxy |
+| `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. `COMPLETION_SOURCED_FIGURES=block` (default; Req 3.7 safety filter withholds figures and dates) or `allow` (only when worded verbatim in approved texts). The demo reaches it via the Vite `/api` proxy |
 | `npm run eval` | Spelling benchmark (offline, a few minutes): detection, correction, auto-replace, error types; writes `eval/reports/latest.md`. `eval:check` gates against `eval/baseline.json`, `eval:baseline` rewrites it. See `docs/EVALUATION.md` |
 | `npm run eval:inject` / `eval:words` / `eval:build` / `eval:manifest` | Insert typed misspellings, build word lists, compile hand-marked dataset sources, re-hash the dataset manifest |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |

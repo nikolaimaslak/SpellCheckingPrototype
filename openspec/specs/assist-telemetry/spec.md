@@ -18,7 +18,7 @@ The client SHALL queue assistance events (completion shown, accepted and dismiss
 - **THEN** typing, spell checking, completion and polish keep working, and no error is shown to the agent
 
 ### Requirement: What is recorded
-Each stored event SHALL carry its type, timestamp, language, and session identifier, plus latency and lengths for completion events, latency and change count for polish events, and the original and replacement word for spelling events. Events MUST NOT contain completion text, draft or corrected text, transcript text or the composer's content.
+Each stored event SHALL carry its type, timestamp, language, and session identifier, plus latency and lengths for completion events, latency and change count for polish events, and the original and replacement word for spelling events. Events MUST NOT contain completion text, draft or corrected text, transcript text or the composer's content. The completion service MAY also record a `completion-withheld` event of its own, carrying only the reason (`figure`, `date`, `identifier` or `conversation`), the language and the timestamp; any other reason value MUST be dropped.
 
 #### Scenario: Completion event has no text
 - **WHEN** a `completion-accepted` event is stored
@@ -28,6 +28,10 @@ Each stored event SHALL carry its type, timestamp, language, and session identif
 - **WHEN** a `polish-shown` event is stored
 - **THEN** it contains latency and the change count, and no draft or corrected text
 
+#### Scenario: Withheld completion recorded without text
+- **WHEN** the completion service withholds a completion for a figure
+- **THEN** the log gains a `completion-withheld` event with reason `figure`, and no completion, prefix or transcript text
+
 ### Requirement: Event log
 The service SHALL accept event batches at `POST /v1/events` and append each event as one JSON line to a local log file that is excluded from version control.
 
@@ -36,7 +40,7 @@ The service SHALL accept event batches at `POST /v1/events` and append each even
 - **THEN** two lines are appended to the log
 
 ### Requirement: Summary page
-The service SHALL serve a summary at `GET /summary` showing, for the logged events: completion acceptance rate (accepted ÷ shown), completion latency p50 and p95, auto-correct revert rate (reverts ÷ auto-corrections) overall and per language, suggestion accepts and ignores per language, ignore share (ignores ÷ (accepts + ignores)) per language, polish acceptance rate (accepted ÷ shown with changes), polish latency p50, and counts per event type and language. It SHALL also classify each `autocorrect` and `accept` event's original→replacement pair with the shared error-type taxonomy, and show per language the distribution of error types seen in the field and the revert rate per auto-correction type. Each spelling figure MUST be labelled with the offline benchmark metric it approximates: revert rate with auto-replace precision, ignore share with the false-flag rate, and the field type distribution with the benchmark's error-type distribution.
+The service SHALL serve a summary at `GET /summary` showing, for the logged events: completion acceptance rate (accepted ÷ shown), completion latency p50 and p95, auto-correct revert rate (reverts ÷ auto-corrections) overall and per language, suggestion accepts and ignores per language, ignore share (ignores ÷ (accepts + ignores)) per language, polish acceptance rate (accepted ÷ shown with changes), polish latency p50, counts per event type and language, and the number of withheld completions per reason, next to the number shown. It SHALL also classify each `autocorrect` and `accept` event's original→replacement pair with the shared error-type taxonomy, and show per language the distribution of error types seen in the field and the revert rate per auto-correction type. Each spelling figure MUST be labelled with the offline benchmark metric it approximates: revert rate with auto-replace precision, ignore share with the false-flag rate, and the field type distribution with the benchmark's error-type distribution.
 
 #### Scenario: Rates computed
 - **WHEN** the log has 10 completions shown with 4 accepted, and 5 auto-corrections with 1 revert
@@ -57,3 +61,7 @@ The service SHALL serve a summary at `GET /summary` showing, for the logged even
 #### Scenario: Field error types
 - **WHEN** the log has Arabic accepts "اذا"→"إذا" and "المساعده"→"المساعدة", and an Arabic auto-correction "النضام"→"النظام" that was reverted
 - **THEN** the Arabic error-type distribution shows one `hamza`, one `ta-marbuta` and one `emphatic`, and the `emphatic` auto-correction revert rate is 100%
+
+#### Scenario: Withheld completions
+- **WHEN** the log has 10 completions shown, 3 withheld for `figure` and 1 for `conversation`
+- **THEN** the summary shows withheld counts of 3 `figure` and 1 `conversation` next to 10 shown

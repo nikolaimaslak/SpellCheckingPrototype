@@ -117,19 +117,22 @@ A fix happens **when you type the space or punctuation right after the word**. T
 
 | # | Do | Expected |
 |---|---|---|
-| T4.1 | Click **Next customer message** (English scenario) | A customer question appears in the chat history. |
-| T4.2 | Type `Thank you for contacting us, your request` and pause about a second | Grey text appears right after the caret, continuing your sentence (for example "…has been received and will be processed within 3 working days…"). |
+| T4.1 | Click **Next customer message** twice (English scenario) | Two customer messages appear in the chat history; the second asks about contribution records. |
+| T4.2 | Type `Thank you for waiting, your contribution records` and pause about a second | Grey text appears right after the caret, continuing your sentence (for example "…are up to date, and the latest payment has been registered on your account."). |
 | T4.3 | Press **Tab** | The grey text is inserted. One Ctrl+Z removes it again. |
 | T4.4 | Pause again to get a suggestion, then type its first few letters | The suggestion stays, minus what you typed. A different letter makes it disappear. |
 | T4.5 | With a suggestion showing, press **Escape** | The suggestion disappears; your text is unchanged. |
 | T4.6 | With a suggestion showing, press **Enter** | The message is sent **without** the grey text. |
-| T4.7 | Switch the scenario to Arabic, click **Next customer message**, type `شكراً لتواصلك معنا، تم استلام طلبك` and pause | An Arabic suggestion appears to the left of the caret, continuing right to left. |
+| T4.7 | Switch the scenario to Arabic, click **Next customer message** twice, type `شكراً لانتظارك، سجل الاشتراكات الخاص بك` and pause | An Arabic suggestion appears to the left of the caret, continuing right to left (for example "…محدث، وتم تسجيل آخر دفعة في حسابك."). |
 | T4.8 | Tick **Agent Desktop fidelity** and repeat T4.7 | The Arabic suggestion appears on the line **below**, starting at the left edge. This mimics Agent Desktop's left-to-right composer; see the limitations. |
 | T4.9 | Get an English suggestion (as in T4.2) and press **Right Arrow** | The whole suggestion is inserted, as with Tab. |
 | T4.10 | Get an English suggestion and press **Ctrl+Right Arrow** twice (**Option+Right Arrow** on a Mac) | The next two words are inserted one at a time; the rest of the grey text stays. One Ctrl+Z removes only the last word. |
 | T4.11 | Get an English suggestion and press **Left Arrow** | The suggestion disappears and the caret moves left as usual. |
 | T4.12 | Get an Arabic suggestion (as in T4.7) and press **Left Arrow**; get another and press **Ctrl+Left Arrow** (Option+Left on a Mac) | Left Arrow inserts the whole Arabic suggestion; Ctrl+Left inserts its first word only. Right Arrow would dismiss it instead. |
 | T4.13 | Repeat T4.12 with **Agent Desktop fidelity** ticked | Same result, although the suggestion is shown on the line below. |
+| T4.14 | Start over (English scenario), click **Next customer message** once, type `Thank you for contacting us, your request` and pause | **No** suggestion appears: the matching approved answer contains "3 working days", and suggestions with numbers, dates or time periods are withheld (Req 3.7). |
+| T4.15 | Stop the demo, set `COMPLETION_SOURCED_FIGURES=allow` in `.env`, run `npm run demo` again and repeat T4.14 | Now "…has been received and will be processed within 3 working days…" appears: figures are allowed when worded exactly as in an approved answer. Set it back to `block` afterwards. |
+| T4.16 | **With Gemini only** (the offline model never uses names): send a customer message `Hello, this is Noura. When will my request be processed?`, then type `Thank you for contacting us` and pause, a few times | No suggestion that contains "Noura" is ever shown: names from the conversation are withheld. The telemetry summary counts any as "conversation". |
 
 With the offline test model, the suggestions are canned and may not fit perfectly. With Gemini they vary, but should always be a single sentence in the language you're typing.
 
@@ -165,7 +168,7 @@ With the offline test model, the suggestions are canned and may not fit perfectl
 
 | # | Do | Expected |
 |---|---|---|
-| T8.1 | After some of the scenarios, wait about 5 seconds and open **Telemetry summary** (link under the settings) | A page shows completion and polish acceptance rates, latency, and the auto-correct revert rate. It records counts and timings only: no typed text, suggestions or drafts. |
+| T8.1 | After some of the scenarios, wait about 5 seconds and open **Telemetry summary** (link under the settings) | A page shows completion and polish acceptance rates, latency, the number of completions withheld by the safety filter (per reason: figure, date, identifier, conversation; T4.14 adds one "figure"), and the auto-correct revert rate. It records counts and timings only: no typed text, suggestions or drafts. |
 
 ## 4. Known limitations (not bugs)
 
@@ -174,6 +177,7 @@ With the offline test model, the suggestions are canned and may not fit perfectl
 - **British spellings are corrected to American ones** in auto mode ("labour" → "labor", "cancelled" → "canceled"), because the English dictionary is en-US. Whether to use en-GB is an open question.
 - **The misspellings lists are drafts** awaiting human review (known issue KI-5). If you see a word changed that shouldn't have been, please report it with the exact word.
 - **Arabic in a left-to-right composer:** Agent Desktop's chat composer is left to right, so Arabic suggestions appear on the line below (T4.8). This follows from that composer's layout.
+- **Suggestions with numbers, dates, time periods, links or the customer's name are withheld** (Req 3.7), so some pauses show nothing (T4.14). Whether figures from approved answers may be shown is an open question; `COMPLETION_SOURCED_FIGURES=allow` shows them (T4.15).
 - **Completion and polish take about half a second to a second** with the live model.
 - **All data is synthetic:** customer messages, canned responses and knowledge-base articles were written for this demo. They are **not** real policies or figures.
 - **Desktop browsers only;** mobile isn't supported.

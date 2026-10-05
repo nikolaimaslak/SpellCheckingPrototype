@@ -29,3 +29,8 @@ export function selectModel(env: Record<string, string | undefined>): ModelSelec
   if (!key) return { model: null, mode, external: false, warning };
   return { model: createGeminiModel({ apiKey: key }), mode, external: true, warning };
 }
+
+/** COMPLETION_SOURCED_FIGURES: `allow` lets figures worded verbatim in approved texts through; anything else is `block` (Req 3.7 as written). */
+export function sourcedFigures(env: Record<string, string | undefined>): 'block' | 'allow' {
+  return env.COMPLETION_SOURCED_FIGURES?.trim().toLowerCase() === 'allow' ? 'allow' : 'block';
+}

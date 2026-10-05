@@ -45,7 +45,7 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 | 3.6.3 | Knowledge base articles | Met | High-confidence retrieval from synthetic `kb.json`. |
 | 3.6.4 | Global canned responses | Met | Synthetic `canned.json`. |
 | 3.6.5 | Agent messages from previous relevant interactions | Gap | No retrieval over past transcripts. |
-| 3.7 | **No PII, identifiers, amounts, dates or timelines** | Conflict | The prompt allows figures and dates that appear in the sources (`server/prompt.ts:8`). The spec example itself is "will be processed within **3 working days**". `postprocess.ts` has no PII, number or date filter. Needs a prompt change plus a deterministic output filter, reusing the tokenizer's digit, URL and email exclusions and adding Arabic-Indic digits, month names and number words in both languages. |
+| 3.7 | **No PII, identifiers, amounts, dates or timelines** | Met (pending SV question 3) | A deterministic server-side filter withholds any completion with digits, number words (EN/AR), currency, percentages, month or weekday names, relative days, timelines ("within a few days", "خلال أسبوع"), emails, links, or words copied from the customer's messages (names). The prompt forbids the same. `COMPLETION_SOURCED_FIGURES=allow` lets figures through only when worded verbatim in an approved text sent with the request; the default `block` follows Req 3.7 as written. Withheld counts per reason are on `/summary` (`completion-safety-filter`). |
 
 ### Req 4: Auto-correct
 
@@ -94,6 +94,7 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 - `autocorrect-reliability` (added after this analysis, ahead of item 2): KI-1, KI-2 and KI-3. Auto-replace is deterministic, never edits inside an email or URL being typed, and fixes a stray capital without picking another word. See `docs/known-issues.md`.
 - `autocorrect-misspellings-list` (item 2, without its KI-1 part, done above): curated EN and AR misspellings lists (no third-party English source; Arabic includes AyaSpell's rules under MPL 1.1) and the auto-replace confidence setting. The configurable threshold is two levels: `list` and `list-and-rule`. The lists' human review is KI-5.
 - `autocorrect-revert-backspace-and-names` (item 4): names protected (mid-sentence capitals, conversation words), Backspace-to-revert; the session-wide revert scope is kept deliberately.
+- `completion-safety-filter` (item 1): Req 3.7 enforced on the server, strict by default, with a switch for sourced figures pending SV question 3.
 - `completion-keys` (item 3): the forward arrow accepts a suggestion (Right for English, Left for Arabic), Ctrl/Option + forward arrow accepts one word, and the next suggestion follows once the current one is used up.
 
 1. **`completion-safety-filter`**: Req 3.7. Prompt forbids amounts, dates, identifiers and PII outright, and a deterministic post-filter drops any completion that contains them. Update the spec example. Small, and it removes a compliance conflict.

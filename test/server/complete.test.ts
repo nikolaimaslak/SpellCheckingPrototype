@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { complete } from '../../server/complete';
 import { createFakeModel } from '../../server/models/fake';
 import type { CannedResponse, CompletionModel } from '../../server/types';
@@ -13,7 +13,7 @@ const body = {
 
 describe('POST /v1/complete', () => {
   it('replies with a completion, language, latency, model and sources', async () => {
-    const res = await complete(body, { model: createFakeModel(), library });
+    const res = await complete(body, { model: createFakeModel(), library, allowSourcedFigures: true });
     expect(res.status).toBe(200);
     expect(res.body).toMatchObject({ lang: 'en', model: 'fake' });
     const reply = res.body as { completion: string; sources: string[]; latencyMs: number };
@@ -98,8 +98,74 @@ describe('knowledge base grounding', () => {
   it('the fake model falls back to a knowledge base passage when no canned response matches', async () => {
     const res = await complete(
       { prefix: 'Early retirement is', transcript: [{ role: 'customer', text: 'Am I eligible for early retirement? I have 26 years of contributions.' }], sources: { transcript: true, canned: false, kb: true } },
-      { model: createFakeModel(), library, kb },
+      { model: createFakeModel(), library, kb, allowSourcedFigures: true },
     );
     expect((res.body as { completion: string }).completion).toMatch(/available to members/);
   });
 });
+
+describe('safety filter (Req 3.7)', () => {
+  const fixed = (text: string): CompletionModel => ({ name: 'fixed', complete: async () => text });
+
+  it('withholds the canned "3 working days" completion under the default, and reports only the reason', async () => {
+    const seen: unknown[][] = [];
+    const res = await complete(body, { model: createFakeModel(), library, onWithheld: (...a) => seen.push(a) });
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ completion: '', withheld: 'figure', lang: 'en' });
+    expect(seen).toEqual([['figure', 'en']]);
+  });
+
+  it('returns the sourced completion with allowSourcedFigures', async () => {
+    const res = await complete(body, { model: createFakeModel(), library, allowSourcedFigures: true });
+    expect((res.body as { completion: string; withheld?: string }).completion).toMatch(/within 3 working days/);
+    expect(res.body).not.toHaveProperty('withheld');
+  });
+
+  it('passes a clean completion without a reason', async () => {
+    const onWithheld = vi.fn();
+    const res = await complete(body, { model: fixed(' has been received and is being reviewed.'), library, onWithheld });
+    expect(res.body).toMatchObject({ completion: ' has been received and is being reviewed.' });
+    expect(res.body).not.toHaveProperty('withheld');
+    expect(onWithheld).not.toHaveBeenCalled();
+  });
+
+  it('withholds a name from the conversation even with allowSourcedFigures', async () => {
+    const res = await complete(
+      { ...body, transcript: [{ role: 'customer', text: 'Hello, this is Noura. When will my request be processed?' }] },
+      { model: fixed(' Noura, it is being reviewed.'), library, allowSourcedFigures: true },
+    );
+    expect(res.body).toMatchObject({ completion: '', withheld: 'conversation' });
+  });
+
+  it('never passes completion text to onWithheld', async () => {
+    const seen: unknown[][] = [];
+    await complete(body, { model: fixed(' will be ready next week.'), library, onWithheld: (...a) => seen.push(a) });
+    expect(JSON.stringify(seen)).toBe('[["date","en"]]');
+  });
+});
+
+describe('tester guide scenarios with the offline model (docs/TESTING.md T4)', () => {
+  const kbAll = kb;
+  const ask = (prefix: string, turns: string[], allowSourcedFigures: boolean) =>
+    complete(
+      { prefix, transcript: turns.map((text) => ({ role: 'customer' as const, text })), sources: { transcript: true, canned: true, kb: true } },
+      { model: createFakeModel(), library, kb: kbAll, allowSourcedFigures },
+    ).then((r) => r.body as { completion: string; withheld?: string });
+  const EN = ['Hello, I submitted a request for my pension documents last week. When will it be processed?', 'Also, can you check the status of my contribution records?'];
+  const AR = ['السلام عليكم، قدمت طلباً للحصول على مستندات المعاش الأسبوع الماضي، متى سيتم معالجته؟', 'هل يمكنك أيضاً الاستعلام عن الاشتراكات الخاصة بي؟'];
+
+  it('T4.2 and T4.7: the contribution-records suggestions pass under the default', async () => {
+    expect((await ask('Thank you for waiting, your contribution records', EN, false)).completion).toMatch(/^ are up to date/);
+    expect((await ask('شكراً لانتظارك، سجل الاشتراكات الخاص بك', AR, false)).completion).toMatch(/محدث/);
+  });
+
+  it('T4.14: the "3 working days" suggestion is withheld under the default', async () => {
+    expect(await ask('Thank you for contacting us, your request', EN.slice(0, 1), false)).toMatchObject({ completion: '', withheld: 'figure' });
+    expect(await ask('شكراً لتواصلك معنا، تم استلام طلبك', AR.slice(0, 1), false)).toMatchObject({ completion: '', withheld: 'figure' });
+  });
+
+  it('T4.15: it appears with allow', async () => {
+    expect((await ask('Thank you for contacting us, your request', EN.slice(0, 1), true)).completion).toMatch(/within 3 working days/);
+  });
+});
+

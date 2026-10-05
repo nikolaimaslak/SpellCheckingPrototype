@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { buildUserContent, SYSTEM_INSTRUCTION } from '../../server/prompt';
+import { buildUserContent, systemInstruction } from '../../server/prompt';
+
+const SYSTEM_INSTRUCTION = systemInstruction();
 
 const transcript = [
   { role: 'customer' as const, text: 'I want to know my contribution status' },
@@ -52,5 +54,19 @@ describe('prompt with knowledge base', () => {
 
   it('tells the model not to invent facts beyond the provided sources', () => {
     expect(SYSTEM_INSTRUCTION).toMatch(/knowledge base/);
+  });
+});
+
+describe('instructions and Req 3.7', () => {
+  it('forbids figures, dates, identifiers and names under the default', () => {
+    const block = systemInstruction();
+    for (const w of ['number', 'amount', 'date', 'time period', 'reference number', 'email', 'link', "person's name"]) expect(block, w).toContain(w);
+    expect(block).not.toMatch(/exactly as written/);
+  });
+
+  it('with allow, limits figures to verbatim approved text and still forbids identifiers and names', () => {
+    const allow = systemInstruction(true);
+    expect(allow).toMatch(/only exactly as written in the approved responses or the knowledge base/);
+    for (const w of ['reference numbers', 'email addresses', 'links', "person's name"]) expect(allow, w).toContain(w);
   });
 });

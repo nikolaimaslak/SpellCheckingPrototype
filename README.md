@@ -50,7 +50,7 @@ All customer messages, canned responses and knowledge-base articles are **synthe
 |---|---|
 | `npm run demo` | Demo page (:5173) and completion server (:5175) together, for testers |
 | `npm run dev` | Demo page only (Vite, :5173); the completion API is proxied as `/api` |
-| `npm run server` | Completion, polish and telemetry server (:5175). Environment: `GEMINI_API_KEY`, `COMPLETION_MODEL=auto\|gemini\|fake`, `PORT` |
+| `npm run server` | Completion, polish and telemetry server (:5175). Environment: `GEMINI_API_KEY`, `COMPLETION_MODEL=auto\|gemini\|fake`, `COMPLETION_SOURCED_FIGURES=block\|allow` (default `block`: suggestions with numbers or dates are withheld), `PORT` |
 | `npm test` | Unit tests (Vitest; test files run one at a time, see `docs/known-issues.md` KI-1) |
 | `npm run typecheck` | Type checking |
 | `npm run build` | Production build of the demo page to `dist/` |

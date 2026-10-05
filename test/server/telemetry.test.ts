@@ -97,3 +97,23 @@ describe('polish telemetry', () => {
   });
 });
 
+
+describe('withheld completions (Req 3.7)', () => {
+  it('stores only an allowed reason, never text', () => {
+    expect(sanitize({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'figure', completion: ' within 3 days' })).toEqual({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'figure' });
+    expect(sanitize({ type: 'completion-withheld', ts: 1, reason: 'secret text' })).toEqual({ type: 'completion-withheld', ts: 1 });
+    expect(sanitize({ type: 'completion-shown', ts: 1, reason: 'figure' })).toEqual({ type: 'completion-shown', ts: 1 });
+  });
+
+  it('counts withheld completions by reason next to those shown', () => {
+    const ev = (type: StoredEvent['type'], reason?: StoredEvent['reason']): StoredEvent => ({ type, ts: 1, lang: 'en', ...(reason ? { reason } : {}) });
+    const events = [
+      ...Array.from({ length: 10 }, () => ev('completion-shown')),
+      ...Array.from({ length: 3 }, () => ev('completion-withheld', 'figure')),
+      ev('completion-withheld', 'conversation'),
+    ];
+    const s = summarize(events);
+    expect(s.completion.withheld).toEqual({ figure: 3, date: 0, identifier: 0, conversation: 1 });
+    expect(renderSummary(s)).toContain('figure 3 · date 0 · identifier 0 · conversation 1 · next to 10 shown');
+  });
+});

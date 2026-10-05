@@ -23,6 +23,8 @@ export interface CompleteReply {
   latencyMs: number;
   model: string;
   sources: string[];
+  /** Set when the safety filter withheld the completion (the reason only, never the text). */
+  withheld?: 'figure' | 'date' | 'identifier' | 'conversation';
 }
 
 export interface GenerationOptions {

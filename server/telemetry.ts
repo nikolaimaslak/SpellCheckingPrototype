@@ -2,7 +2,9 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { classify, type Lang } from '../eval/error-types.ts';
 
-const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed'] as const;
+const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed', 'completion-withheld'] as const;
+/** Why the server's safety filter withheld a completion (safety.ts); nothing else may be stored for it. */
+const WITHHELD_REASONS = ['figure', 'date', 'identifier', 'conversation'] as const;
 const SPELLING = ['autocorrect', 'revert', 'accept', 'ignore'] as const;
 const POLISH = ['polish-shown', 'polish-accepted', 'polish-dismissed', 'polish-reverted'] as const;
 type EventType = (typeof COMPLETION)[number] | (typeof SPELLING)[number] | (typeof POLISH)[number];
@@ -18,6 +20,7 @@ export interface StoredEvent {
   original?: string;
   replacement?: string;
   changes?: number;
+  reason?: (typeof WITHHELD_REASONS)[number];
 }
 
 const COMMON = ['type', 'ts', 'lang', 'session'] as const;
@@ -47,6 +50,7 @@ export function sanitize(input: unknown): StoredEvent | null {
     const v = o[k];
     if (typeof v === 'string' ? v.length <= 64 : typeof v === 'number' && Number.isFinite(v)) out[k] = v;
   }
+  if (type === 'completion-withheld' && (WITHHELD_REASONS as readonly unknown[]).includes(o.reason)) out.reason = o.reason;
   out.type = type;
   if (typeof out.ts !== 'number') out.ts = Date.now();
   return out as unknown as StoredEvent;
@@ -101,6 +105,10 @@ export function summarize(events: StoredEvent[]) {
       shown,
       accepted,
       dismissed: count('completion-dismissed'),
+      withheld: Object.fromEntries(WITHHELD_REASONS.map((r) => [r, events.filter((e) => e.type === 'completion-withheld' && e.reason === r).length])) as Record<
+        (typeof WITHHELD_REASONS)[number],
+        number
+      >,
       acceptanceRate: shown ? accepted / shown : null,
       latencyP50: percentile(latencies, 50),
       latencyP95: percentile(latencies, 95),
@@ -184,6 +192,7 @@ export function renderSummary(s: ReturnType<typeof summarize>): string {
 <div class="grid">
 <div>Completion acceptance<div class="k">${pct(s.completion.acceptanceRate)}</div>${s.completion.accepted} of ${s.completion.shown} shown</div>
 <div>Completion latency<div class="k">${ms(s.completion.latencyP50)}</div>p50 · p95 ${ms(s.completion.latencyP95)}</div>
+<div>Completions withheld (Req 3.7)<div class="k">${Object.values(s.completion.withheld).reduce((a, b) => a + b, 0)}</div>${Object.entries(s.completion.withheld).map(([r, n]) => `${r} ${n}`).join(' · ')} · next to ${s.completion.shown} shown</div>
 <div>Auto-correct revert rate<div class="k">${pct(s.autocorrect.revertRate)}</div>${s.autocorrect.reverts} of ${s.autocorrect.count}</div>
 <div>Polish acceptance<div class="k">${pct(s.polish.acceptanceRate)}</div>${s.polish.accepted} of ${s.polish.shownWithChanges} previews · p50 ${ms(s.polish.latencyP50)}</div>
 </div>

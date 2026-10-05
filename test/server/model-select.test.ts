@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectModel } from '../../server/model-select';
+import { selectModel, sourcedFigures } from '../../server/model-select';
 
 describe('selectModel', () => {
   it('auto without a key uses the offline model', () => {
@@ -27,5 +27,14 @@ describe('selectModel', () => {
     const s = selectModel({ COMPLETION_MODEL: 'gpt' });
     expect(s.mode).toBe('auto');
     expect(s.warning).toMatch(/unknown COMPLETION_MODEL/);
+  });
+});
+
+describe('sourcedFigures', () => {
+  it('is block unless COMPLETION_SOURCED_FIGURES is allow', () => {
+    expect(sourcedFigures({})).toBe('block');
+    expect(sourcedFigures({ COMPLETION_SOURCED_FIGURES: 'allow' })).toBe('allow');
+    expect(sourcedFigures({ COMPLETION_SOURCED_FIGURES: ' Allow ' })).toBe('allow');
+    expect(sourcedFigures({ COMPLETION_SOURCED_FIGURES: 'yes' })).toBe('block');
   });
 });
