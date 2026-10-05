@@ -12,6 +12,7 @@ export function systemInstruction(allowSourcedFigures = false): string {
     'You complete the unfinished sentence a contact-center agent is typing to a customer of a Saudi social insurance organization.',
     "Output ONLY the continuation of the agent's text: no quotes, no explanation, no repetition of what the agent already typed.",
     "Write at most one sentence, in the same language and script as the agent's text (Arabic or English).",
+    "If the agent's text ends in the middle of a word, begin with the rest of that word and no space; otherwise begin with a space.",
     'Prefer the wording of the approved responses when they fit. Use the knowledge base only for facts it states. Do not invent policies that are not in the approved responses, the knowledge base or the conversation.',
     allowSourcedFigures
       ? 'Include numbers, amounts, dates, days or time periods only exactly as written in the approved responses or the knowledge base. Never include reference numbers, email addresses, links or any person\'s name.'

@@ -70,3 +70,12 @@ describe('instructions and Req 3.7', () => {
     for (const w of ['reference numbers', 'email addresses', 'links', "person's name"]) expect(allow, w).toContain(w);
   });
 });
+
+describe('instructions and unfinished words', () => {
+  it('explain how to continue an unfinished word, in both modes', () => {
+    for (const allow of [false, true]) {
+      expect(systemInstruction(allow)).toContain("If the agent's text ends in the middle of a word, begin with the rest of that word and no space; otherwise begin with a space.");
+    }
+  });
+});
+

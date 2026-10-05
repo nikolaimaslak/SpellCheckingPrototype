@@ -169,3 +169,55 @@ describe('tester guide scenarios with the offline model (docs/TESTING.md T4)', (
   });
 });
 
+describe('unfinished words (completion-midword-join)', () => {
+  const fixed = (text: string): CompletionModel => ({ name: 'fixed', complete: async () => text });
+  const FIRST = [{ role: 'customer' as const, text: 'Hello, I submitted a request for my pension documents last week. When will it be processed?' }];
+  const midword = (allowSourcedFigures: boolean) =>
+    complete({ prefix: "It hasn't been proce", transcript: FIRST, sources: { transcript: true, canned: true, kb: true } }, { model: createFakeModel(), library, kb, allowSourcedFigures });
+
+  it('completes the word with no leading space, with the offline model', async () => {
+    const body = (await midword(true)).body as { completion: string };
+    expect(body.completion).toMatch(/^ssed within 3 working days/);
+  });
+
+  it('withholds the same completion under the default (figure)', async () => {
+    expect((await midword(false)).body).toMatchObject({ completion: '', withheld: 'figure' });
+  });
+
+  it('still adds the space after a whole word', async () => {
+    const res = await complete(body, { model: fixed('has been received and is being reviewed.'), library });
+    expect((res.body as { completion: string }).completion).toBe(' has been received and is being reviewed.');
+  });
+
+  it('does not count the unfinished word itself as known', async () => {
+    const res = await complete({ ...body, prefix: 'Please use the Abshe' }, { model: fixed('r app now.'), library });
+    expect((res.body as { completion: string }).completion).toBe('r app now.');
+  });
+
+  it('is not tripped by the conversation-word check on a mid-word fragment', async () => {
+    const res = await complete(
+      { prefix: "It hasn't been proce", transcript: FIRST, sources: { transcript: true, canned: false, kb: false } },
+      { model: fixed('ssed yet, but it is under review.'), library },
+    );
+    expect(res.body).toMatchObject({ completion: 'ssed yet, but it is under review.' });
+    expect(res.body).not.toHaveProperty('withheld');
+  });
+});
+
+describe('tester guide mid-word scenario (docs/TESTING.md T4.17)', () => {
+  it('"Your contribution rec" completes to "ords are up to date…" under the default setting', async () => {
+    const res = await complete(
+      {
+        prefix: 'Your contribution rec',
+        transcript: [
+          { role: 'customer', text: 'Hello, I submitted a request for my pension documents last week. When will it be processed?' },
+          { role: 'customer', text: 'Also, can you check the status of my contribution records?' },
+        ],
+        sources: { transcript: true, canned: true, kb: true },
+      },
+      { model: createFakeModel(), library, kb },
+    );
+    expect((res.body as { completion: string }).completion).toBe('ords are up to date, and the latest payment has been registered on your account.');
+  });
+});
+
