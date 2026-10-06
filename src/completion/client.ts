@@ -15,6 +15,8 @@ export interface CompletionReply {
   latencyMs: number;
   model: string;
   sources: string[];
+  /** With a completion: the agent's unfinished word (`typed`), its completed form and what follows. The demo shows `completion`. */
+  edit?: { typed: string; word: string; rest: string };
 }
 
 export type CompletionFetcher = (body: CompletionRequest, signal: AbortSignal) => Promise<CompletionReply | null>;

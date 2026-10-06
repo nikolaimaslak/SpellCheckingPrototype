@@ -11,13 +11,17 @@ export interface GeminiOptions {
 
 /**
  * Gemini over REST (generateContent). Tuned for latency: low temperature, a
- * short output, a newline stop and minimal thinking. The key travels only in
- * the request header and is never included in errors.
+ * short output, a newline stop and minimal thinking. With a response schema,
+ * asks for JSON and drops the newline stop, which could cut the JSON. The key
+ * travels only in the request header and is never included in errors.
  */
 export function createGeminiModel({ apiKey, model = GEMINI_MODEL, fetch: doFetch = fetch }: GeminiOptions): CompletionModel {
   return {
     name: model,
     async complete(system, user, signal, opts = {}) {
+      const output = opts.responseSchema
+        ? { responseMimeType: 'application/json', responseSchema: opts.responseSchema }
+        : { stopSequences: opts.stopSequences ?? ['\n'] };
       const res = await doFetch(`${ENDPOINT}/${model}:generateContent`, {
         method: 'POST',
         signal,
@@ -27,10 +31,10 @@ export function createGeminiModel({ apiKey, model = GEMINI_MODEL, fetch: doFetch
           contents: [{ role: 'user', parts: [{ text: user }] }],
           generationConfig: {
             temperature: 0.2,
-            // Completion defaults: one short line. Polish passes its own.
-            maxOutputTokens: opts.maxOutputTokens ?? 48,
-            stopSequences: opts.stopSequences ?? ['\n'],
+            // Completion defaults: one short line (or its JSON). Polish passes its own.
+            maxOutputTokens: opts.maxOutputTokens ?? (opts.responseSchema ? 64 : 48),
             thinkingConfig: { thinkingLevel: 'minimal' },
+            ...output,
           },
         }),
       });

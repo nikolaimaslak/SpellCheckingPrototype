@@ -10,16 +10,23 @@ import type { CannedResponse, Turn } from './types.ts';
 export function systemInstruction(allowSourcedFigures = false): string {
   return [
     'You complete the unfinished sentence a contact-center agent is typing to a customer of a Saudi social insurance organization.',
-    "Output ONLY the continuation of the agent's text: no quotes, no explanation, no repetition of what the agent already typed.",
+    'Return JSON with two fields. `word`: the last word of the agent\'s text, written out in full, whether or not the agent finished it (for example "Ollama" when the text ends with "Ollam", and "request" when it ends with "request"); an empty string only if the text ends with a space or punctuation. `rest`: the continuation after that word, starting with a space or punctuation as needed.',
+    'Do not repeat earlier words the agent typed; only the current word goes in `word`.',
     "Write at most one sentence, in the same language and script as the agent's text (Arabic or English).",
-    "If the agent's text ends in the middle of a word, start by writing that whole word; otherwise begin with a space.",
     'Prefer the wording of the approved responses when they fit. Use the knowledge base only for facts it states. Do not invent policies that are not in the approved responses, the knowledge base or the conversation.',
     allowSourcedFigures
       ? 'Include numbers, amounts, dates, days or time periods only exactly as written in the approved responses or the knowledge base. Never include reference numbers, email addresses, links or any person\'s name.'
       : "Do not include any number, amount, date, day, time period, reference number, email address, link, or any person's name.",
-    'If nothing sensible can be added, output nothing.',
+    'If nothing sensible can be added, return an empty `word` and `rest`.',
   ].join('\n');
 }
+
+/** Gemini response schema for completion: the current word in full, and the rest. */
+export const COMPLETION_SCHEMA = {
+  type: 'OBJECT',
+  properties: { word: { type: 'STRING' }, rest: { type: 'STRING' } },
+  required: ['word', 'rest'],
+};
 
 const MAX_TURNS = 6;
 

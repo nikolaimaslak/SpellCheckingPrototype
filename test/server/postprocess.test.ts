@@ -1,76 +1,103 @@
 import { describe, expect, it } from 'vitest';
-import { postprocess } from '../../server/postprocess';
-import { normalize } from '../../server/retrieval';
+import { assemble, finalize, parseStructured, type Structured } from '../../server/postprocess';
 
-describe('postprocess', () => {
-  it.each([
-    ['removes repetition of the prefix', 'Thank you, your request', 'your request will be processed soon.', ' will be processed soon.'],
-    ['cuts after the first sentence', 'Thank you, your request', ' will be processed. Anything else?', ' will be processed.'],
-    ['cuts at a newline', 'Your request', 'will be processed\nThanks', ' will be processed'],
-    ['strips quotes', 'Your request', '"will be processed."', ' will be processed.'],
-    ['adds a leading space after a word', 'your request', 'will be processed.', ' will be processed.'],
-    ['keeps no extra space after whitespace', 'your request ', 'will be processed.', 'will be processed.'],
-    ['no space before punctuation', 'your request', ', thank you.', ', thank you.'],
-    ['Arabic question mark terminates', 'هل تريد', 'معرفة حالة طلبك؟ يمكنني المساعدة', ' معرفة حالة طلبك؟'],
-    ['Arabic continuation', 'تم استلام طلبك', 'وسيتم معالجته خلال ثلاثة أيام عمل.', ' وسيتم معالجته خلال ثلاثة أيام عمل.'],
-  ])('%s', (_name, prefix, raw, expected) => {
-    expect(postprocess(prefix, raw)).toBe(expected);
+/** assemble + finalize, as complete.ts runs them; 'format' or the final completion. */
+const build = (prefix: string, s: Structured) => {
+  const a = assemble(prefix, s);
+  return a === 'format' ? 'format' : finalize(prefix, a.completion);
+};
+
+describe('parseStructured', () => {
+  it('reads word and rest', () => {
+    expect(parseStructured('{"word":"Ollama","rest":", I can help you."}')).toEqual({ word: 'Ollama', rest: ', I can help you.' });
   });
 
-  it('caps at 20 words', () => {
-    const raw = Array.from({ length: 30 }, (_, i) => `w${i}`).join(' ');
-    expect(postprocess('Your request', raw).trim().split(/\s+/)).toHaveLength(20);
-  });
-
-  it('rejects the wrong script', () => {
-    expect(postprocess('تم استلام طلبك', 'and will be processed.')).toBe('');
-    expect(postprocess('Your request', 'سيتم معالجته.')).toBe('');
-  });
-
-  it('returns empty for nothing useful', () => {
-    expect(postprocess('Your request', '')).toBe('');
-    expect(postprocess('Your request', '  ...  ')).toBe('');
-    expect(postprocess('Your request', 'Your request')).toBe('');
+  it('rejects invalid JSON or the wrong shape', () => {
+    for (const raw of ['', ' n easily confused.', '{"word":"been"}', '{"word":1,"rest":""}', '["been",""]', 'null']) expect(parseStructured(raw), raw).toBeNull();
   });
 });
 
-describe('postprocess: unfinished words', () => {
-  const vocab = (...words: string[]) => {
-    const known = new Set(words.map((w) => normalize(w)));
-    return (w: string) => known.has(normalize(w));
-  };
-  const isWord = vocab('processed', 'request', 'form', 'استلام', 'طلبك');
-
-  it('completes an unfinished word when the joined word is known', () => {
-    expect(postprocess("It hasn't been proce", 'ssed yet, but it is under review.', isWord)).toBe('ssed yet, but it is under review.');
+describe('assemble: unfinished words', () => {
+  it('completes an unfinished word', () => {
+    expect(assemble("It hasn't been proce", { word: 'processed', rest: ' yet, but it is under review.' })).toEqual({
+      completion: 'ssed yet, but it is under review.',
+      edit: { typed: 'proce', word: 'processed', rest: ' yet, but it is under review.' },
+    });
   });
 
-  it('strips an echoed unfinished word', () => {
-    expect(postprocess("It hasn't been proce", 'processed yet, but it is under review.', isWord)).toBe('ssed yet, but it is under review.');
-    expect(postprocess("It hasn't been proce", 'processed yet, but it is under review.')).toBe('ssed yet, but it is under review.');
+  it('ignores letter case and keeps the agent’s letters', () => {
+    expect(build("It hasn't been proce", { word: 'Processed', rest: ' yet.' })).toBe('ssed yet.');
   });
 
-  it('adds a space after a known word when the model left it out', () => {
-    expect(postprocess('Thank you, your request', 'will be processed soon.', isWord)).toBe(' will be processed soon.');
+  it('completes the whole word the model repeats', () => {
+    expect(build("If it weren't for the arcane name you could have be", { word: 'been', rest: ' easily confused.' })).toBe('en easily confused.');
   });
 
-  it('keeps the space the model sent', () => {
-    expect(postprocess('Please upload the form', ' today if possible.', isWord)).toBe(' today if possible.');
+  it('completes a word no dictionary knows', () => {
+    expect(build('Use the Abshe', { word: 'Absher', rest: ' app now.' })).toBe('r app now.');
+    expect(build('Before jumping into Ollam', { word: 'Ollama', rest: ', I can help you.' })).toBe('a, I can help you.');
   });
 
-  it('completes an Arabic unfinished word, comparing normalized forms', () => {
-    expect(postprocess('تم استلا', 'م طلبك وسيتم معالجته', isWord)).toBe('م طلبك وسيتم معالجته');
+  it('completes an Arabic unfinished word', () => {
+    expect(build('تم استلا', { word: 'استلام', rest: ' طلبك وسيتم معالجته' })).toBe('م طلبك وسيتم معالجته');
   });
 
-  it('joins when the unfinished part is not a known word and the model sent no space', () => {
-    expect(postprocess('Use the Abshe', 'r app now.', vocab())).toBe('r app now.');
+  it('continues after a finished word the model repeats in full', () => {
+    expect(build('Thank you, your request', { word: 'request', rest: ' will be processed soon.' })).toBe(' will be processed soon.');
   });
 
-  it('strips the whole unfinished word the model repeats, as the prompt asks', () => {
-    expect(postprocess("If it weren't for the arcane name you could have be", 'been easily confused.', isWord)).toBe('en easily confused.');
+  it('withholds a word that does not extend what was typed', () => {
+    const prefix = "If it weren't for the arcane name you could have be";
+    expect(assemble(prefix, { word: 'seen', rest: ' helpful.' })).toBe('format');
+    expect(assemble(prefix, { word: '', rest: ' n easily confused.' })).toBe('format');
+    expect(assemble('Your request', { word: 'request', rest: '' })).toBe('format');
+  });
+});
+
+describe('assemble: new words', () => {
+  it('adds nothing after a space', () => {
+    expect(assemble('Thank you, your request ', { word: '', rest: 'will be processed soon.' })).toEqual({
+      completion: 'will be processed soon.',
+      edit: { typed: '', word: '', rest: 'will be processed soon.' },
+    });
   });
 
-  it('does not treat a one-letter partial as an echo', () => {
-    expect(postprocess('Thank you, I am a', 'about to check.')).toBe(' about to check.');
+  it('adds a space after punctuation', () => {
+    expect(build('Please upload the form,', { word: '', rest: 'today if possible.' })).toBe(' today if possible.');
+    expect(build('Please upload the form,', { word: 'today', rest: ' if possible.' })).toBe(' today if possible.');
+  });
+
+  it('adds no space before punctuation', () => {
+    expect(build('Please upload the form.', { word: '', rest: '..' })).toBe('');
+  });
+});
+
+describe('finalize', () => {
+  it.each([
+    ['cuts after the first sentence', 'Thank you, your request', ' will be processed. Anything else?', ' will be processed.'],
+    ['cuts at a newline', 'Your request ', 'will be processed\nThanks', 'will be processed'],
+    ['removes a restated prefix tail', 'Thank you, your request ', 'your request will be processed.', 'will be processed.'],
+    ['removes a restated tail after punctuation', 'Thank you,', ' Thank you, your request is received.', ' your request is received.'],
+    ['Arabic question mark terminates', 'هل تريد ', 'معرفة حالة طلبك؟ يمكنني المساعدة', 'معرفة حالة طلبك؟'],
+    ['keeps a mid-word join', 'تم استلا', 'م طلبك وسيتم معالجته.', 'م طلبك وسيتم معالجته.'],
+  ])('%s', (_name, prefix, completion, expected) => {
+    expect(finalize(prefix, completion)).toBe(expected);
+  });
+
+  it('caps at 20 words', () => {
+    const rest = ' ' + Array.from({ length: 30 }, (_, i) => `w${i}`).join(' ');
+    const out = build('Your request', { word: 'request', rest });
+    expect(out).toMatch(/^ w0/);
+    expect((out as string).trim().split(/\s+/)).toHaveLength(20);
+  });
+
+  it('rejects the wrong script', () => {
+    expect(build('تم استلام طلبك', { word: 'طلبك', rest: ' and will be processed.' })).toBe('');
+    expect(build('Your request ', { word: '', rest: 'سيتم معالجته.' })).toBe('');
+  });
+
+  it('returns empty for nothing useful', () => {
+    expect(finalize('Your request', '')).toBe('');
+    expect(finalize('Your request', ' ...  ')).toBe('');
   });
 });

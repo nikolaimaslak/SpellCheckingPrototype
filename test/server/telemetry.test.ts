@@ -113,12 +113,12 @@ describe('withheld completions (Req 3.7)', () => {
       ev('completion-withheld', 'conversation'),
     ];
     const s = summarize(events);
-    expect(s.completion.withheld).toEqual({ figure: 3, date: 0, identifier: 0, conversation: 1, spelling: 0 });
-    expect(renderSummary(s)).toContain('figure 3 · date 0 · identifier 0 · conversation 1 · spelling 0 · next to 10 shown');
+    expect(s.completion.withheld).toEqual({ figure: 3, date: 0, identifier: 0, conversation: 1, format: 0, spelling: 0 });
+    expect(renderSummary(s)).toContain('figure 3 · date 0 · identifier 0 · conversation 1 · format 0 · spelling 0 · next to 10 shown');
   });
 });
 
-describe('client first-word check (completion-midword-echo)', () => {
+describe('reason spelling stays accepted', () => {
   it('keeps reason spelling and counts it', () => {
     expect(sanitize({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'spelling', word: 'ben' })).toEqual({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'spelling' });
     const ev = (reason: StoredEvent['reason']): StoredEvent => ({ type: 'completion-withheld', ts: 1, lang: 'en', reason });
@@ -126,3 +126,13 @@ describe('client first-word check (completion-midword-echo)', () => {
   });
 });
 
+
+describe('unusable model output (completion-structured-output)', () => {
+  it('keeps reason format and counts it', () => {
+    expect(sanitize({ type: 'completion-withheld', ts: 1, lang: 'ar', reason: 'format', raw: '{"word":"x"}' })).toEqual({ type: 'completion-withheld', ts: 1, lang: 'ar', reason: 'format' });
+    const ev = (): StoredEvent => ({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'format' });
+    const s = summarize([ev(), ev(), ev(), ev()]);
+    expect(s.completion.withheld).toMatchObject({ format: 4 });
+    expect(renderSummary(s)).toContain('format 4');
+  });
+});

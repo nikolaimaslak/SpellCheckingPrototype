@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildUserContent, systemInstruction } from '../../server/prompt';
+import { buildUserContent, COMPLETION_SCHEMA, systemInstruction } from '../../server/prompt';
 
 const SYSTEM_INSTRUCTION = systemInstruction();
 
@@ -72,10 +72,20 @@ describe('instructions and Req 3.7', () => {
 });
 
 describe('instructions and unfinished words', () => {
-  it('explain how to continue an unfinished word, in both modes', () => {
+  it('ask for the whole current word in `word` and the continuation in `rest`, in both modes', () => {
     for (const allow of [false, true]) {
-      expect(systemInstruction(allow)).toContain("If the agent's text ends in the middle of a word, start by writing that whole word; otherwise begin with a space.");
+      const s = systemInstruction(allow);
+      expect(s).toMatch(/Return JSON with two fields\. `word`: the last word of the agent's text, written out in full, whether or not the agent finished it/);
+      expect(s).toContain('"Ollama" when the text ends with "Ollam", and "request" when it ends with "request"');
+      expect(s).toMatch(/`rest`: the continuation after that word/);
+      expect(s).not.toContain('begin with the rest of that word');
+      expect(s).not.toContain('start by writing that whole word');
+      expect(s).toMatch(allow ? /only exactly as written/ : /Do not include any number/);
     }
+  });
+
+  it('exports the response schema of word and rest', () => {
+    expect(COMPLETION_SCHEMA).toEqual({ type: 'OBJECT', properties: { word: { type: 'STRING' }, rest: { type: 'STRING' } }, required: ['word', 'rest'] });
   });
 });
 

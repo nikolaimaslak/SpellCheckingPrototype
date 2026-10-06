@@ -18,7 +18,7 @@ The client SHALL queue assistance events (completion shown, accepted and dismiss
 - **THEN** typing, spell checking, completion and polish keep working, and no error is shown to the agent
 
 ### Requirement: What is recorded
-Each stored event SHALL carry its type, timestamp, language, and session identifier, plus latency and lengths for completion events, latency and change count for polish events, and the original and replacement word for spelling events. Events MUST NOT contain completion text, draft or corrected text, transcript text or the composer's content. A `completion-withheld` event, recorded by the completion service or sent by the client, carries only the reason (`figure`, `date`, `identifier`, `conversation` from the server's safety filter, or `spelling` from the client's word check), the language and the timestamp; any other reason value MUST be dropped.
+Each stored event SHALL carry its type, timestamp, language, and session identifier, plus latency and lengths for completion events, latency and change count for polish events, and the original and replacement word for spelling events. Events MUST NOT contain completion text, draft or corrected text, transcript text or the composer's content. A `completion-withheld` event, recorded by the completion service or sent by the client, carries only the reason (`figure`, `date`, `identifier`, `conversation` from the server's safety filter, `format` for model output the server couldn't use, or `spelling`, accepted for a client-side word check although no client currently sends it), the language and the timestamp; any other reason value MUST be dropped.
 
 #### Scenario: Completion event has no text
 - **WHEN** a `completion-accepted` event is stored
@@ -35,6 +35,10 @@ Each stored event SHALL carry its type, timestamp, language, and session identif
 #### Scenario: Client word check recorded without text
 - **WHEN** the client withholds a suggestion because its first word is misspelled
 - **THEN** the log gains a `completion-withheld` event with reason `spelling`, and no suggestion or composer text
+
+#### Scenario: Malformed model output recorded without text
+- **WHEN** the completion service withholds a model reply whose `word` doesn't extend what the agent typed
+- **THEN** the log gains a `completion-withheld` event with reason `format`, and no model output or prefix text
 
 ### Requirement: Event log
 The service SHALL accept event batches at `POST /v1/events` and append each event as one JSON line to a local log file that is excluded from version control.
@@ -73,3 +77,7 @@ The service SHALL serve a summary at `GET /summary` showing, for the logged even
 #### Scenario: Spelling withholds counted
 - **WHEN** the log has 2 completions withheld for `spelling` and 1 for `figure`
 - **THEN** the summary shows withheld counts of 2 `spelling` and 1 `figure`
+
+#### Scenario: Format withholds counted
+- **WHEN** the log has 4 completions withheld for `format`
+- **THEN** the summary shows a withheld count of 4 `format`

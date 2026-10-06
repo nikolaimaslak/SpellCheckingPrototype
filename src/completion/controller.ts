@@ -2,13 +2,10 @@ import { buildTextMap, caretOffset } from '../tokenizer';
 import type { CompletionFetcher, Turn } from './client';
 import { browserMeasure, createGhost, type GhostMeasure } from './ghost';
 import { detectMac, ghostKeyAction, nextWord } from './keys';
-import { firstWordToCheck, strayLetter } from './word-check';
 import { shouldRequest } from './trigger';
 
 export interface CompletionEvent {
-  type: 'completion-shown' | 'completion-accepted' | 'completion-dismissed' | 'completion-withheld';
-  /** completion-withheld: why the suggestion wasn't shown (never its text). */
-  reason?: 'spelling';
+  type: 'completion-shown' | 'completion-accepted' | 'completion-dismissed';
   lang: 'en' | 'ar';
   /** Round trip from request to display. */
   latencyMs?: number;
@@ -29,12 +26,6 @@ export interface CompletionOptions {
   sources?: { transcript: boolean; canned: boolean; kb: boolean };
   /** The live conversation, oldest first. */
   transcript?: () => Turn[];
-  /**
-   * Checks the first word a suggestion would produce (true: correct, false:
-   * misspelled, undefined: unknown). A misspelled one is withheld, so a
-   * broken mid-word fragment ("be" + "n") is never shown.
-   */
-  checkWord?: (word: string, lang: 'en' | 'ar') => Promise<boolean | undefined>;
   /** Receives events without any completion or composer text. */
   onEvent?: (event: CompletionEvent) => void;
   debounceMs?: number;
@@ -153,20 +144,6 @@ export function attachCompletion(el: HTMLElement, options: CompletionOptions): C
     if (now.caret !== caret || now.map.text !== map.text || doc.querySelector(OVERLAYS)) return;
 
     const lang = langOf(prefix);
-    // The first word the agent would end up with must be a word.
-    const first = firstWordToCheck(before, reply.completion);
-    if (first) {
-      let ok = !strayLetter(first);
-      if (ok && options.checkWord) {
-        ok = (await options.checkWord(first.word, first.lang)) !== false;
-        const again = caretState();
-        if (mine !== generation || detached || again.caret !== caret || again.map.text !== map.text || doc.querySelector(OVERLAYS)) return;
-      }
-      if (!ok) {
-        emit({ type: 'completion-withheld', lang, reason: 'spelling' });
-        return;
-      }
-    }
     ghost.show(reply.completion, dirOf(lang));
     anchor = caret;
     shown = { lang, latencyMs: Math.round(performance.now() - started), length: reply.completion.length, consumed: 0, wordAccepted: false };

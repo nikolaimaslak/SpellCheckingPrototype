@@ -1,6 +1,6 @@
-import { postprocess } from './postprocess.ts';
-import { buildUserContent, systemInstruction } from './prompt.ts';
-import { normalize, retrieve, retrieveKb, type KbPassage } from './retrieval.ts';
+import { assemble, finalize, parseStructured, type Edit } from './postprocess.ts';
+import { buildUserContent, COMPLETION_SCHEMA, systemInstruction } from './prompt.ts';
+import { retrieve, retrieveKb, type KbPassage } from './retrieval.ts';
 import { safetyCheck, vocabulary, type WithheldReason } from './safety.ts';
 import { scriptOf, type CannedResponse, type CompleteReply, type CompleteRequest, type CompletionModel, type Lang, type Turn } from './types.ts';
 
@@ -11,8 +11,8 @@ export interface CompleteDeps {
   timeoutMs?: number;
   /** COMPLETION_SOURCED_FIGURES=allow (default false: Req 3.7 as written). */
   allowSourcedFigures?: boolean;
-  /** Told the reason (never the text) whenever the safety filter withholds a completion. */
-  onWithheld?: (reason: WithheldReason, lang: Lang | null) => void;
+  /** Told the reason (never the text) whenever a completion is withheld: unusable model output or the safety filter. */
+  onWithheld?: (reason: WithheldReason | 'format', lang: Lang | null) => void;
 }
 
 // Vocabulary of the whole approved library, computed once per data set.
@@ -47,7 +47,7 @@ function parseRequest(input: unknown): CompleteRequest | string {
   };
 }
 
-/** POST /v1/complete: retrieve → prompt → model → post-process. */
+/** POST /v1/complete: retrieve → prompt → model ({ word, rest }) → assemble → finalize → safety. */
 export async function complete(input: unknown, deps: CompleteDeps): Promise<HttpResult> {
   const started = performance.now();
   const req = parseRequest(input);
@@ -62,7 +62,9 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
 
   let raw: string;
   try {
-    raw = await deps.model.complete(systemInstruction(deps.allowSourcedFigures ?? false), user, AbortSignal.timeout(deps.timeoutMs ?? 2000));
+    raw = await deps.model.complete(systemInstruction(deps.allowSourcedFigures ?? false), user, AbortSignal.timeout(deps.timeoutMs ?? 2000), {
+      responseSchema: COMPLETION_SCHEMA,
+    });
   } catch (err) {
     const name = (err as Error)?.name;
     if (name === 'TimeoutError' || name === 'AbortError') return { status: 504, body: { error: 'completion model timed out' } };
@@ -70,37 +72,46 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
   }
 
   const lang = scriptOf(req.prefix);
-  // Words that tell whether an unfinished word is being completed: the approved
-  // library, the conversation and the agent's own text.
-  const library = libraryVocabulary(deps.library, deps.kb);
-  // The prefix's own unfinished last word must not count as a known word.
-  const finishedPrefix = /\s$/u.test(req.prefix) ? req.prefix : req.prefix.replace(/[\p{L}\p{N}\p{M}]+$/u, '');
-  const local = vocabulary([finishedPrefix, ...req.transcript.map((t) => t.text)]);
-  const isWord = (w: string) => library.has(normalize(w)) || local.has(normalize(w));
-  let completion = postprocess(req.prefix, raw, isWord);
-  // Req 3.7: withhold, never shorten, a completion with figures, dates, identifiers or customer words.
-  const withheld = completion
-    ? safetyCheck(completion, {
-        prefix: req.prefix,
-        customerTurns: req.transcript.filter((t) => t.role === 'customer').map((t) => t.text),
-        sent: [...sources.map((s) => s.text), ...kb.map((p) => p.text)],
-        library,
-        allowSourcedFigures: deps.allowSourcedFigures ?? false,
-      })
-    : null;
-  if (withheld) {
-    completion = '';
-    deps.onWithheld?.(withheld, lang);
-  }
+  const { completion, edit, withheld } = build(req.prefix, raw, (completion) =>
+    // Req 3.7: withhold, never shorten, a completion with figures, dates, identifiers or customer words.
+    safetyCheck(completion, {
+      prefix: req.prefix,
+      customerTurns: req.transcript.filter((t) => t.role === 'customer').map((t) => t.text),
+      sent: [...sources.map((s) => s.text), ...kb.map((p) => p.text)],
+      library: libraryVocabulary(deps.library, deps.kb),
+      allowSourcedFigures: deps.allowSourcedFigures ?? false,
+    }),
+  );
+  if (withheld) deps.onWithheld?.(withheld, lang);
   return {
     status: 200,
     body: {
       completion,
       lang,
+      ...(edit ? { edit } : {}),
       ...(withheld ? { withheld } : {}),
       latencyMs: Math.round(performance.now() - started),
       model: deps.model.name,
       sources: [...sources.map((s) => s.id), ...kb.map((p) => p.id)],
     },
   };
+}
+
+/**
+ * The model's raw output → the suggestion and its edit, or the reason it is
+ * withheld. An empty answer means nothing to add, not a failure.
+ */
+function build(prefix: string, raw: string, safety: (completion: string) => WithheldReason | null): { completion: string; edit?: Edit; withheld?: WithheldReason | 'format' } {
+  const parsed = parseStructured(raw);
+  if (!parsed) return { completion: '', withheld: 'format' };
+  if (!parsed.word && !parsed.rest.trim()) return { completion: '' };
+  const assembled = assemble(prefix, parsed);
+  if (assembled === 'format') return { completion: '', withheld: 'format' };
+  const completion = finalize(prefix, assembled.completion);
+  if (!completion) return { completion: '' };
+  const withheld = safety(completion);
+  if (withheld) return { completion: '', withheld };
+  const { typed, word } = assembled.edit;
+  // finalize may have shortened the text after the word: describe what is shown.
+  return { completion, edit: { typed, word, rest: completion.slice(word.length - typed.length) } };
 }

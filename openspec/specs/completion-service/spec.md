@@ -9,7 +9,7 @@ The server-side (Tier 2) service that predicts the rest of the agent's sentence 
 ### Requirement: Completion endpoint contract
 The service SHALL expose `POST /v1/complete`.
 - **Request (JSON):** the agent's text before the caret (`prefix`), the recent transcript as `{ role: 'customer' | 'agent', text }` turns, and the enabled context sources.
-- **Reply on success (JSON):** `{ completion, lang, latencyMs, model, sources }`, where `completion` is the text to append (possibly empty) and `sources` lists the identifiers of the canned responses used.
+- **Reply on success (JSON):** `{ completion, lang, latencyMs, model, sources }`, where `completion` is the text to append (possibly empty) and `sources` lists the identifiers of the canned responses used. When `completion` is non-empty, the reply MUST also carry `edit: { typed, word, rest }`: `typed` is the agent's unfinished word as the service read it (empty when the prefix ends with whitespace or punctuation), `word` its completed form, and `rest` what follows, so that `completion` equals `word` without its first `typed.length` characters, followed by `rest`.
 
 The client MUST reach the service through a configurable base URL, so it can be replaced without changing the client.
 
@@ -21,13 +21,17 @@ The client MUST reach the service through a configurable base URL, so it can be 
 - **WHEN** the model's output is empty or rejected by post-processing
 - **THEN** the reply carries an empty completion with HTTP 200
 
+#### Scenario: Structured edit in the reply
+- **WHEN** the agent typed "Before jumping into Ollam" and the suggestion completes the word
+- **THEN** the reply carries `completion: "a, I can help you."` and `edit: { typed: "Ollam", word: "Ollama", rest: ", I can help you." }`
+
 ### Requirement: Context assembly
 The service SHALL build the model prompt from cheapest to most expensive:
 1. the most recent transcript turns (always, when enabled);
 2. up to 3 canned responses ranked by lexical similarity to the customer's last message and the prefix (when enabled);
 3. up to 2 knowledge base passages, only when the customer's last message retrieves them with a score at or above a high-confidence threshold (when the `kb` source is enabled).
 
-It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used, and the instructions MUST forbid amounts, numbers, dates, timelines, identifiers (such as reference numbers, email addresses and links) and people's names. When the sourced-figures setting is `allow`, the instructions MUST instead allow figures, dates and timelines only as worded verbatim in the canned responses or knowledge base passages sent. The instructions MUST still forbid policies that are not in the sources. The instructions MUST also say that, when the agent's text ends in the middle of a word, the output starts by writing that whole word (which the post-processing then strips), and otherwise starts with a space.
+It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used, and the instructions MUST forbid amounts, numbers, dates, timelines, identifiers (such as reference numbers, email addresses and links) and people's names. When the sourced-figures setting is `allow`, the instructions MUST instead allow figures, dates and timelines only as worded verbatim in the canned responses or knowledge base passages sent. The instructions MUST still forbid policies that are not in the sources. The instructions MUST describe the structured output: `word`, the word the agent is typing written out in full (empty when the agent's text ends with whitespace or punctuation), and `rest`, the continuation after it including its own leading space or punctuation. They MUST NOT ask for raw character fragments of a word.
 
 #### Scenario: Canned response steers wording
 - **WHEN** the customer asked about pension contribution status and a canned response about contribution status exists
@@ -59,10 +63,10 @@ It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants nor
 
 #### Scenario: Instructions explain unfinished words
 - **WHEN** the instructions are built, under either sourced-figures setting
-- **THEN** they tell the model to start by writing the whole unfinished word, and to start a new word with a space
+- **THEN** they ask for the whole current word in `word` and the continuation in `rest`, never a fragment of a word
 
 #### Scenario: Whole word repeated by the model
-- **WHEN** the prefix is "…you could have be" and the model follows the instructions with "been easily confused."
+- **WHEN** the prefix is "…you could have be" and the model returns `{ "word": "been", "rest": " easily confused." }`
 - **THEN** the completion is "en easily confused."
 
 ### Requirement: Model call
@@ -71,7 +75,7 @@ The service SHALL select its model from `COMPLETION_MODEL`:
 - `gemini`: Gemini only, unavailable without a key;
 - `fake`: the offline test model only.
 
-It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal reasoning, a short output limit and a request timeout. The API key MUST be read from the server environment only, and MUST never appear in replies, logs or the repository. `GET /health` MUST report the active model, whether it sends text outside the machine, the selection mode, and the sourced-figures setting (`block` or `allow`, from `COMPLETION_SOURCED_FIGURES`, default `block`).
+It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal reasoning, a short output limit and a request timeout. For completion, the call MUST request JSON output constrained by a response schema with the string fields `word` and `rest`; the offline test model MUST return the same shape. Grammar polish keeps its free-text call. The API key MUST be read from the server environment only, and MUST never appear in replies, logs or the repository. `GET /health` MUST report the active model, whether it sends text outside the machine, the selection mode, and the sourced-figures setting (`block` or `allow`, from `COMPLETION_SOURCED_FIGURES`, default `block`).
 
 #### Scenario: Key missing
 - **WHEN** the server starts with the default mode and no `GEMINI_API_KEY`
@@ -93,15 +97,17 @@ It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal rea
 - **WHEN** the server starts without `COMPLETION_SOURCED_FIGURES`
 - **THEN** `/health` reports the sourced-figures setting as `block`
 
-### Requirement: Output post-processing
-The service SHALL turn the model output into a safe continuation: no repetition of the prefix, at most one sentence (cut after the first sentence terminator), at most 20 words, a single line, and in the same script as the prefix's last word. When the prefix ends in whitespace, or the continuation doesn't start with a letter or digit, no space MUST be added. When the prefix ends inside a word (its last character is a letter or digit) and the continuation starts with a letter or digit, the service SHALL decide deterministically between joining (completing the unfinished word) and adding a space (starting a new word), in this order:
-1. **Echoed word:** the continuation's first word starts with the unfinished word and is longer. The repeated part MUST be removed and the rest joined.
-2. **Model said "new word":** the raw model output started with whitespace. A space MUST be added.
-3. **Known joined word:** the unfinished word plus the continuation's first word is a word of the vocabulary. Join.
-4. **Known unfinished word:** the unfinished word alone is a word of the vocabulary. A space MUST be added.
-5. **Otherwise:** join.
+#### Scenario: Structured completion call
+- **WHEN** the service calls Gemini for a completion
+- **THEN** the request asks for JSON with a response schema of `word` and `rest`, and no newline stop sequence cuts the JSON
 
-The vocabulary is the words of the approved library (all canned responses and knowledge base articles), the conversation in the request and the prefix. Words are compared ignoring letter case, Arabic diacritics, tatweel and alef/hamza forms. Without a vocabulary, step 4 applies. Output failing these rules MUST be returned as an empty completion.
+### Requirement: Output post-processing
+The service SHALL turn the model output into a safe continuation: no repetition of the prefix, at most one sentence (cut after the first sentence terminator), at most 20 words, a single line, and in the same script as the prefix's last word. The model's output SHALL be parsed as `{ word, rest }`, and the suggestion assembled from it:
+- **typed part:** the prefix's trailing run of letters, digits and marks; empty when the prefix ends with whitespace or punctuation;
+- **with a typed part:** `word` MUST start with it (letter case ignored for the comparison) and MUST be longer than it, or equal to it when `rest` is non-empty; the suggestion is `word` without its first `typed.length` characters, followed by `rest`;
+- **without a typed part:** the suggestion is `word` followed by `rest`, with a leading space added when the prefix doesn't end in whitespace and the suggestion starts with a letter or digit.
+
+Output that can't be parsed, or whose `word` doesn't extend the typed part, MUST be returned as an empty completion with `withheld: "format"`; it MUST never be applied as a change to what the agent typed. No dictionary or vocabulary MUST be needed for this.
 
 After that, a safety filter (formal Req 3.7) SHALL return an **empty** completion, never a shortened one, when the continuation contains any of the following:
 - **figure:** a digit (Western or Arabic-Indic); an English number word from "two" upward ("zero", "two" … "twenty", the tens, "hundred", "thousand", "million", "billion", "dozen"); an Arabic number word ("صفر", "اثنان" … "عشرة", the tens, "مئة"/"مائة", "ألف", "مليون"), also with a leading و ف ب ل ك or ال; a currency ("SAR", "riyal", "ريال", "$", "﷼"); or a percentage ("%", "percent", "بالمئة");
@@ -112,15 +118,15 @@ After that, a safety filter (formal Req 3.7) SHALL return an **empty** completio
 When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropped only for **figure** or **date** SHALL pass if the whole continuation, without its leading space and final punctuation, appears verbatim in one of the canned responses or knowledge base passages sent with this request (comparing whitespace, letter case, Arabic diacritics and tatweel loosely). Identifiers and conversation words MUST always be dropped. A dropped completion's reply MUST carry `withheld` with the first matching reason (`figure`, `date`, `identifier` or `conversation`) and never the dropped text. The filter MUST be deterministic and MUST run on the server, so no client can bypass it.
 
 #### Scenario: Model repeats the prefix
-- **WHEN** the model returns "your request will be processed soon." for the prefix "Thank you, your request"
+- **WHEN** the model returns `{ "word": "request", "rest": " will be processed soon." }` for the prefix "Thank you, your request" (repeating the agent's last word in full)
 - **THEN** the completion is " will be processed soon."
 
 #### Scenario: Multiple sentences
-- **WHEN** the model returns " will be processed. Anything else?"
+- **WHEN** the model returns `{ "word": "request", "rest": " will be processed. Anything else?" }` for the prefix "Thank you, your request"
 - **THEN** the completion is " will be processed."
 
 #### Scenario: Wrong language
-- **WHEN** the prefix ends with an Arabic word and the model returns English
+- **WHEN** the prefix ends with an Arabic word and the model's `word` and `rest` are English
 - **THEN** the completion is empty
 
 #### Scenario: Figure from a canned response under the default setting
@@ -172,25 +178,37 @@ When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropp
 - **THEN** the completion is empty and the reply carries `withheld: "identifier"`
 
 #### Scenario: Completing an unfinished word
-- **WHEN** the prefix is "It hasn't been proce" and the model returns "ssed yet, but it is under review." (with "processed" in the approved library)
-- **THEN** the completion is "ssed yet, but it is under review.", with no leading space
+- **WHEN** the prefix is "It hasn't been proce" and the model returns `{ "word": "processed", "rest": " yet, but it is under review." }`
+- **THEN** the completion is "ssed yet, but it is under review.", with no leading space, and `edit.typed` is "proce"
 
 #### Scenario: Model repeats the unfinished word
-- **WHEN** the prefix is "It hasn't been proce" and the model returns "processed yet, but it is under review."
-- **THEN** the completion is "ssed yet, but it is under review."
+- **WHEN** the prefix is "It hasn't been proce" and the model returns `{ "word": "Processed", "rest": " yet." }` (different letter case)
+- **THEN** the completion is "ssed yet.", keeping the agent's typed letters as they are
 
 #### Scenario: New word without a leading space from the model
-- **WHEN** the prefix is "Thank you, your request" and the model returns "will be processed soon."
-- **THEN** the completion is " will be processed soon.", because "request" is a known word
+- **WHEN** the prefix is "Thank you, your request " (ending in a space) and the model returns `{ "word": "", "rest": "will be processed soon." }`
+- **THEN** the completion is "will be processed soon.", with no extra space
 
 #### Scenario: Model marks a new word
-- **WHEN** the prefix is "Please upload the form" and the model returns " today if possible."
-- **THEN** the completion is " today if possible."
+- **WHEN** the prefix is "Please upload the form," and the model returns `{ "word": "", "rest": "today if possible." }`
+- **THEN** the completion is " today if possible.", with the space added after the comma
 
 #### Scenario: Arabic unfinished word
-- **WHEN** the prefix is "تم استلا" and the model returns "م طلبك وسيتم معالجته" (with "استلام" in the approved library)
-- **THEN** the completion is "م طلبك وسيتم معالجته", joined without a space
+- **WHEN** the prefix is "تم استلا" and the model returns `{ "word": "استلام", "rest": " طلبك وسيتم معالجته" }`
+- **THEN** the completion is "م طلبك وسيتم معالجته"
 
 #### Scenario: Unknown unfinished word
-- **WHEN** the prefix ends with "Abshe", the model returns "r app now." without a leading space, and neither "Abshe" nor "Absher" is in the vocabulary
-- **THEN** the completion is "r app now.", joined
+- **WHEN** the prefix ends with "Abshe" and the model returns `{ "word": "Absher", "rest": " app now." }`, a word no dictionary or approved text contains
+- **THEN** the completion is "r app now."
+
+#### Scenario: Name from the conversation completed
+- **WHEN** the customer wrote "How does Ollama work?", the agent typed "Before jumping into Ollam", and the model returns `{ "word": "Ollama", "rest": ", I can help you." }`
+- **THEN** the completion is "a, I can help you." and nothing is withheld: the safety filter checks the suggested text, and the agent started that word themselves
+
+#### Scenario: Word that doesn't extend what was typed
+- **WHEN** the prefix is "…you could have be" and the model returns `{ "word": "seen", "rest": " helpful." }` or `{ "word": "", "rest": " n easily confused." }`
+- **THEN** the completion is empty and the reply carries `withheld: "format"`
+
+#### Scenario: Unparseable output
+- **WHEN** the model's output isn't valid JSON of the expected shape
+- **THEN** the completion is empty and the reply carries `withheld: "format"`

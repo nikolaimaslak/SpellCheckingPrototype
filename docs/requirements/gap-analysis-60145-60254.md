@@ -33,7 +33,7 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 
 | # | Requirement | Status | Prototype today |
 |---|---|---|---|
-| 3.1 | Inline ghost text after the cursor, low contrast, not editable | Met | `inline-completion` "Ghost text display", including the Arabic RTL and fixed-LTR handling. |
+| 3.1 | Inline ghost text after the cursor, low contrast, not editable | Met | `inline-completion` "Ghost text display", including the Arabic RTL and fixed-LTR handling. Mid-word suggestions ("Ollam" → "Ollama, …") come from structured model output `{ word, rest }`, checked on the server (`completion-service` "Output post-processing"). |
 | 3.2.1 | Accept all with Tab **and Right Arrow at end of line** | Met | Tab, or the forward arrow of the suggestion's direction: Right for English, Left for Arabic, also in the fixed-LTR composer (`completion-keys`). Ghost text only shows at the end of a line. |
 | 3.2.2 | Accept one word at a time (Ctrl+Right Arrow) | Met | Ctrl + forward arrow (Option + forward arrow on macOS, where Ctrl+arrow switches desktops). One undo step per word (`completion-keys`). |
 | 3.2.3 | Dismiss by typing another character, Escape or caret move | Met | Typing matching characters consumes the ghost text instead of dismissing it, which is an improvement over the requirement. |

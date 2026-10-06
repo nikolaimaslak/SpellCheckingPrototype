@@ -1,6 +1,5 @@
 import './style.css';
 import { createCompletionClient, attachCompletion, type CompletionHandle } from '../completion';
-import { spellServiceCheck } from '../completion/word-check';
 import { attachSpellCheck, type SpellCheckHandle } from '../composer';
 import { resolveCompletion, resolveGrammar, resolveMode } from '../policy';
 import { attachPolish, createPolishClient, type PolishHandle } from '../polish';
@@ -80,8 +79,6 @@ function apply({ policy, preference, agent }: DemoSettings) {
           fetcher,
           sources: policy.completion.sources,
           transcript: () => readTranscript(transcript),
-          // The page's spelling engine vets the suggestion's first word ("be" + "n" → "ben").
-          checkWord: spellServiceCheck(() => current),
           onEvent: record,
         }),
       )

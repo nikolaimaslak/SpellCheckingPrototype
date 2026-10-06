@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createGeminiModel, GEMINI_MODEL } from '../../server/models/gemini';
+import { COMPLETION_SCHEMA } from '../../server/prompt';
 
 const KEY = 'test-key-123';
 const ok = (text: string) => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text }] } }] }), { status: 200 });
@@ -55,5 +56,30 @@ describe('Gemini generation options', () => {
     const [withOpts, defaults] = fetch.mock.calls.map((c) => JSON.parse(((c as unknown as [string, RequestInit])[1].body as string)).generationConfig);
     expect(withOpts).toMatchObject({ maxOutputTokens: 512, stopSequences: [], temperature: 0.2, thinkingConfig: { thinkingLevel: 'minimal' } });
     expect(defaults).toMatchObject({ maxOutputTokens: 48, stopSequences: ['\n'] });
+  });
+});
+
+describe('Gemini structured output', () => {
+  it('asks for JSON with the schema and no stop sequences, keeping the key out of errors', async () => {
+    const fetch = vi.fn(async () => ok('{"word":"been","rest":" easily confused."}'));
+    const model = createGeminiModel({ apiKey: KEY, fetch: fetch as unknown as typeof globalThis.fetch });
+    const text = await model.complete('s', 'u', new AbortController().signal, { responseSchema: COMPLETION_SCHEMA });
+    expect(text).toBe('{"word":"been","rest":" easily confused."}');
+    const config = JSON.parse(((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body as string)).generationConfig;
+    expect(config).toMatchObject({ responseMimeType: 'application/json', responseSchema: COMPLETION_SCHEMA, maxOutputTokens: 64, temperature: 0.2 });
+    expect(config).not.toHaveProperty('stopSequences');
+
+    const failing = createGeminiModel({ apiKey: KEY, fetch: (async () => new Response(KEY, { status: 500 })) as unknown as typeof globalThis.fetch });
+    const err = await failing.complete('s', 'u', new AbortController().signal, { responseSchema: COMPLETION_SCHEMA }).catch((e: Error) => e);
+    expect((err as Error).message).not.toContain(KEY);
+  });
+
+  it('leaves a plain call (polish) without a JSON mime type', async () => {
+    const fetch = vi.fn(async () => ok('x'));
+    await createGeminiModel({ apiKey: KEY, fetch: fetch as unknown as typeof globalThis.fetch }).complete('s', 'u', new AbortController().signal, { maxOutputTokens: 512, stopSequences: [] });
+    const config = JSON.parse(((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body as string)).generationConfig;
+    expect(config).not.toHaveProperty('responseMimeType');
+    expect(config).not.toHaveProperty('responseSchema');
+    expect(config).toMatchObject({ maxOutputTokens: 512, stopSequences: [] });
   });
 });
