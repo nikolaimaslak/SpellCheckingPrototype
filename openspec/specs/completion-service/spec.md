@@ -109,9 +109,10 @@ It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal rea
 The service SHALL turn the model output into a safe continuation: no repetition of the prefix, at most one sentence (cut after the first sentence terminator, which is `.`, `!`, `?` or `؟` followed by whitespace or the end of the text, so emails, links and decimals stay whole), at most 20 words, a single line, and in the same script as the prefix's last word, ignoring emails and links, which are written in Latin letters in either language. The model's output SHALL be parsed as `{ word, rest }`, and the suggestion assembled from it:
 - **typed part:** the prefix's trailing run of letters, digits and marks; empty when the prefix ends with whitespace or punctuation;
 - **with a typed part:** `word` MUST start with it (letter case ignored for the comparison) and MUST be longer than it, or equal to it when `rest` is non-empty; the suggestion is `word` without its first `typed.length` characters, followed by `rest`;
-- **without a typed part:** the suggestion is `word` followed by `rest`, with a leading space added when the prefix doesn't end in whitespace and the suggestion starts with a letter or digit.
+- **without a typed part:** the suggestion is `word` followed by `rest`. When the prefix ends in whitespace, the suggestion's leading whitespace MUST be removed; otherwise a leading space is added when the suggestion starts with a letter or digit;
+- **the word is whole:** when `word` is non-empty, `rest` MUST be empty or start with whitespace or punctuation. A `rest` starting with a letter, digit or mark continues the word (a repeated fragment, a split-off Arabic suffix) and is not assembled.
 
-Output that can't be parsed, or whose `word` doesn't extend the typed part, MUST be returned as an empty completion with `withheld: "format"`; it MUST never be applied as a change to what the agent typed. No dictionary or vocabulary MUST be needed for this.
+Output that can't be parsed, whose `word` doesn't extend the typed part, or whose `rest` continues the word, MUST be returned as an empty completion with `withheld: "format"`; it MUST never be applied as a change to what the agent typed. No dictionary or vocabulary MUST be needed for this.
 
 The service MUST NOT filter the assembled suggestion for its content: names, words from the conversation, identifiers (emails, links, reference numbers), amounts, figures, dates and timelines are returned as the model wrote them. The only reasons a non-empty model answer yields no suggestion are `format` and the checks above (one line, one sentence, 20 words, script).
 
@@ -182,3 +183,19 @@ The service MUST NOT filter the assembled suggestion for its content: names, wor
 #### Scenario: Name and identifier from the conversation returned
 - **WHEN** the customer wrote "Hello, this is Noura, my email is noura@example.com" and the model returns `{ "word": "", "rest": " Noura, we will write to noura@example.com." }` for the prefix "Thank you,"
 - **THEN** the completion is " Noura, we will write to noura@example.com." and the reply carries no `withheld`
+
+#### Scenario: Repeated fragment in rest
+- **WHEN** the prefix is "I'll forward this to our technical depa" and the model returns `{ "word": "department", "rest": "rtment for assistance." }`
+- **THEN** the completion is empty and the reply carries `withheld: "format"`
+
+#### Scenario: Fragment kept as the word
+- **WHEN** the prefix is "شكراً على صبرك، سأرسل لك التفا" and the model returns `{ "word": "التفا", "rest": "اصيل حالما تتوفر." }`
+- **THEN** the completion is empty and the reply carries `withheld: "format"`
+
+#### Scenario: Arabic suffix split off
+- **WHEN** the prefix is "أهلاً بك، كيف يمكنني مسا" and the model returns `{ "word": "مساعدة", "rest": "ك اليوم؟" }`
+- **THEN** the completion is empty and the reply carries `withheld: "format"`, rather than showing "مساعدةك"
+
+#### Scenario: No double space after a space
+- **WHEN** the prefix is "تم فتح ticket جديد. " and the model returns `{ "word": "", "rest": " وسيتواصل معك المختصون قريباً." }`
+- **THEN** the completion is "وسيتواصل معك المختصون قريباً.", without the leading space

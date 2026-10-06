@@ -29,7 +29,11 @@
     "eval:build": "node --import ./eval/register.ts eval/cli/build.ts",
     "eval:manifest": "node --import ./eval/register.ts eval/cli/manifest.ts",
     "eval:words": "node --import ./eval/register.ts eval/cli/words.ts",
-    "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts"
+    "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts",
+    "eval:completion": "node eval/cli/completion.ts",
+    "eval:completion:check": "node eval/cli/completion.ts --check",
+    "eval:completion:baseline": "node eval/cli/completion.ts --baseline",
+    "eval:completion:record": "node eval/cli/completion.ts --record"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

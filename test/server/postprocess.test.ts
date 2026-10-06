@@ -54,7 +54,31 @@ describe('assemble: unfinished words', () => {
   });
 });
 
+describe('assemble: the word is whole (completion-eval)', () => {
+  it('withholds a rest that continues the word', () => {
+    expect(assemble("I'll forward this to our technical depa", { word: 'department', rest: 'rtment for assistance.' })).toBe('format');
+    expect(assemble('شكراً على صبرك، سأرسل لك التفا', { word: 'التفا', rest: 'اصيل حالما تتوفر.' })).toBe('format');
+    expect(assemble('أهلاً بك، كيف يمكنني مسا', { word: 'مساعدة', rest: 'ك اليوم؟' })).toBe('format');
+    expect(assemble('Your order', { word: 'order', rest: '2 ships today.' })).toBe('format');
+  });
+
+  it('accepts a rest starting with a space or punctuation, or an empty one', () => {
+    expect(build('Thank you, your request', { word: 'request', rest: ' has been received.' })).toBe(' has been received.');
+    expect(build('Thank you for your pati', { word: 'patience', rest: '.' })).toBe('ence.');
+    expect(build('Thank you for your pati', { word: 'patience', rest: '' })).toBe('ence');
+    expect(build('أهلاً بك، كيف يمكنني مسا', { word: 'مساعدتك', rest: ' اليوم؟' })).toBe('عدتك اليوم؟');
+  });
+});
+
 describe('assemble: new words', () => {
+  it('drops the leading space after a prefix that ends in a space, edit included', () => {
+    expect(assemble('تم فتح ticket جديد. ', { word: '', rest: ' وسيتواصل معك المختصون قريباً.' })).toEqual({
+      completion: 'وسيتواصل معك المختصون قريباً.',
+      edit: { typed: '', word: '', rest: 'وسيتواصل معك المختصون قريباً.' },
+    });
+    expect(build('Your refund was approved. ', { word: '', rest: '  Anything else?' })).toBe('Anything else?');
+  });
+
   it('adds nothing after a space', () => {
     expect(assemble('Thank you, your request ', { word: '', rest: 'will be processed soon.' })).toEqual({
       completion: 'will be processed soon.',

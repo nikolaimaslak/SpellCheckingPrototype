@@ -1,5 +1,7 @@
 # Evaluating spell check and auto-correct
 
+For inline completion, see `docs/COMPLETION-EVAL.md`.
+
 The `eval/` tooling measures how well the Tier 1 spelling layer **detects** misspellings, **corrects** them (the intended word as the top correction or among the first five, whether applied automatically or offered), and how safely it **auto-replaces**. It also estimates **which types** of spelling error occur and which types of correction the system makes. Spec: `openspec/specs/spelling-eval/` (after archive; until then `openspec/changes/spelling-eval/`).
 
 Everything runs locally on the committed WASM engine and dictionaries. No server or model key is needed.

@@ -1,0 +1,14 @@
+{
+  "_note": "PROVISIONAL thresholds (openspec/specs/completion-eval), set before the first measurement. Rates are fractions; latency in ms. \"tolerance\" is how much worse than the baseline a compared value may get before eval:completion:check fails; tolerances must exceed run-to-run sampling noise. Criteria with \"compare\": false (stability, latency) are judged against their threshold only. Compared criteria report their threshold verdict but fail the gate only on a regression. After the first runs (2026-10-06): shown-agreement lowered to 0.35 (observed 0.47–0.60) and latency-p95 raised to 2000 ms (observed 955–1558 ms) so run-to-run noise never fails the gate.",
+  "criteria": [
+    { "id": "seam-accuracy", "label": "Seam word correct (shown samples)", "metric": "seamAccuracy", "column": "all", "category": "all", "threshold": 0.9, "direction": "min", "tolerance": 0.05 },
+    { "id": "seam-accuracy-ar", "label": "Seam word correct, Arabic (shown samples)", "metric": "seamAccuracy", "column": "ar", "category": "all", "threshold": 0.85, "direction": "min", "tolerance": 0.1 },
+    { "id": "spacing-errors", "label": "Spacing errors at the seam (shown samples)", "metric": "spacingErrorRate", "column": "all", "category": "all", "threshold": 0.02, "direction": "max", "tolerance": 0.02 },
+    { "id": "inventions", "label": "Invented details (shown samples)", "metric": "inventionRate", "column": "all", "category": "all", "threshold": 0.02, "direction": "max", "tolerance": 0.02 },
+    { "id": "format-rate", "label": "Withheld as format", "metric": "formatRate", "column": "all", "category": "all", "threshold": 0.15, "direction": "max", "tolerance": 0.06 },
+    { "id": "shown-rate", "label": "Suggestion shown", "metric": "shownRate", "column": "all", "category": "all", "threshold": 0.7, "direction": "min", "tolerance": 0.06 },
+    { "id": "error-rate", "label": "Failed or timed-out requests", "metric": "errorRate", "column": "all", "category": "all", "threshold": 0.02, "direction": "max", "tolerance": 0, "compare": false },
+    { "id": "shown-agreement", "label": "Cases whose samples agree on shown", "metric": "shownAgreement", "column": "all", "category": "all", "threshold": 0.35, "direction": "min", "tolerance": 0, "compare": false },
+    { "id": "latency-p95", "label": "Latency p95 (ms)", "metric": "p95Ms", "column": "all", "category": "all", "threshold": 2000, "direction": "max", "tolerance": 0, "compare": false }
+  ]
+}

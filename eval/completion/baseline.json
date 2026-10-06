@@ -1,0 +1,16 @@
+{
+  "model": "gemini-3.5-flash-lite",
+  "datasetHash": "1928e6a4f5cab3f25c7517de2b1deb9346157e8836f44a23aafc5b91e037b52e",
+  "samples": 5,
+  "criteria": {
+    "seam-accuracy": 1,
+    "seam-accuracy-ar": 1,
+    "spacing-errors": 0,
+    "inventions": 0,
+    "format-rate": 0.34,
+    "shown-rate": 0.5533333333333333,
+    "error-rate": 0,
+    "shown-agreement": 0.55,
+    "latency-p95": 954.6332249999978
+  }
+}

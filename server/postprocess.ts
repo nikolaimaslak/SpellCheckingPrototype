@@ -38,10 +38,13 @@ export function parseStructured(raw: string): Structured | null {
  * (`typed`), `word` must extend it (letter case ignored) and the suggestion
  * is the rest of `word` plus `rest`; anything else is 'format', never an edit
  * of what the agent typed. Without one, the suggestion is `word` + `rest`,
- * with a space after punctuation.
+ * with a space after punctuation and none after a space. `word` is whole: a
+ * `rest` that continues it ("rtment…" after "department", "ك" after
+ * "مساعدة") is 'format' too.
  */
 export function assemble(prefix: string, { word, rest }: Structured): { completion: string; edit: Edit } | 'format' {
   const typed = prefix.match(TYPED)?.[0] ?? '';
+  if (word && /^[\p{L}\p{N}\p{M}]/u.test(rest)) return 'format';
   if (typed) {
     if (!word.toLowerCase().startsWith(typed.toLowerCase())) return 'format';
     if (word.length === typed.length && !rest) return 'format';
@@ -49,7 +52,8 @@ export function assemble(prefix: string, { word, rest }: Structured): { completi
   }
   // No word is being typed: the whole answer is new text.
   let completion = word + rest;
-  if (!/\s$/u.test(prefix) && /^[\p{L}\p{N}]/u.test(completion)) completion = ` ${completion}`;
+  if (/\s$/u.test(prefix)) completion = completion.trimStart();
+  else if (/^[\p{L}\p{N}]/u.test(completion)) completion = ` ${completion}`;
   return { completion, edit: { typed: '', word: '', rest: completion } };
 }
 

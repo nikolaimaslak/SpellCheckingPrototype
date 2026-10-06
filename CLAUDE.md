@@ -29,6 +29,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. The demo reaches it via the Vite `/api` proxy |
 | `npm run eval` | Spelling benchmark (offline, a few minutes): detection, correction, auto-replace, error types; writes `eval/reports/latest.md`. `eval:check` gates against `eval/baseline.json`, `eval:baseline` rewrites it. See `docs/EVALUATION.md` |
 | `npm run eval:inject` / `eval:words` / `eval:build` / `eval:manifest` | Insert typed misspellings, build word lists, compile hand-marked dataset sources, re-hash the dataset manifest |
+| `npm run eval:completion` | Completion benchmark against the live model (about a minute with Gemini, synthetic cases only): 5 samples of every case in `eval/completion/cases.jsonl`, writes `eval/reports/completion-latest.md`. `:check` gates against `eval/completion/baseline.json`, `:baseline` rewrites it, `:record` rewrites the recordings the offline replay suite in `npm test` uses. See `docs/COMPLETION-EVAL.md` |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout
@@ -43,6 +44,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/telemetry/`: batching client for assistance events.
 - `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
 - `server/`: Tier 2 dev stand-in: completion (`/v1/complete`, retrieval over the synthetic `server/data/canned.json` and the synthetic knowledge base `server/data/kb.json`), grammar polish (`/v1/polish` with protected-content, length and line-break checks), Gemini client, telemetry log and `/summary`. TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
+- `eval/completion/`: completion evaluation (cases, recordings, judges, metrics, gate); `eval/cli/completion.ts` is its command. Plain Node, imports `server/` only. After any change to completion assembly or its prompt, run `npm test` (replays) and `npm run eval:completion:check`.
 - `eval/`: spelling evaluation tooling, run by Node through `eval/register.ts` (resolves `src/`'s extensionless imports). `pipeline.ts` mirrors the composer in typing order; `error-types.ts` is the shared error taxonomy and classifier (also imported by `server/telemetry.ts`); `datasets/` holds the manifest-checked synthetic datasets (`private/` is gitignored); `criteria.json` and `baseline.json` drive the gate. Run `npm run eval:check` before and after any change to auto-correct.
 - `dev/ad-loader/`: dev-only loader for a live Agent Desktop tenant; never part of the build.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
