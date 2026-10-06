@@ -29,3 +29,6 @@ server/.venv/
 __pycache__/
 .pytest_cache/
 /.cache/
+
+# Local completion eval workspace: inputs, generated sets, run reports (never committed)
+/eval/local/

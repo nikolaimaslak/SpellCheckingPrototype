@@ -30,7 +30,9 @@
     "eval:build": "node --import ./eval/register.ts eval/cli/build.ts",
     "eval:manifest": "node --import ./eval/register.ts eval/cli/manifest.ts",
     "eval:words": "node --import ./eval/register.ts eval/cli/words.ts",
-    "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts"
+    "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts",
+    "eval:completion:build": "uv run --project server --locked python -m assist_eval build",
+    "eval:completion": "uv run --project server --locked python -m assist_eval run"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
