@@ -66,6 +66,10 @@ describe('postprocess: unfinished words', () => {
     expect(postprocess('Use the Abshe', 'r app now.', vocab())).toBe('r app now.');
   });
 
+  it('strips the whole unfinished word the model repeats, as the prompt asks', () => {
+    expect(postprocess("If it weren't for the arcane name you could have be", 'been easily confused.', isWord)).toBe('en easily confused.');
+  });
+
   it('does not treat a one-letter partial as an echo', () => {
     expect(postprocess('Thank you, I am a', 'about to check.')).toBe(' about to check.');
   });

@@ -133,7 +133,7 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T4.14 | Start over (English scenario), click **Next customer message** once, type `Thank you for contacting us, your request` and pause | **No** suggestion appears: the matching approved answer contains "3 working days", and suggestions with numbers, dates or time periods are withheld (Req 3.7). |
 | T4.15 | Stop the demo, set `COMPLETION_SOURCED_FIGURES=allow` in `.env`, run `npm run demo` again and repeat T4.14 | Now "…has been received and will be processed within 3 working days…" appears: figures are allowed when worded exactly as in an approved answer. Set it back to `block` afterwards. |
 | T4.16 | **With Gemini only** (the offline model never uses names): send a customer message `Hello, this is Noura. When will my request be processed?`, then type `Thank you for contacting us` and pause, a few times | No suggestion that contains "Noura" is ever shown: names from the conversation are withheld. The telemetry summary counts any as "conversation". |
-| T4.17 | After T4.1 (two customer messages), type `Your contribution rec` (stop in the middle of the word) and pause | The suggestion completes the word with no extra space: "Your contribution rec**ords are up to date, and the latest payment…**". With `COMPLETION_SOURCED_FIGURES=allow` and only the first customer message, `It hasn't been proce` likewise completes to "proce**ssed within 3 working days…**". |
+| T4.17 | After T4.1 (two customer messages), type `Your contribution rec` (stop in the middle of the word) and pause | The suggestion completes the word with no extra space: "Your contribution rec**ords are up to date, and the latest payment…**". With `COMPLETION_SOURCED_FIGURES=allow` and only the first customer message, `It hasn't been proce` likewise completes to "proce**ssed within 3 working days…**". A suggestion that would leave a broken word (for example "be" + "n…" = "ben", or a stray single letter) is never shown; the telemetry summary counts it as "spelling". |
 
 With the offline test model, the suggestions are canned and may not fit perfectly. With Gemini they vary, but should always be a single sentence in the language you're typing.
 
@@ -169,7 +169,7 @@ With the offline test model, the suggestions are canned and may not fit perfectl
 
 | # | Do | Expected |
 |---|---|---|
-| T8.1 | After some of the scenarios, wait about 5 seconds and open **Telemetry summary** (link under the settings) | A page shows completion and polish acceptance rates, latency, the number of completions withheld by the safety filter (per reason: figure, date, identifier, conversation; T4.14 adds one "figure"), and the auto-correct revert rate. It records counts and timings only: no typed text, suggestions or drafts. |
+| T8.1 | After some of the scenarios, wait about 5 seconds and open **Telemetry summary** (link under the settings) | A page shows completion and polish acceptance rates, latency, the number of completions withheld by the safety filter (per reason: figure, date, identifier, conversation, spelling; T4.14 adds one "figure"), and the auto-correct revert rate. It records counts and timings only: no typed text, suggestions or drafts. |
 
 ## 4. Known limitations (not bugs)
 

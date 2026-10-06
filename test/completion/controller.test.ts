@@ -14,7 +14,7 @@ afterEach(() => {
 function setup(
   reply: string | null = ' will be processed within 3 working days.',
   fetchImpl?: CompletionFetcher,
-  opts: { text?: string; isMac?: boolean; dir?: 'ltr' } = {},
+  opts: { text?: string; isMac?: boolean; dir?: 'ltr'; checkWord?: (w: string, l: 'en' | 'ar') => Promise<boolean | undefined> } = {},
 ) {
   document.body.innerHTML = `<div id="c" contenteditable="true"${opts.dir ? ` dir="${opts.dir}"` : ''}></div>`;
   const el = document.getElementById('c')!;
@@ -35,6 +35,7 @@ function setup(
     transcript: () => [{ role: 'customer', text: 'when will it be processed?' }],
     onEvent: (e) => events.push(e),
     env: { replace, measure, isMac: opts.isMac ?? false },
+    checkWord: opts.checkWord,
   });
   handles.push(handle);
   return { el, fetcher, events, replace, handle };
@@ -313,4 +314,57 @@ describe('inline completion controller', () => {
       expect(json).not.toContain('request');
     });
   });
+
+  describe('first-word check (completion-midword-echo)', () => {
+    const PREFIX = "If it weren't for the arcane name you could have be";
+    const known = (...words: string[]) => vi.fn(async (w: string) => words.includes(w));
+
+    it('withholds a broken mid-word fragment and reports only the reason', async () => {
+      const checkWord = known('been');
+      const { events, handle } = setup('n easily confused.', undefined, { text: PREFIX, checkWord });
+      await handle.requestNow();
+      expect(ghostText()).toBe('');
+      expect(checkWord).toHaveBeenCalledWith('ben', 'en');
+      expect(events).toEqual([{ type: 'completion-withheld', lang: 'en', reason: 'spelling' }]);
+      expect(JSON.stringify(events)).not.toContain('easily');
+    });
+
+    it('withholds a stray lone letter without asking the engine', async () => {
+      const checkWord = known('n');
+      const { events, handle } = setup(' n easily confused.', undefined, { text: PREFIX, checkWord });
+      await handle.requestNow();
+      expect(ghostText()).toBe('');
+      expect(checkWord).not.toHaveBeenCalled();
+      expect(events.map((e) => e.type)).toEqual(['completion-withheld']);
+    });
+
+    it('shows a correct mid-word completion', async () => {
+      const { handle } = setup('ssed yet.', undefined, { text: "It hasn't been proce", checkWord: known('processed') });
+      await handle.requestNow();
+      expect(ghostText()).toBe('ssed yet.');
+    });
+
+    it('shows the suggestion when the check is unknown or absent', async () => {
+      const a = setup('n easily confused.', undefined, { text: PREFIX, checkWord: async () => undefined });
+      await a.handle.requestNow();
+      expect(ghostText()).toBe('n easily confused.');
+      handles.splice(0).forEach((h) => h.detach());
+      const b = setup('n easily confused.', undefined, { text: PREFIX });
+      await b.handle.requestNow();
+      expect(ghostText()).toBe('n easily confused.');
+    });
+
+    it('drops the suggestion if the agent typed during a slow check', async () => {
+      let release!: (v: boolean) => void;
+      const checkWord = vi.fn(() => new Promise<boolean | undefined>((r) => (release = r)));
+      const { el, handle } = setup(' will be processed.', undefined, { text: 'Thank you, your request', checkWord });
+      const pending = handle.requestNow();
+      await vi.waitFor(() => expect(checkWord).toHaveBeenCalled());
+      typeChar(el, 's');
+      release(true);
+      await pending;
+      expect(ghostText()).toBe('');
+    });
+  });
 });
+

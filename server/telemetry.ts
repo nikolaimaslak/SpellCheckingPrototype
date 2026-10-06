@@ -3,8 +3,11 @@ import { dirname } from 'node:path';
 import { classify, type Lang } from '../eval/error-types.ts';
 
 const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed', 'completion-withheld'] as const;
-/** Why the server's safety filter withheld a completion (safety.ts); nothing else may be stored for it. */
-const WITHHELD_REASONS = ['figure', 'date', 'identifier', 'conversation'] as const;
+/**
+ * Why a completion was withheld: the server's safety filter (safety.ts) or the
+ * client's first-word check (spelling). Nothing else may be stored for it.
+ */
+const WITHHELD_REASONS = ['figure', 'date', 'identifier', 'conversation', 'spelling'] as const;
 const SPELLING = ['autocorrect', 'revert', 'accept', 'ignore'] as const;
 const POLISH = ['polish-shown', 'polish-accepted', 'polish-dismissed', 'polish-reverted'] as const;
 type EventType = (typeof COMPLETION)[number] | (typeof SPELLING)[number] | (typeof POLISH)[number];

@@ -27,7 +27,7 @@ The service SHALL build the model prompt from cheapest to most expensive:
 2. up to 3 canned responses ranked by lexical similarity to the customer's last message and the prefix (when enabled);
 3. up to 2 knowledge base passages, only when the customer's last message retrieves them with a score at or above a high-confidence threshold (when the `kb` source is enabled).
 
-It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used, and the instructions MUST forbid amounts, numbers, dates, timelines, identifiers (such as reference numbers, email addresses and links) and people's names. When the sourced-figures setting is `allow`, the instructions MUST instead allow figures, dates and timelines only as worded verbatim in the canned responses or knowledge base passages sent. The instructions MUST still forbid policies that are not in the sources. The instructions MUST also say that, when the agent's text ends in the middle of a word, the output starts with the rest of that word without a space, and otherwise starts with a space.
+It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used, and the instructions MUST forbid amounts, numbers, dates, timelines, identifiers (such as reference numbers, email addresses and links) and people's names. When the sourced-figures setting is `allow`, the instructions MUST instead allow figures, dates and timelines only as worded verbatim in the canned responses or knowledge base passages sent. The instructions MUST still forbid policies that are not in the sources. The instructions MUST also say that, when the agent's text ends in the middle of a word, the output starts by writing that whole word (which the post-processing then strips), and otherwise starts with a space.
 
 #### Scenario: Canned response steers wording
 - **WHEN** the customer asked about pension contribution status and a canned response about contribution status exists
@@ -59,7 +59,11 @@ It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants nor
 
 #### Scenario: Instructions explain unfinished words
 - **WHEN** the instructions are built, under either sourced-figures setting
-- **THEN** they tell the model to continue an unfinished word without a space, and to start a new word with a space
+- **THEN** they tell the model to start by writing the whole unfinished word, and to start a new word with a space
+
+#### Scenario: Whole word repeated by the model
+- **WHEN** the prefix is "…you could have be" and the model follows the instructions with "been easily confused."
+- **THEN** the completion is "en easily confused."
 
 ### Requirement: Model call
 The service SHALL select its model from `COMPLETION_MODEL`:

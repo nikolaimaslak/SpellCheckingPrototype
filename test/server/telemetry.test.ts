@@ -113,7 +113,16 @@ describe('withheld completions (Req 3.7)', () => {
       ev('completion-withheld', 'conversation'),
     ];
     const s = summarize(events);
-    expect(s.completion.withheld).toEqual({ figure: 3, date: 0, identifier: 0, conversation: 1 });
-    expect(renderSummary(s)).toContain('figure 3 · date 0 · identifier 0 · conversation 1 · next to 10 shown');
+    expect(s.completion.withheld).toEqual({ figure: 3, date: 0, identifier: 0, conversation: 1, spelling: 0 });
+    expect(renderSummary(s)).toContain('figure 3 · date 0 · identifier 0 · conversation 1 · spelling 0 · next to 10 shown');
   });
 });
+
+describe('client first-word check (completion-midword-echo)', () => {
+  it('keeps reason spelling and counts it', () => {
+    expect(sanitize({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'spelling', word: 'ben' })).toEqual({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'spelling' });
+    const ev = (reason: StoredEvent['reason']): StoredEvent => ({ type: 'completion-withheld', ts: 1, lang: 'en', reason });
+    expect(summarize([ev('spelling'), ev('spelling'), ev('figure')]).completion.withheld).toMatchObject({ spelling: 2, figure: 1 });
+  });
+});
+
