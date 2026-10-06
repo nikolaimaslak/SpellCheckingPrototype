@@ -74,3 +74,18 @@ For Arabic, the alef-form check lists every other ا/أ/إ/آ spelling that the 
 2. A fluent Arabic reviewer does the same for `AR_PROJECT`, and confirms or rejects every `not:` judgment there and in `AYASPELL_NOT`. If a judgment is rejected, the entry is removed.
 3. Run `npm run lists:ayaspell` if `AYASPELL_NOT` changed, then `npm test` and `npm run eval:check`.
 4. Change "human review: pending" in each list header to name the reviewer and the date, then run `npm run eval:baseline` if the results changed.
+
+## KI-6: A completion's join inside a word isn't checked
+
+**Status:** open, accepted October 6, 2026 in the `completion-continuation-contract` change.
+
+**What happens.** Inline completion asks the model for the text that goes right after the caret. When the agent stops mid-word, the model writes the missing letters, and the server shows them as written: it doesn't check the completed word against a dictionary. A model that repeats or drops a letter at the join produces a misspelled word in the ghost text. The agent's own letters are never changed, and accepting the suggestion is still the agent's choice.
+
+**Evidence.** In the live check with `gemini-3.5-flash-lite` (60 cases × 5 samples), 96.5% of shown mid-word joins read correctly. The errors were all repeated letters in Arabic: "التفا" + "اصيل" ("التفااصيل") and "المرو" + "ُرور" ("المروُرور"). An earlier run also had one English drop: "Leib" + "n…" for "Leibniz". The numbers are in the change's `live-check.md`.
+
+**Options when this is addressed:**
+1. **A browser-side check** of the completed word with the Hunspell engine already loaded in the worker: hide the suggestion, or keep only the first word's completion, when the joined word is misspelled and the typed fragment wasn't. Mind names and product words the dictionary doesn't know ("Ollama", "Absher"); the custom dictionary helps.
+2. **An Arabic-only overlap repair** on the server: drop letters at the start of the continuation that repeat the end of the typed fragment (marks ignored). This fixes the observed cases. Real Arabic words with doubled letters across the join (مما, ممن, يحيي) are the risk. It isn't suitable for English ("be" + "en").
+3. **The completed-sentence contract:** the model restates the current sentence and the server strips the typed part. This is the most robust seam, at 10–20 more output tokens.
+4. **Prompt optimization** in the planned DSPy optimizer change, with seam errors as part of the metric.
+

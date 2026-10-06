@@ -23,3 +23,9 @@ wasm/.build/
 
 # Obsidian vault settings (per-user editor state)
 /.obsidian/
+
+# Python server (uv): environment, caches, and the opt-in LLM request cache
+server/.venv/
+__pycache__/
+.pytest_cache/
+/.cache/

@@ -14,6 +14,7 @@ Thank you for testing it. Each scenario below tells you what to type and what yo
 
 **Requirements:**
 - Node.js **23.6 or newer** (check with `node --version`) and npm.
+- **uv** (check with `uv --version`), which runs the completion server and installs its Python by itself. Install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (macOS: `brew install uv`; Windows: `winget install astral-sh.uv`). The first `npm run demo` downloads Python and the server's packages, so it needs a network connection and takes a minute.
 - A supported browser: current **Chrome** or **Edge** (recommended), **Safari 17.2+**, or **Firefox 140+**.
 
 **Start:**
@@ -31,6 +32,8 @@ Open **http://localhost:5173/** (printed in the terminal). Stop with **Ctrl+C**.
 
 - **Banner at the top**, saying which model completion and polish use:
   - **Yellow, "… (Google)":** a live model. Text you type in a composer may be sent to Google.
+  - **Yellow, "… may be sent outside this machine":** another remote model (set with `COMPLETION_MODEL` in `.env`). Same rule: made-up text only.
+  - **"… a model running on this machine":** a local model (for example `COMPLETION_MODEL=ollama_chat/<model>`); live results, and nothing you type leaves your machine.
   - **"Offline test model":** canned results; nothing leaves your machine.
   - **"Unavailable":** the completion server isn't running. Spelling still works.
 - **Spelling engine line:** English and Arabic dictionaries loading, with timings.
@@ -133,7 +136,7 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T4.14 | Start over (English scenario), click **Next customer message** once, type `Thank you for contacting us, your request` and pause | The suggestion "…has been received and will be processed within 3 working days…" appears. Suggestions aren't filtered for figures, dates, links or names: they may contain any detail from the conversation and the approved answers. |
 | T4.15 | Start over (Arabic scenario), click **Next customer message** once, type `شكراً لتواصلك معنا، تم استلام طلبك` and pause | An Arabic suggestion with the time period appears, for example "…وسيتم معالجته خلال ثلاثة أيام عمل…". |
 | T4.16 | **With Gemini only** (the offline model never uses names): send a customer message `Hello, this is Noura. When will my request be processed?`, then type `Thank you for contacting us,` (with the comma) and pause, a few times | A suggestion may include "Noura": details from the conversation aren't filtered (made-up data only). Nothing is counted as withheld for it on the telemetry summary. |
-| T4.17 | After T4.1 (two customer messages), type `Your contribution rec` (stop in the middle of the word) and pause | The suggestion completes the word with no extra space: "Your contribution rec**ords are up to date, and the latest payment…**". With only the first customer message, `It hasn't been proce` likewise completes to "proce**ssed within 3 working days…**". A suggestion never changes or breaks the word you started: when the model's word doesn't continue your letters (for example "be" followed by "n…"), nothing is shown, and the telemetry summary counts it as "format". |
+| T4.17 | After T4.1 (two customer messages), type `Your contribution rec` (stop in the middle of the word) and pause | The suggestion completes the word with no extra space: "Your contribution rec**ords are up to date, and the latest payment…**". With only the first customer message, `It hasn't been proce` likewise completes to "proce**ssed within 3 working days…**". A suggestion never changes the letters you typed. The join inside a word is shown as the model wrote it and isn't checked against a dictionary, so it can occasionally repeat or drop a letter (seen in Arabic: `شكراً على صبرك، سأرسل لك التفا` + "اصيل…" reads "التفااصيل"). **Report any join that misspells the word**, with the exact text. |
 
 With the offline test model, the suggestions are canned and may not fit perfectly. With Gemini they vary, but should always be a single sentence in the language you're typing.
 

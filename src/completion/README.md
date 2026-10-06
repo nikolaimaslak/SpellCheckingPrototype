@@ -38,14 +38,24 @@ The forward arrow follows the **suggestion's** direction (an Arabic prefix means
 
 Every accept goes through `env.replace` (`execCommand('insertText')`): **one undo step per accept** and an ordinary host `input` event. A word accept fires an input event that the type-through logic consumes, so word accept and typing through share one path. When the suggestion is used up, the next pause may request a new one. No request is made while words remain.
 
-## Unfinished words: the structured edit
+## Unfinished words: the continuation and its edit
 
-The server asks the model for JSON `{ word, rest }`: the word the agent is typing, written out in full ("Ollama" for "Ollam"), and the continuation after it. It builds the suggestion itself (`server/postprocess.ts`):
-- **Typed part:** the prefix's trailing letters ("Ollam"), or nothing after a space or punctuation.
-- **Check:** `word` must start with the typed part (letter case ignored) and add to it. Anything else, or output that isn't that JSON, is withheld as `format`. The agent's text is never changed.
-- **Suggestion:** the rest of `word`, then `rest` ("a, I can help you."). After punctuation, a space is added before a new word.
+The server sends the model the agent's text exactly as typed and asks for one JSON field, `continuation`: the text that goes right after the caret (the typed DSPy program `ContinueText` in `server/assist/programs.py`). Its instructions give one rule per way the text can end, each with an English and an Arabic example:
+- **mid-word:** the missing letters, no space ("proce" → "ssed today.");
+- **a complete word:** a space or punctuation first ("Your request" → " has been received.");
+- **a space:** the next word, no space;
+- **punctuation:** a space, then the next word.
 
-The reply carries the suggestion as `completion` and the edit as `edit: { typed, word, rest }`, so a host can tell "complete the word" from "start a new one" without re-deriving it. The browser does no spelling check of its own: the model's whole words are trusted, and only the seam is checked, by plain string comparison on the server.
+The JSON is read leniently in form (inside prose or a fence, cut off, extra fields) but strictly in type: `continuation` must be a string, or the reply is withheld as `format`, the only withheld reason.
+
+The server then adjusts only what is never ambiguous (`server/assist/postprocess.py`, `join`):
+- no space after a space;
+- one space after punctuation;
+- the unfinished word written again from its start is dropped ("proce" + "Processed yet." → "ssed yet.").
+
+The existing checks then apply: one line, one sentence, 20 words, the same script, no restating of the prefix's tail. A join the model makes inside a word is shown as written. It isn't checked against a dictionary, so a repeated or dropped letter can reach the agent ("التفا" + "اصيل" reads "التفااصيل"; see `docs/known-issues.md` KI-6).
+
+The reply carries the suggestion as `completion`, and an `edit: { typed, word, rest }` derived by the server: `typed` is the prefix's trailing letters, `word` is `typed` plus the completion's leading letters when it joins, and `rest` is what follows. A host can tell "complete the word" from "start a new one" without re-deriving it, and `completion == word.slice(typed.length) + rest` always holds.
 
 ## Events
 

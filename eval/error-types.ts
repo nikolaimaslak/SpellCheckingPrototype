@@ -1,6 +1,7 @@
-// The spelling error taxonomy, shared by the misspelling inserter, the
-// benchmark reports and the telemetry summary (server/telemetry.ts imports
-// this file, so it must stay dependency-free and run directly under Node).
+// The spelling error taxonomy, shared by the misspelling inserter and the
+// benchmark reports. The telemetry summary uses a Python port of classify()
+// (server/assist/error_types.py); test/fixtures/error-types.json keeps the two
+// equal. Dependency-free, so it runs directly under Node.
 //
 // Edits are named from the misspelling's point of view: `delete` means the
 // misspelling lacks a letter of the intended word, `insert` that it has an

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   AR_TYPES,
@@ -129,5 +130,22 @@ describe('inserting errors', () => {
 
   it('puts ta marbuta errors where the letter is', () => {
     expect(variants('المساعدة', 'ta-marbuta', 'ar')).toEqual(['المساعده']);
+  });
+});
+
+// The same fixture runs against the Python port (server/tests/test_error_types.py),
+// so the telemetry summary and the benchmark classify every pair alike.
+describe('shared error-type fixture', () => {
+  const fixture = JSON.parse(readFileSync('test/fixtures/error-types.json', 'utf8')) as {
+    cases: { misspelled: string; intended: string; lang: Lang; expected: ReturnType<typeof classify> }[];
+  };
+
+  it('covers English, Arabic, multi, boundary and unclassifiable pairs', () => {
+    const types = new Set<string | null>(fixture.cases.map((c) => c.expected?.type ?? null));
+    for (const t of [...EN_TYPES, ...AR_TYPES, 'multi', 'boundary', null]) expect(types.has(t), String(t)).toBe(true);
+  });
+
+  it.each(fixture.cases.map((c) => [c.misspelled, c.intended, c.lang, c] as const))('%s → %s (%s)', (_m, _w, _l, c) => {
+    expect(classify(c.misspelled, c.intended, c.lang)).toEqual(c.expected);
   });
 });

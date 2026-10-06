@@ -1,0 +1,5710 @@
+{
+ "_note": "Shared error-type fixture: checked against eval/error-types.ts (Vitest) and server/assist/error_types.py (pytest). Generated from the classifier test cases, the telemetry spec examples and variants() output; regenerate only on purpose.",
+ "cases": [
+  {
+   "misspelled": "اذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ا",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الى",
+   "intended": "إلى",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ا",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 2,
+      "from": "ؤ",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسوول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ؤ",
+      "to": "و",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سما",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 3,
+      "from": "ء",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المساعده",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "ta-marbuta",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 7,
+      "from": "ة",
+      "to": "ه",
+      "type": "ta-marbuta"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "علي",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "alef-maqsura",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ى",
+      "to": "ي",
+      "type": "alef-maqsura"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "النضام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ظ",
+      "to": "ض",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الطلت",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ب",
+      "to": "ت",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مرحيا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ب",
+      "to": "ي",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مرحلا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ب",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مرحكا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ب",
+      "to": "ك",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الطلبب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "ب",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التسجل",
+   "intended": "التسجيل",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 5,
+      "from": "ي",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التسيجل",
+   "intended": "التسجيل",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 4,
+      "from": "جي",
+      "to": "يج",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "teh",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 1,
+      "from": "he",
+      "to": "eh",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "untill",
+   "intended": "until",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "l",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ocured",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "multi",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "c",
+      "to": "",
+      "type": "undouble"
+     },
+     {
+      "op": "del",
+      "at": 4,
+      "from": "r",
+      "to": "",
+      "type": "undouble"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "occured",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "undouble",
+    "edits": [
+     {
+      "op": "del",
+      "at": 4,
+      "from": "r",
+      "to": "",
+      "type": "undouble"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "wich",
+   "intended": "which",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "h",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pleaae",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "s",
+      "to": "a",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "plezse",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "a",
+      "to": "z",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "recieve",
+   "intended": "receive",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 3,
+      "from": "ei",
+      "to": "ie",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "seperate",
+   "intended": "separate",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "a",
+      "to": "e",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pleasde",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 5,
+      "from": "",
+      "to": "d",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "riyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "r",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "alot",
+   "intended": "a lot",
+   "lang": "en",
+   "expected": {
+    "type": "boundary",
+    "edits": []
+   }
+  },
+  {
+   "misspelled": "acomodate",
+   "intended": "accommodate",
+   "lang": "en",
+   "expected": {
+    "type": "multi",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "c",
+      "to": "",
+      "type": "undouble"
+     },
+     {
+      "op": "del",
+      "at": 4,
+      "from": "m",
+      "to": "",
+      "type": "undouble"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "xyz",
+   "intended": "abcdef",
+   "lang": "en",
+   "expected": {
+    "type": "multi",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "a",
+      "to": "",
+      "type": "delete"
+     },
+     {
+      "op": "del",
+      "at": 1,
+      "from": "b",
+      "to": "",
+      "type": "delete"
+     },
+     {
+      "op": "del",
+      "at": 2,
+      "from": "c",
+      "to": "",
+      "type": "delete"
+     },
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "d",
+      "to": "x",
+      "type": "keyboard-sub"
+     },
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "e",
+      "to": "y",
+      "type": "substitute"
+     },
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "f",
+      "to": "z",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "file",
+   "intended": "ملف",
+   "lang": "en",
+   "expected": null
+  },
+  {
+   "misspelled": "مَرْحَبًا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": null
+  },
+  {
+   "misspelled": "مرحـيا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ب",
+      "to": "ي",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "please",
+   "intended": "please",
+   "lang": "en",
+   "expected": null
+  },
+  {
+   "misspelled": "GOSI",
+   "intended": "نظام",
+   "lang": "ar",
+   "expected": null
+  },
+  {
+   "misspelled": "نظامGOSI",
+   "intended": "نظام",
+   "lang": "ar",
+   "expected": null
+  },
+  {
+   "misspelled": "e-mail",
+   "intended": "email",
+   "lang": "en",
+   "expected": {
+    "type": "boundary",
+    "edits": []
+   }
+  },
+  {
+   "misspelled": "re‐send",
+   "intended": "resend",
+   "lang": "en",
+   "expected": {
+    "type": "boundary",
+    "edits": []
+   }
+  },
+  {
+   "misspelled": "a",
+   "intended": "b",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "b",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ab",
+   "intended": "ba",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ba",
+      "to": "ab",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "",
+   "intended": "a",
+   "lang": "en",
+   "expected": null
+  },
+  {
+   "misspelled": "aa",
+   "intended": "a",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "a",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ب",
+   "intended": "ت",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ت",
+      "to": "ب",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "olease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "o",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "plsase",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "e",
+      "to": "s",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pleade",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "s",
+      "to": "d",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pleass",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "e",
+      "to": "s",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "eequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "r",
+      "to": "e",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rdquest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "e",
+      "to": "d",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "requwst",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "e",
+      "to": "w",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "requeet",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "s",
+      "to": "e",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "xontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "c",
+      "to": "x",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "clntribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "o",
+      "to": "l",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "confribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "t",
+      "to": "f",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "controbution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "i",
+      "to": "o",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "oension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "o",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pemsion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "n",
+      "to": "m",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "penzion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "s",
+      "to": "z",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pensipn",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "o",
+      "to": "p",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Eiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "E",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Rkyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "i",
+      "to": "k",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Riywdh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "a",
+      "to": "w",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Riyach",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "d",
+      "to": "c",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "sddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "a",
+      "to": "s",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ardress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "d",
+      "to": "r",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "adxress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "d",
+      "to": "x",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "addrrss",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "e",
+      "to": "r",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "iccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "o",
+      "to": "i",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ofcurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "c",
+      "to": "f",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "occhrred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "u",
+      "to": "h",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "occurted",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "r",
+      "to": "t",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rhe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "t",
+      "to": "r",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tue",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "h",
+      "to": "u",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "alease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "hlease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "h",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rlease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "r",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ylease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "y",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "r",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "kequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "r",
+      "to": "k",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "sequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "r",
+      "to": "s",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "raquest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "e",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "c",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "kontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "c",
+      "to": "k",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "c",
+      "to": "r",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "cantribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "o",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "hension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "h",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "r",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "yension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "y",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "kiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "k",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "siyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "s",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Rayadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "i",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "bddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "a",
+      "to": "b",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "iddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "a",
+      "to": "i",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "a",
+      "to": "p",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aadress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "d",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "accurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "o",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "hccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "o",
+      "to": "h",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "o",
+      "to": "t",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "oacurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "c",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ahe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "t",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "jhe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "t",
+      "to": "j",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "qhe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "t",
+      "to": "q",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tae",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "h",
+      "to": "a",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "lpease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "pl",
+      "to": "lp",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "erquest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "re",
+      "to": "er",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ocntribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "co",
+      "to": "oc",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "contribtuion",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 7,
+      "from": "ut",
+      "to": "tu",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "epnsion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "pe",
+      "to": "ep",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "iRyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "Ri",
+      "to": "iR",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "dadress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ad",
+      "to": "da",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "cocurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "oc",
+      "to": "co",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "hte",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "th",
+      "to": "ht",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "lease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "p",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "equest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "r",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "c",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "contribtion",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 7,
+      "from": "u",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "p",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "iyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "R",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "a",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "o",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "he",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "t",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "oplease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "o",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "plwease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "w",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pledase",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "d",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pleadse",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "d",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "erequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "e",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rwequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "w",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "reaquest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "a",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "requhest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "h",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "xcontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "x",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "cfontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "f",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "clontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "l",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "conhtribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "h",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "opension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "o",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pernsion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "r",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pemnsion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "m",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pensaion",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "a",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "eRiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "e",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Rfiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "f",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Rkiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "k",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Rihyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "h",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "saddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "s",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "azddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "z",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "adrdress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "r",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "adderess",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "e",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ioccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "i",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "olccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "l",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ofccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "f",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "occuyrred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 4,
+      "from": "",
+      "to": "y",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rthe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "r",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tghe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "g",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tbhe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "b",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ther",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "r",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "pplease",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "p",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "rrequest",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "r",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ccontribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "c",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "contribuution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 7,
+      "from": "",
+      "to": "u",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ppension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "p",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "RRiyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "R",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "aaddress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "a",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ooccurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "o",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "tthe",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "double",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "t",
+      "type": "double"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "adress",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "undouble",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "d",
+      "to": "",
+      "type": "undouble"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ocurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "undouble",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "c",
+      "to": "",
+      "type": "undouble"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Please",
+   "intended": "please",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "P",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Request",
+   "intended": "request",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "r",
+      "to": "R",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Contribution",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "c",
+      "to": "C",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "contribUtion",
+   "intended": "contribution",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 7,
+      "from": "u",
+      "to": "U",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Pension",
+   "intended": "pension",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "p",
+      "to": "P",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "riyadh",
+   "intended": "Riyadh",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "R",
+      "to": "r",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Address",
+   "intended": "address",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "a",
+      "to": "A",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "Occurred",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "o",
+      "to": "O",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "occurreD",
+   "intended": "occurred",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 7,
+      "from": "d",
+      "to": "D",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "The",
+   "intended": "the",
+   "lang": "en",
+   "expected": {
+    "type": "case",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "t",
+      "to": "T",
+      "type": "case"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 3,
+      "from": "أ",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "إ",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الآشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ا",
+      "to": "آ",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 2,
+      "from": "ؤ",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سما",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "hamza",
+    "edits": [
+     {
+      "op": "del",
+      "at": 3,
+      "from": "ء",
+      "to": "",
+      "type": "hamza"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المساعده",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "ta-marbuta",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 7,
+      "from": "ة",
+      "to": "ه",
+      "type": "ta-marbuta"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "علي",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "alef-maqsura",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ى",
+      "to": "ي",
+      "type": "alef-maqsura"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الطأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ت",
+      "to": "ط",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المصاعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "س",
+      "to": "ص",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إزا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ذ",
+      "to": "ز",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "النضام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ظ",
+      "to": "ض",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاشطراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ت",
+      "to": "ط",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مصؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "س",
+      "to": "ص",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "صماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ص",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "emphatic",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ط",
+      "to": "ت",
+      "type": "emphatic"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مزحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ر",
+      "to": "ز",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "البأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ت",
+      "to": "ب",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التأمننات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "ي",
+      "to": "ن",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التأمينان",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 8,
+      "from": "ت",
+      "to": "ن",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المشاعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "س",
+      "to": "ش",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إدا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ذ",
+      "to": "د",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "غلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "غ",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "البظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ن",
+      "to": "ب",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاستراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ش",
+      "to": "س",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاشتراكاث",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 9,
+      "from": "ت",
+      "to": "ث",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مشؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "س",
+      "to": "ش",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "شماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ش",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الظلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "dots",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ط",
+      "to": "ظ",
+      "type": "dots"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "نرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ن",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مبحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ر",
+      "to": "ب",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مرحؤا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ب",
+      "to": "ؤ",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "للتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ف",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الةأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ت",
+      "to": "ة",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التأمسنات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 5,
+      "from": "ي",
+      "to": "س",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "للمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ف",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الوساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "م",
+      "to": "و",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المستعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ا",
+      "to": "ت",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إذل",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "هلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "ه",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "عرى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ر",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "للنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ف",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الوظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ن",
+      "to": "و",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "النظىم",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ا",
+      "to": "ى",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "للاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ف",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الىشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ا",
+      "to": "ى",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاشىراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ت",
+      "to": "ى",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "نسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ن",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مثؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "س",
+      "to": "ث",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسؤزل",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "و",
+      "to": "ز",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسؤور",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ل",
+      "to": "ر",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "يماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ي",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سحاء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "م",
+      "to": "ح",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سمىء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 2,
+      "from": "ا",
+      "to": "ى",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "للطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ل",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 1,
+      "from": "ل",
+      "to": "ف",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الطاب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 3,
+      "from": "ل",
+      "to": "ا",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الطلؤ",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "keyboard-sub",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 4,
+      "from": "ب",
+      "to": "ؤ",
+      "type": "keyboard-sub"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ارحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ا",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ررحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "عرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ع",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ءرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ء",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ذذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ذ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "طذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ط",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لذا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "إ",
+      "to": "ل",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ع",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ا",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "عسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ع",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ءسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "م",
+      "to": "ء",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ا",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ذماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ذ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "غماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "غ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "هماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "س",
+      "to": "ه",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "بلطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ب",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رلطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ر",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ظلطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "ظ",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ولطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "substitute",
+    "edits": [
+     {
+      "op": "sub",
+      "at": 0,
+      "from": "ا",
+      "to": "و",
+      "type": "substitute"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "م",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ا",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التأمينا",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 8,
+      "from": "ت",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ا",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المساعد",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 7,
+      "from": "ة",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 1,
+      "from": "ذ",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ع",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ا",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ا",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاشتراات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 7,
+      "from": "ك",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "م",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "س",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "delete",
+    "edits": [
+     {
+      "op": "del",
+      "at": 0,
+      "from": "ا",
+      "to": "",
+      "type": "delete"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "نمرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ن",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "محرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ح",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ملرحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مرحمبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "م",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لالتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اعلتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افلتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ف",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التنأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "ن",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لالمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اعلمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افلمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ف",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الكمساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "ك",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إذلا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "إذاع",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "غعلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "غ",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "عتلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ت",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "عرلى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ر",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لالنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اعلنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افلنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ف",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "المنظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "م",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لالاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اعلاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افلاشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ف",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاتشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "ت",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "نمسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ن",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "محسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ح",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ميسؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ي",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مسؤرول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "ر",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "شسماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ش",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سثماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ث",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سحماء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ح",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سمالء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 3,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لالطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 0,
+      "from": "",
+      "to": "ل",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "اعلطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ع",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "افلطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 1,
+      "from": "",
+      "to": "ف",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الجطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "insert",
+    "edits": [
+     {
+      "op": "ins",
+      "at": 2,
+      "from": "",
+      "to": "ج",
+      "type": "insert"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "رمحبا",
+   "intended": "مرحبا",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "مر",
+      "to": "رم",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لاتأمينات",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ال",
+      "to": "لا",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "التأمينتا",
+   "intended": "التأمينات",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 7,
+      "from": "ات",
+      "to": "تا",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لامساعدة",
+   "intended": "المساعدة",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ال",
+      "to": "لا",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "ذإا",
+   "intended": "إذا",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "إذ",
+      "to": "ذإ",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لعى",
+   "intended": "على",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "عل",
+      "to": "لع",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لانظام",
+   "intended": "النظام",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ال",
+      "to": "لا",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لااشتراكات",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ال",
+      "to": "لا",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "الاشترااكت",
+   "intended": "الاشتراكات",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 7,
+      "from": "كا",
+      "to": "اك",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "سمؤول",
+   "intended": "مسؤول",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "مس",
+      "to": "سم",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "مساء",
+   "intended": "سماء",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "سم",
+      "to": "مس",
+      "type": "transpose"
+     }
+    ]
+   }
+  },
+  {
+   "misspelled": "لاطلب",
+   "intended": "الطلب",
+   "lang": "ar",
+   "expected": {
+    "type": "transpose",
+    "edits": [
+     {
+      "op": "swap",
+      "at": 0,
+      "from": "ال",
+      "to": "لا",
+      "type": "transpose"
+     }
+    ]
+   }
+  }
+ ]
+}

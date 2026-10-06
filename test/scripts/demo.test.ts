@@ -28,3 +28,21 @@ describe('demo start helpers', () => {
     expect(await portFree(port)).toBe(true);
   });
 });
+
+describe('uv check and model banner', () => {
+  it('reports a missing uv, naming it and its install command', async () => {
+    const { uvAvailable, uvMissingMessage } = await import('../../scripts/demo');
+    expect(uvAvailable('uv-definitely-not-installed')).toBe(false);
+    expect(uvMissingMessage()).toMatch(/uv is required/);
+    expect(uvMissingMessage()).toContain('https://astral.sh/uv/install.sh');
+  });
+
+  it('describes each kind of model', async () => {
+    const { describeModel } = await import('../../scripts/demo');
+    expect(describeModel(null)).toMatch(/not responding/);
+    expect(describeModel({ model: null, external: false })).toMatch(/unavailable/);
+    expect(describeModel({ model: 'fake', external: false })).toMatch(/offline test model/);
+    expect(describeModel({ model: 'gemini-3.5-flash-lite', external: true })).toMatch(/sent outside this machine/);
+    expect(describeModel({ model: 'ollama_chat/qwen3:8b', external: false })).toMatch(/stays on this machine/);
+  });
+});

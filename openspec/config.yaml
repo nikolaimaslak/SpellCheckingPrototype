@@ -36,6 +36,9 @@ context: |
       under the MPL 1.1 option; Hunspell is compiled to WASM by our own build
       (emsdk in Docker), AyaSpell is vendored unmodified in dicts/ar/. English
       dictionary: SCOWL-derived (dictionary-en, MIT AND BSD).
+    - English is the first language (delivery priority): every test and every
+      spec scenario must work in English, and English is never left without
+      coverage for a text behavior.
     - Arabic is first-class: RTL and mixed Arabic/English (bidi) text, per-token
       script detection, Arabic normalization (diacritics, tatweel, alef variants).
     - Exclusions: URLs, emails, case/reference numbers, tokens with digits, and
@@ -63,7 +66,7 @@ rules:
     - Include a Non-goals section.
     - Call out any new third-party dependency with its license.
   specs:
-    - Write scenarios for Arabic and mixed Arabic/English input whenever text is processed.
+    - Whenever text is processed, write scenarios for English first, then Arabic and mixed Arabic/English input.
     - Tier 1 requirements must state that they work without network access.
   design:
     - Say which tier (1 browser / 2 server / config) each component lives in.

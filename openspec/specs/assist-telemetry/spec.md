@@ -37,7 +37,7 @@ Each stored event SHALL carry its type, timestamp, language, and session identif
 - **THEN** the log gains a `completion-withheld` event with reason `spelling`, and no suggestion or composer text
 
 #### Scenario: Malformed model output recorded without text
-- **WHEN** the completion service withholds a model reply whose `word` doesn't extend what the agent typed
+- **WHEN** the completion service withholds a model reply that has no string `continuation`
 - **THEN** the log gains a `completion-withheld` event with reason `format`, and no model output or prefix text
 
 ### Requirement: Event log
@@ -48,7 +48,27 @@ The service SHALL accept event batches at `POST /v1/events` and append each even
 - **THEN** two lines are appended to the log
 
 ### Requirement: Summary page
-The service SHALL serve a summary at `GET /summary` showing, for the logged events: completion acceptance rate (accepted ÷ shown), completion latency p50 and p95, auto-correct revert rate (reverts ÷ auto-corrections) overall and per language, suggestion accepts and ignores per language, ignore share (ignores ÷ (accepts + ignores)) per language, polish acceptance rate (accepted ÷ shown with changes), polish latency p50, counts per event type and language, and the number of withheld completions per reason, next to the number shown. It SHALL also classify each `autocorrect` and `accept` event's original→replacement pair with the shared error-type taxonomy, and show per language the distribution of error types seen in the field and the revert rate per auto-correction type. Each spelling figure MUST be labelled with the offline benchmark metric it approximates: revert rate with auto-replace precision, ignore share with the false-flag rate, and the field type distribution with the benchmark's error-type distribution.
+The service SHALL serve a summary at `GET /summary` showing, for the logged events:
+- completion acceptance rate (accepted ÷ shown);
+- completion latency p50 and p95;
+- auto-correct revert rate (reverts ÷ auto-corrections), overall and per language;
+- suggestion accepts and ignores per language;
+- ignore share (ignores ÷ (accepts + ignores)) per language;
+- polish acceptance rate (accepted ÷ shown with changes);
+- polish latency p50;
+- counts per event type and language;
+- the number of withheld completions per reason, next to the number shown.
+
+**Error types:** it SHALL also classify each `autocorrect` and `accept` event's original→replacement pair with the shared error-type taxonomy, and show per language:
+- the distribution of error types seen in the field;
+- the revert rate per auto-correction type.
+
+**Labels:** each spelling figure MUST be labelled with the offline benchmark metric it approximates:
+- revert rate: auto-replace precision;
+- ignore share: the false-flag rate;
+- the field type distribution: the benchmark's error-type distribution.
+
+**One taxonomy in two languages:** the service's classifier MUST give the same type as the spelling benchmark's classifier for every pair. A shared fixture of English, Arabic and unclassifiable pairs with their expected types MUST be checked against both classifiers in the test suite.
 
 #### Scenario: Rates computed
 - **WHEN** the log has 10 completions shown with 4 accepted, and 5 auto-corrections with 1 revert
@@ -81,3 +101,11 @@ The service SHALL serve a summary at `GET /summary` showing, for the logged even
 #### Scenario: Format withholds counted
 - **WHEN** the log has 4 completions withheld for `format`
 - **THEN** the summary shows a withheld count of 4 `format`
+
+#### Scenario: Classifiers agree
+- **WHEN** the shared fixture holds "teh"→"the" (en), "المساعده"→"المساعدة" (ar), "xyz"→"abcdef" (en, several edits) and "file"→"ملف" (mixed scripts)
+- **THEN** the service's classifier and the spelling benchmark's classifier both give `transpose`, `ta-marbuta`, `multi` and no type, and a fixture entry that either one gets wrong fails the tests
+
+#### Scenario: Existing log read unchanged
+- **WHEN** the service starts on a `telemetry/events.jsonl` written by the previous server
+- **THEN** the summary counts every event in it as before

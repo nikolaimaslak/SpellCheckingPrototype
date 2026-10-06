@@ -7,15 +7,27 @@ Lets an external tester start the prototype locally in a few minutes, know what 
 ## Requirements
 
 ### Requirement: One-command start
-`npm run demo` SHALL check that the Node version is supported, provision the dictionaries, start the completion server and the demo page together, print the demo URL and the active completion model, and stop both processes when the tester presses Ctrl+C or either process exits. It MUST fail early with a clear message when Node is too old or a required port is taken.
+`npm run demo` SHALL:
+1. check that the Node version is supported and that `uv` is installed;
+2. provision the dictionaries;
+3. prepare the Python environment for the completion server (`uv sync`, which also installs the pinned Python when missing);
+4. start the completion server and the demo page together;
+5. print the demo URL and the active completion model;
+6. stop both processes when the tester presses Ctrl+C or either process exits.
+
+It MUST fail early with a clear message when Node is too old, when `uv` is missing (saying how to install it), when the Python environment can't be prepared, or when a required port is taken.
 
 #### Scenario: Fresh start
-- **WHEN** a tester runs `npm install` and then `npm run demo` on a fresh clone
-- **THEN** both servers start, and one line tells them to open `http://localhost:5173/` and which completion model is active
+- **WHEN** a tester with Node and `uv` installed runs `npm install` and then `npm run demo` on a fresh clone
+- **THEN** the Python environment is prepared, both servers start, and one line tells them to open `http://localhost:5173/` and which completion model is active
 
 #### Scenario: Old Node
 - **WHEN** the installed Node is older than the supported version
 - **THEN** the command exits with a message naming the required version, before starting anything
+
+#### Scenario: uv missing
+- **WHEN** `uv` is not on the PATH
+- **THEN** the command exits before starting anything, with a message naming `uv` and its install command
 
 #### Scenario: Port in use
 - **WHEN** port 5173 or 5175 is already in use
@@ -26,15 +38,26 @@ Lets an external tester start the prototype locally in a few minutes, know what 
 - **THEN** both processes stop, and nothing keeps listening on either port
 
 ### Requirement: Environment template
-The repository SHALL include `.env.example` documenting `GEMINI_API_KEY` and `COMPLETION_MODEL` (`auto`, `gemini`, `fake`) with what each choice means for data leaving the machine. `.env` MUST remain excluded from version control.
+The repository SHALL include `.env.example` documenting what each setting means for data leaving the machine:
+- `GEMINI_API_KEY`;
+- `COMPLETION_MODEL`: `auto`, `gemini`, `fake`, or a provider-qualified model id such as a local model;
+- `COMPLETION_API_BASE`;
+- `COMPLETION_MAX_TURNS`: optional; unset passes the full conversation to the model;
+- `ASSIST_LLM_CACHE`: off by default, and what turning it on stores.
+
+`.env` and the LLM cache directory MUST remain excluded from version control.
 
 #### Scenario: Template present
 - **WHEN** a tester opens `.env.example`
-- **THEN** it explains that without a key the offline test model is used, and that with a key typed text is sent to Google
+- **THEN** it explains that without a key the offline test model is used, that with a key typed text is sent to Google, and that a local model id keeps text on the machine
+
+#### Scenario: Cache explained
+- **WHEN** a tester reads the `ASSIST_LLM_CACHE` entry
+- **THEN** it says the cache is off by default and, when on, stores the text sent to the model under a git-ignored directory
 
 ### Requirement: Tester guide
 The repository SHALL include `docs/TESTING.md` with:
-- requirements (Node version, supported browsers);
+- requirements (Node version, `uv`, supported browsers);
 - the start command;
 - a numbered scenario for each feature (spell check, auto-correct, inline completion, knowledge base grounding, grammar polish, admin and agent settings, telemetry summary), each with exact input text in English and Arabic where relevant and the expected result;
 - known limitations;
@@ -53,6 +76,10 @@ The repository SHALL include `docs/TESTING.md` with:
 #### Scenario: Known limitations listed
 - **WHEN** a tester reads the known-limitations section
 - **THEN** it explains ambiguous short typos, that many Arabic typos are only underlined and not auto-corrected, Arabic ghost text on the line below in a left-to-right composer, completion latency, and that all customer and knowledge content is synthetic
+
+#### Scenario: uv in the requirements
+- **WHEN** a tester reads the requirements section
+- **THEN** it lists `uv` with its install command next to Node
 
 ### Requirement: Report template
 The repository SHALL include a test report template (`docs/TEST-REPORT-TEMPLATE.md`, mirrored as `.github/ISSUE_TEMPLATE/test-report.md`) asking for scenario number, steps, exact input text, expected and actual result, browser and version, language, the model banner shown, the version stamp, and an optional screenshot.

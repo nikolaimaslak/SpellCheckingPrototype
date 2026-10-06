@@ -19,17 +19,17 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 
 | Command | What it does |
 |---|---|
-| `npm run demo` | Testers' one-command start: checks Node and ports, runs the demo page (:5173) and completion server (:5175), prints the URL and active model |
+| `npm run demo` | Testers' one-command start (needs Node and `uv`): checks Node, `uv` and ports, provisions dictionaries, runs `uv sync`, starts the demo page (:5173) and the Python completion server (:5175), prints the URL and active model |
 | `npm run dev` | Demo page only, at http://localhost:5173 (bound to 127.0.0.1; provisions dictionaries first) |
-| `npm test` | Vitest (Node by default; DOM tests opt in with `// @vitest-environment jsdom`) |
+| `npm test` | Vitest (Node by default; DOM tests opt in with `// @vitest-environment jsdom`), then pytest for the server (`npm run test:py`) |
+| `npm run test:py` | The server's pytest suite only: `uv run --project server --locked pytest server/tests -q` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` (both dictionaries) |
 | `npm run fetch-dicts` | Provision English (from npm) and Arabic (vendored `dicts/ar`, sha256-checked) into `public/dicts/`, offline |
 | `npm run build:wasm` | Rebuild Hunspell WASM in Docker; only when changing the pin or `wasm/binding.cpp` |
-| `npm run server` | Completion, polish and telemetry server on 127.0.0.1:5175. `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini` or `fake`. The demo reaches it via the Vite `/api` proxy |
+| `uv run --project server python -m assist` | The completion, polish and telemetry server on 127.0.0.1:5175 (`npm run server` is an alias). `COMPLETION_MODEL=auto` (default: Gemini with `GEMINI_API_KEY`, else the offline test model), `gemini`, `fake`, or any LiteLLM id such as `ollama_chat/<model>` (with `COMPLETION_API_BASE`). `COMPLETION_MAX_TURNS` limits the conversation sent (default: all of it); `ASSIST_LLM_CACHE=on` caches LLM requests under `.cache/llm/` (default off). The demo reaches it via the Vite `/api` proxy |
 | `npm run eval` | Spelling benchmark (offline, a few minutes): detection, correction, auto-replace, error types; writes `eval/reports/latest.md`. `eval:check` gates against `eval/baseline.json`, `eval:baseline` rewrites it. See `docs/EVALUATION.md` |
 | `npm run eval:inject` / `eval:words` / `eval:build` / `eval:manifest` | Insert typed misspellings, build word lists, compile hand-marked dataset sources, re-hash the dataset manifest |
-| `npm run eval:completion` | Completion benchmark against the live model (about a minute with Gemini, synthetic cases only): 5 samples of every case in `eval/completion/cases.jsonl`, writes `eval/reports/completion-latest.md`. `:check` gates against `eval/completion/baseline.json`, `:baseline` rewrites it, `:record` rewrites the recordings the offline replay suite in `npm test` uses. See `docs/COMPLETION-EVAL.md` |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout
@@ -43,27 +43,29 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/policy/`: admin policy and agent preference (`resolveMode`, `resolveCompletion`).
 - `src/telemetry/`: batching client for assistance events.
 - `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
-- `server/`: Tier 2 dev stand-in: completion (`/v1/complete`, retrieval over the synthetic `server/data/canned.json` and the synthetic knowledge base `server/data/kb.json`), grammar polish (`/v1/polish` with protected-content, length and line-break checks), Gemini client, telemetry log and `/summary`. TypeScript run directly by Node, so its relative imports use `.ts` extensions and it doesn't import `src/`.
-- `eval/completion/`: completion evaluation (cases, recordings, judges, metrics, gate); `eval/cli/completion.ts` is its command. Plain Node, imports `server/` only. After any change to completion assembly or its prompt, run `npm test` (replays) and `npm run eval:completion:check`.
-- `eval/`: spelling evaluation tooling, run by Node through `eval/register.ts` (resolves `src/`'s extensionless imports). `pipeline.ts` mirrors the composer in typing order; `error-types.ts` is the shared error taxonomy and classifier (also imported by `server/telemetry.ts`); `datasets/` holds the manifest-checked synthetic datasets (`private/` is gitignored); `criteria.json` and `baseline.json` drive the gate. Run `npm run eval:check` before and after any change to auto-correct.
+- `server/`: Tier 2 dev stand-in, in Python (`uv` project: `pyproject.toml`, `uv.lock`, `.python-version`). The `assist` package: `app.py` (FastAPI routes and error shape), `settings.py` (env, `.env`, model selection), `programs.py` (the typed DSPy programs `ContinueText` / `PolishDraft`, the `TypedJSONAdapter`, the offline test model), `lm.py` (the `dspy.LM` through LiteLLM, cache, error classes), `complete.py` / `polish.py` (the endpoints), `retrieval.py` (over the synthetic `server/data/canned.json` and `server/data/kb.json`), `postprocess.py` (joining the continuation, `finalize`, the derived edit), `telemetry.py` + `error_types.py` (event log and `/summary`). Tests in `server/tests/` (pytest), including `test_scenarios_en.py`, which runs every English spec scenario and fails on an untested one. It doesn't import `src/`.
+- `eval/completion/`: the completion case dataset (`cases.jsonl`, loader `cases.ts`) and the last live run on the former Node server (`reference/`). **There is no completion quality gate** until the eval is redesigned in Python (see `docs/COMPLETION-EVAL.md`); after a change to completion assembly or its prompt, run `npm test` and check a few dataset prefixes by hand with Gemini.
+- `eval/`: spelling evaluation tooling, run by Node through `eval/register.ts` (resolves `src/`'s extensionless imports). `pipeline.ts` mirrors the composer in typing order; `error-types.ts` is the error taxonomy and classifier (the server's `error_types.py` is a Python port of `classify`; `test/fixtures/error-types.json` is checked against both); `datasets/` holds the manifest-checked synthetic datasets (`private/` is gitignored); `criteria.json` and `baseline.json` drive the gate. Run `npm run eval:check` before and after any change to auto-correct.
 - `dev/ad-loader/`: dev-only loader for a live Agent Desktop tenant; never part of the build.
 - `wasm/`: `build.sh` (pinned Hunspell tag and emsdk digest) and `binding.cpp` (6-function C ABI).
 - `scripts/fetch-dicts.ts`: dictionary provisioning (run directly by Node, no build step).
 - `dicts/`: vendored Arabic dictionary (`ar/` with `NOTICE`) and `MANIFEST.md` (sources, pins, hashes, licenses).
-- `test/`: mirrors `src/`, `server/`, `scripts/` and `eval/`. Test files run serially (`fileParallelism: false`; see KI-1).
+- `test/`: mirrors `src/`, `scripts/` and `eval/`; `test/fixtures/` holds fixtures shared with the server's pytest suite. Test files run serially (`fileParallelism: false`; see KI-1).
 
 ## Hard constraints
 
 - **No browser extensions.** Everything is page code.
 - **Tier 1 never touches the network.** Only same-origin static assets (WASM, dictionaries). Engine work stays in the worker, never on the page thread. Completion (Tier 2) is the exception, and only to our own service.
-- **Secrets stay server-side.** `GEMINI_API_KEY` only in the server environment or gitignored `.env`. Hosted-model traffic is for synthetic demo data only. Telemetry never stores completion, transcript or composer text (server allowlist).
+- **Secrets stay server-side.** `GEMINI_API_KEY` only in the server environment or gitignored `.env`. Hosted-model traffic is for synthetic demo data only. Telemetry never stores completion, transcript or composer text (server allowlist). The LLM request cache stores prompts, so it is **off by default** (`ASSIST_LLM_CACHE`); DSPy history and LiteLLM debug output stay off.
 - **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through one transaction path so a single undo reverts them.
 - **Licensing.** No GPL/LGPL terms. Hunspell and the AyaSpell Arabic dictionary are both tri-licensed and used under **MPL 1.1** (notices in `src/spell/wasm/NOTICE` and `dicts/ar/NOTICE`). Any new dependency needs its license checked first.
+- **English is the first language.** Delivery priority: every test and spec scenario must work in English, and every text-processing behavior has English cases.
 - **Arabic is first-class.** Give every text-processing behavior Arabic and mixed Arabic/English test cases. Use `dir="auto"` / `unicode-bidi: plaintext` for direction.
 - Exclude URLs, emails, reference numbers, tokens with digits, and `$(substitution.fields)` from checking.
 
 ## Conventions
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties), so `scripts/*.ts` run directly under Node.
-- Vanilla DOM, no UI framework, npm only.
+- Vanilla DOM, no UI framework, npm for the page and tooling.
+- The server is Python under `uv` (pinned Python, locked dependencies). Every LLM call goes through a typed DSPy program with `TypedJSONAdapter` (never `ChatAdapter`), with no retries; post-processing (assembly, withheld checks, polish safety checks) stays deterministic code, never in the model.
 - Tests read dictionaries from `node_modules/dictionary-en/` and `dicts/ar/` directly.
