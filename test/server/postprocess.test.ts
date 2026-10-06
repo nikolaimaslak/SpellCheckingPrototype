@@ -96,6 +96,19 @@ describe('finalize', () => {
     expect(build('Your request ', { word: '', rest: 'سيتم معالجته.' })).toBe('');
   });
 
+  it('keeps emails, links and decimals whole when cutting to one sentence', () => {
+    expect(finalize('Thank you,', ' we will write to noura@example.com. Anything else?')).toBe(' we will write to noura@example.com.');
+    expect(finalize('Thank you,', ' see www.gosi.gov.sa for details.')).toBe(' see www.gosi.gov.sa for details.');
+    expect(finalize('The rate is', ' 2.5 percent. Thanks')).toBe(' 2.5 percent.');
+    expect(finalize('هل تريد ', 'معرفة حالة طلبك؟ يمكنني المساعدة')).toBe('معرفة حالة طلبك؟');
+  });
+
+  it('ignores emails and links in the script check', () => {
+    expect(finalize('شكراً، سنرسل التحديث إلى', ' noura@example.com.')).toBe(' noura@example.com.');
+    expect(finalize('يرجى زيارة', ' www.gosi.gov.sa للمزيد.')).toBe(' www.gosi.gov.sa للمزيد.');
+    expect(finalize('شكراً، سنرسل التحديث إلى', ' noura@example.com and more.')).toBe('');
+  });
+
   it('returns empty for nothing useful', () => {
     expect(finalize('Your request', '')).toBe('');
     expect(finalize('Your request', ' ...  ')).toBe('');

@@ -57,31 +57,24 @@ describe('prompt with knowledge base', () => {
   });
 });
 
-describe('instructions and Req 3.7', () => {
-  it('forbids figures, dates, identifiers and names under the default', () => {
-    const block = systemInstruction();
-    for (const w of ['number', 'amount', 'date', 'time period', 'reference number', 'email', 'link', "person's name"]) expect(block, w).toContain(w);
-    expect(block).not.toMatch(/exactly as written/);
-  });
-
-  it('with allow, limits figures to verbatim approved text and still forbids identifiers and names', () => {
-    const allow = systemInstruction(true);
-    expect(allow).toMatch(/only exactly as written in the approved responses or the knowledge base/);
-    for (const w of ['reference numbers', 'email addresses', 'links', "person's name"]) expect(allow, w).toContain(w);
+describe('instructions and details from the sources', () => {
+  it('no longer forbid details, and ask for them only as given in the sources', () => {
+    const s = systemInstruction();
+    expect(s).not.toMatch(/Do not include any number/);
+    expect(s).not.toMatch(/only exactly as written/);
+    expect(s).toContain('Use names, numbers, amounts, dates, time periods, reference numbers, email addresses and links only as they appear in the conversation, the approved responses or the knowledge base; never invent them.');
+    expect(s).toContain('Do not invent policies that are not in the approved responses, the knowledge base or the conversation.');
   });
 });
 
 describe('instructions and unfinished words', () => {
-  it('ask for the whole current word in `word` and the continuation in `rest`, in both modes', () => {
-    for (const allow of [false, true]) {
-      const s = systemInstruction(allow);
-      expect(s).toMatch(/Return JSON with two fields\. `word`: the last word of the agent's text, written out in full, whether or not the agent finished it/);
-      expect(s).toContain('"Ollama" when the text ends with "Ollam", and "request" when it ends with "request"');
-      expect(s).toMatch(/`rest`: the continuation after that word/);
-      expect(s).not.toContain('begin with the rest of that word');
-      expect(s).not.toContain('start by writing that whole word');
-      expect(s).toMatch(allow ? /only exactly as written/ : /Do not include any number/);
-    }
+  it('ask for the whole current word in `word` and the continuation in `rest`', () => {
+    const s = systemInstruction();
+    expect(s).toMatch(/Return JSON with two fields\. `word`: the last word of the agent's text, written out in full, whether or not the agent finished it/);
+    expect(s).toContain('"Ollama" when the text ends with "Ollam", and "request" when it ends with "request"');
+    expect(s).toMatch(/`rest`: the continuation after that word/);
+    expect(s).not.toContain('begin with the rest of that word');
+    expect(s).not.toContain('start by writing that whole word');
   });
 
   it('exports the response schema of word and rest', () => {

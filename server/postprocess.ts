@@ -1,7 +1,10 @@
 import { scriptOf } from './types.ts';
 
 const MAX_WORDS = 20;
-const TERMINATOR = /[.!?؟]/u;
+// A sentence ends at . ! ? ؟ followed by whitespace or the end, so emails, links and decimals stay whole.
+const TERMINATOR = /[.!?؟](?=\s|$)/u;
+// Emails and links are written in Latin letters in either language: they don't decide the script.
+const IDENTIFIER = /\b(?:https?:\/\/|www\.)\S+|[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu;
 const TYPED = /[\p{L}\p{N}\p{M}]+$/u;
 
 /** The model's structured answer: the current word in full, and what follows it. */
@@ -82,7 +85,7 @@ export function finalize(prefix: string, completion: string): string {
   if (!/[\p{L}\p{N}]/u.test(out)) return '';
 
   const want = scriptOf(prefix);
-  const got = scriptOf(out.match(/[\p{L}\p{M}]+/u)?.[0] ?? '');
+  const got = scriptOf(out.replace(IDENTIFIER, ' ').match(/[\p{L}\p{M}]+/u)?.[0] ?? '');
   if (want && got && want !== got) return '';
   return out;
 }

@@ -2,21 +2,18 @@ import type { Rankable } from './retrieval.ts';
 import type { CannedResponse, Turn } from './types.ts';
 
 /**
- * The model's instructions. Req 3.7 forbids PII, identifiers, amounts, dates
- * and timelines; with COMPLETION_SOURCED_FIGURES=allow, figures and dates
- * worded exactly as in the approved texts are allowed. The safety filter
- * (safety.ts) enforces the same rules on the output.
+ * The model's instructions. Details from the content sent (names, figures,
+ * dates, identifiers) may be used, only as given there: production runs on a
+ * local model so that suggestions can use customer data (Req 3.7 pending SV).
  */
-export function systemInstruction(allowSourcedFigures = false): string {
+export function systemInstruction(): string {
   return [
     'You complete the unfinished sentence a contact-center agent is typing to a customer of a Saudi social insurance organization.',
     'Return JSON with two fields. `word`: the last word of the agent\'s text, written out in full, whether or not the agent finished it (for example "Ollama" when the text ends with "Ollam", and "request" when it ends with "request"); an empty string only if the text ends with a space or punctuation. `rest`: the continuation after that word, starting with a space or punctuation as needed.',
     'Do not repeat earlier words the agent typed; only the current word goes in `word`.',
     "Write at most one sentence, in the same language and script as the agent's text (Arabic or English).",
     'Prefer the wording of the approved responses when they fit. Use the knowledge base only for facts it states. Do not invent policies that are not in the approved responses, the knowledge base or the conversation.',
-    allowSourcedFigures
-      ? 'Include numbers, amounts, dates, days or time periods only exactly as written in the approved responses or the knowledge base. Never include reference numbers, email addresses, links or any person\'s name.'
-      : "Do not include any number, amount, date, day, time period, reference number, email address, link, or any person's name.",
+    'Use names, numbers, amounts, dates, time periods, reference numbers, email addresses and links only as they appear in the conversation, the approved responses or the knowledge base; never invent them.',
     'If nothing sensible can be added, return an empty `word` and `rest`.',
   ].join('\n');
 }

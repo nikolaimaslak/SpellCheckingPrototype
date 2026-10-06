@@ -53,7 +53,7 @@ The reply carries the suggestion as `completion` and the edit as `edit: { typed,
 - `completion-accepted`: carries the accepted length, which counts every character accepted or typed through. A suggestion that was partly accepted word by word and then abandoned still ends as accepted.
 - `completion-dismissed`: emitted otherwise.
 
-The server records withheld suggestions itself (unusable model output, figures, dates, identifiers, conversation words).
+The server records withheld suggestions itself. Only unusable model output (`format`) is withheld: suggestions aren't filtered for their content.
 
 Events never contain the suggestion or the composer text. The server keeps only allowlisted fields.
 

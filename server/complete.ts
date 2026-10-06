@@ -1,7 +1,6 @@
 import { assemble, finalize, parseStructured, type Edit } from './postprocess.ts';
 import { buildUserContent, COMPLETION_SCHEMA, systemInstruction } from './prompt.ts';
 import { retrieve, retrieveKb, type KbPassage } from './retrieval.ts';
-import { safetyCheck, vocabulary, type WithheldReason } from './safety.ts';
 import { scriptOf, type CannedResponse, type CompleteReply, type CompleteRequest, type CompletionModel, type Lang, type Turn } from './types.ts';
 
 export interface CompleteDeps {
@@ -9,20 +8,8 @@ export interface CompleteDeps {
   library: CannedResponse[];
   kb?: KbPassage[];
   timeoutMs?: number;
-  /** COMPLETION_SOURCED_FIGURES=allow (default false: Req 3.7 as written). */
-  allowSourcedFigures?: boolean;
-  /** Told the reason (never the text) whenever a completion is withheld: unusable model output or the safety filter. */
-  onWithheld?: (reason: WithheldReason | 'format', lang: Lang | null) => void;
-}
-
-// Vocabulary of the whole approved library, computed once per data set.
-const vocabularies = new WeakMap<CannedResponse[], { kb: KbPassage[] | undefined; words: Set<string> }>();
-function libraryVocabulary(library: CannedResponse[], kb: KbPassage[] | undefined): Set<string> {
-  const cached = vocabularies.get(library);
-  if (cached && cached.kb === kb) return cached.words;
-  const words = vocabulary([...library.map((c) => c.text), ...(kb ?? []).map((p) => p.text)]);
-  vocabularies.set(library, { kb, words });
-  return words;
+  /** Told the reason (never the text) whenever model output can't be used. */
+  onWithheld?: (reason: 'format', lang: Lang | null) => void;
 }
 
 export interface HttpResult {
@@ -47,7 +34,7 @@ function parseRequest(input: unknown): CompleteRequest | string {
   };
 }
 
-/** POST /v1/complete: retrieve → prompt → model ({ word, rest }) → assemble → finalize → safety. */
+/** POST /v1/complete: retrieve → prompt → model ({ word, rest }) → assemble → finalize. */
 export async function complete(input: unknown, deps: CompleteDeps): Promise<HttpResult> {
   const started = performance.now();
   const req = parseRequest(input);
@@ -62,7 +49,7 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
 
   let raw: string;
   try {
-    raw = await deps.model.complete(systemInstruction(deps.allowSourcedFigures ?? false), user, AbortSignal.timeout(deps.timeoutMs ?? 2000), {
+    raw = await deps.model.complete(systemInstruction(), user, AbortSignal.timeout(deps.timeoutMs ?? 2000), {
       responseSchema: COMPLETION_SCHEMA,
     });
   } catch (err) {
@@ -72,16 +59,8 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
   }
 
   const lang = scriptOf(req.prefix);
-  const { completion, edit, withheld } = build(req.prefix, raw, (completion) =>
-    // Req 3.7: withhold, never shorten, a completion with figures, dates, identifiers or customer words.
-    safetyCheck(completion, {
-      prefix: req.prefix,
-      customerTurns: req.transcript.filter((t) => t.role === 'customer').map((t) => t.text),
-      sent: [...sources.map((s) => s.text), ...kb.map((p) => p.text)],
-      library: libraryVocabulary(deps.library, deps.kb),
-      allowSourcedFigures: deps.allowSourcedFigures ?? false,
-    }),
-  );
+  // No content filter: the suggestion may carry any detail of the content sent (synthetic data in dev).
+  const { completion, edit, withheld } = build(req.prefix, raw);
   if (withheld) deps.onWithheld?.(withheld, lang);
   return {
     status: 200,
@@ -101,7 +80,7 @@ export async function complete(input: unknown, deps: CompleteDeps): Promise<Http
  * The model's raw output → the suggestion and its edit, or the reason it is
  * withheld. An empty answer means nothing to add, not a failure.
  */
-function build(prefix: string, raw: string, safety: (completion: string) => WithheldReason | null): { completion: string; edit?: Edit; withheld?: WithheldReason | 'format' } {
+function build(prefix: string, raw: string): { completion: string; edit?: Edit; withheld?: 'format' } {
   const parsed = parseStructured(raw);
   if (!parsed) return { completion: '', withheld: 'format' };
   if (!parsed.word && !parsed.rest.trim()) return { completion: '' };
@@ -109,8 +88,6 @@ function build(prefix: string, raw: string, safety: (completion: string) => With
   if (assembled === 'format') return { completion: '', withheld: 'format' };
   const completion = finalize(prefix, assembled.completion);
   if (!completion) return { completion: '' };
-  const withheld = safety(completion);
-  if (withheld) return { completion: '', withheld };
   const { typed, word } = assembled.edit;
   // finalize may have shortened the text after the word: describe what is shown.
   return { completion, edit: { typed, word, rest: completion.slice(word.length - typed.length) } };

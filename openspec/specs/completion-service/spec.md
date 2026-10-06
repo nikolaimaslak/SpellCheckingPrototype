@@ -31,7 +31,7 @@ The service SHALL build the model prompt from cheapest to most expensive:
 2. up to 3 canned responses ranked by lexical similarity to the customer's last message and the prefix (when enabled);
 3. up to 2 knowledge base passages, only when the customer's last message retrieves them with a score at or above a high-confidence threshold (when the `kb` source is enabled).
 
-It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used, and the instructions MUST forbid amounts, numbers, dates, timelines, identifiers (such as reference numbers, email addresses and links) and people's names. When the sourced-figures setting is `allow`, the instructions MUST instead allow figures, dates and timelines only as worded verbatim in the canned responses or knowledge base passages sent. The instructions MUST still forbid policies that are not in the sources. The instructions MUST describe the structured output: `word`, the word the agent is typing written out in full (empty when the agent's text ends with whitespace or punctuation), and `rest`, the continuation after it including its own leading space or punctuation. They MUST NOT ask for raw character fragments of a word.
+It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants normalized for retrieval. The stable parts (instructions, canned snippets, knowledge base passages, transcript) MUST come before the prefix, so repeated requests share a prompt prefix. The reply's `sources` MUST identify the knowledge base passages used. The instructions MUST NOT forbid names, identifiers, amounts, figures, dates or timelines: the model may use any detail from the conversation, canned responses and knowledge base passages sent. They MUST tell the model to state facts, figures, dates and identifiers only as given in those sources, and not to invent policies or details that aren't in them. The instructions MUST describe the structured output: `word`, the last word of the agent's text written out in full, whether or not the agent finished it (empty when the agent's text ends with whitespace or punctuation), and `rest`, the continuation after it including its own leading space or punctuation. They MUST NOT ask for raw character fragments of a word.
 
 #### Scenario: Canned response steers wording
 - **WHEN** the customer asked about pension contribution status and a canned response about contribution status exists
@@ -58,11 +58,15 @@ It MUST compare Arabic text with diacritics, tatweel and alef/hamza variants nor
 - **THEN** no knowledge base passage is retrieved or sent
 
 #### Scenario: Instructions under the default setting
-- **WHEN** the server runs with the default sourced-figures setting
-- **THEN** the instructions forbid amounts, numbers, dates, timelines, identifiers and names without exception
+- **WHEN** the instructions are built
+- **THEN** they don't forbid names, identifiers, amounts, figures, dates or timelines, and they ask the model to use only details given in the conversation, canned responses or knowledge base passages sent
+
+#### Scenario: Arabic and mixed details from the sources
+- **WHEN** the customer wrote "رقم طلبي 4471 والبريد noura@example.com" and the agent typed "شكراً، سنرسل التحديث إلى"
+- **THEN** the prompt carries the customer's message unredacted, and a suggestion containing "noura@example.com" is returned unchanged
 
 #### Scenario: Instructions explain unfinished words
-- **WHEN** the instructions are built, under either sourced-figures setting
+- **WHEN** the instructions are built
 - **THEN** they ask for the whole current word in `word` and the continuation in `rest`, never a fragment of a word
 
 #### Scenario: Whole word repeated by the model
@@ -75,7 +79,7 @@ The service SHALL select its model from `COMPLETION_MODEL`:
 - `gemini`: Gemini only, unavailable without a key;
 - `fake`: the offline test model only.
 
-It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal reasoning, a short output limit and a request timeout. For completion, the call MUST request JSON output constrained by a response schema with the string fields `word` and `rest`; the offline test model MUST return the same shape. Grammar polish keeps its free-text call. The API key MUST be read from the server environment only, and MUST never appear in replies, logs or the repository. `GET /health` MUST report the active model, whether it sends text outside the machine, the selection mode, and the sourced-figures setting (`block` or `allow`, from `COMPLETION_SOURCED_FIGURES`, default `block`).
+It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal reasoning, a short output limit and a request timeout. For completion, the call MUST request JSON output constrained by a response schema with the string fields `word` and `rest`; the offline test model MUST return the same shape. Grammar polish keeps its free-text call. The API key MUST be read from the server environment only, and MUST never appear in replies, logs or the repository. `GET /health` MUST report the active model, whether it sends text outside the machine, and the selection mode. There is no sourced-figures setting: `COMPLETION_SOURCED_FIGURES` is ignored.
 
 #### Scenario: Key missing
 - **WHEN** the server starts with the default mode and no `GEMINI_API_KEY`
@@ -94,28 +98,22 @@ It SHALL call Gemini (`gemini-3.5-flash-lite`) with low temperature, minimal rea
 - **THEN** the endpoint answers HTTP 502 or 504 with a short reason, and the client shows no ghost text
 
 #### Scenario: Health reports the safety setting
-- **WHEN** the server starts without `COMPLETION_SOURCED_FIGURES`
-- **THEN** `/health` reports the sourced-figures setting as `block`
+- **WHEN** the server starts, with or without `COMPLETION_SOURCED_FIGURES`
+- **THEN** `/health` reports no sourced-figures setting, and completions are never withheld for figures, dates or identifiers
 
 #### Scenario: Structured completion call
 - **WHEN** the service calls Gemini for a completion
 - **THEN** the request asks for JSON with a response schema of `word` and `rest`, and no newline stop sequence cuts the JSON
 
-### Requirement: Output post-processing
-The service SHALL turn the model output into a safe continuation: no repetition of the prefix, at most one sentence (cut after the first sentence terminator), at most 20 words, a single line, and in the same script as the prefix's last word. The model's output SHALL be parsed as `{ word, rest }`, and the suggestion assembled from it:
+### Requirement: Output assembly
+The service SHALL turn the model output into a safe continuation: no repetition of the prefix, at most one sentence (cut after the first sentence terminator, which is `.`, `!`, `?` or `؟` followed by whitespace or the end of the text, so emails, links and decimals stay whole), at most 20 words, a single line, and in the same script as the prefix's last word, ignoring emails and links, which are written in Latin letters in either language. The model's output SHALL be parsed as `{ word, rest }`, and the suggestion assembled from it:
 - **typed part:** the prefix's trailing run of letters, digits and marks; empty when the prefix ends with whitespace or punctuation;
 - **with a typed part:** `word` MUST start with it (letter case ignored for the comparison) and MUST be longer than it, or equal to it when `rest` is non-empty; the suggestion is `word` without its first `typed.length` characters, followed by `rest`;
 - **without a typed part:** the suggestion is `word` followed by `rest`, with a leading space added when the prefix doesn't end in whitespace and the suggestion starts with a letter or digit.
 
 Output that can't be parsed, or whose `word` doesn't extend the typed part, MUST be returned as an empty completion with `withheld: "format"`; it MUST never be applied as a change to what the agent typed. No dictionary or vocabulary MUST be needed for this.
 
-After that, a safety filter (formal Req 3.7) SHALL return an **empty** completion, never a shortened one, when the continuation contains any of the following:
-- **figure:** a digit (Western or Arabic-Indic); an English number word from "two" upward ("zero", "two" … "twenty", the tens, "hundred", "thousand", "million", "billion", "dozen"); an Arabic number word ("صفر", "اثنان" … "عشرة", the tens, "مئة"/"مائة", "ألف", "مليون"), also with a leading و ف ب ل ك or ال; a currency ("SAR", "riyal", "ريال", "$", "﷼"); or a percentage ("%", "percent", "بالمئة");
-- **date:** an English month name (capitalized; "May" only next to a digit) or weekday name; an Arabic Gregorian, Levantine or Hijri month name; an Arabic weekday with ال; "tomorrow", "yesterday", "tonight", "غداً", "غدا", "بكرة", "أمس"; or a time unit (day, week, month, year, hour, minute; يوم, أسبوع, شهر, سنة, ساعة, دقيقة and their plurals) in the same continuation as a relative word ("within", "next", "few", "couple", "several", "after"; "خلال", "القادم", "المقبل", "بعد", "عدة", "بضعة");
-- **identifier:** an email address or a URL;
-- **conversation:** a word of three or more letters from the customer's turns of this request that appears neither in the prefix nor anywhere in the approved library (every canned response and knowledge base article). Comparison ignores letter case, Arabic diacritics and tatweel.
-
-When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropped only for **figure** or **date** SHALL pass if the whole continuation, without its leading space and final punctuation, appears verbatim in one of the canned responses or knowledge base passages sent with this request (comparing whitespace, letter case, Arabic diacritics and tatweel loosely). Identifiers and conversation words MUST always be dropped. A dropped completion's reply MUST carry `withheld` with the first matching reason (`figure`, `date`, `identifier` or `conversation`) and never the dropped text. The filter MUST be deterministic and MUST run on the server, so no client can bypass it.
+The service MUST NOT filter the assembled suggestion for its content: names, words from the conversation, identifiers (emails, links, reference numbers), amounts, figures, dates and timelines are returned as the model wrote them. The only reasons a non-empty model answer yields no suggestion are `format` and the checks above (one line, one sentence, 20 words, script).
 
 #### Scenario: Model repeats the prefix
 - **WHEN** the model returns `{ "word": "request", "rest": " will be processed soon." }` for the prefix "Thank you, your request" (repeating the agent's last word in full)
@@ -128,54 +126,6 @@ When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropp
 #### Scenario: Wrong language
 - **WHEN** the prefix ends with an Arabic word and the model's `word` and `rest` are English
 - **THEN** the completion is empty
-
-#### Scenario: Figure from a canned response under the default setting
-- **WHEN** the model returns " will be processed within 3 working days." and the setting is `block`
-- **THEN** the completion is empty and the reply carries `withheld: "figure"`
-
-#### Scenario: Arabic number word
-- **WHEN** the model returns " وسيتم معالجته خلال ثلاثة أيام عمل" for an Arabic prefix and the setting is `block`
-- **THEN** the completion is empty and the reply carries `withheld: "figure"`
-
-#### Scenario: Timeline without a number
-- **WHEN** the model returns " will be ready next week."
-- **THEN** the completion is empty and the reply carries `withheld: "date"`
-
-#### Scenario: Arabic month
-- **WHEN** the model returns " اعتباراً من شهر رمضان" for an Arabic prefix
-- **THEN** the completion is empty and the reply carries `withheld: "date"`
-
-#### Scenario: Link
-- **WHEN** the model returns " at www.gosi.gov.sa for details."
-- **THEN** the completion is empty and the reply carries `withheld: "identifier"`
-
-#### Scenario: Name from the conversation
-- **WHEN** the customer wrote "Hello, this is Noura" and the model returns " Noura, we have received your request."
-- **THEN** the completion is empty and the reply carries `withheld: "conversation"`
-
-#### Scenario: Arabic name from the conversation
-- **WHEN** the customer wrote "معك نوره من الرياض" and the model returns " يا نوره، تم استلام طلبك" for an Arabic prefix
-- **THEN** the completion is empty and the reply carries `withheld: "conversation"`
-
-#### Scenario: Conversation word that is also approved wording
-- **WHEN** the customer wrote "my request is pending", the agent typed "Thank you, your", and the model returns " request has been received." ("request" is a customer word, but it also appears in the approved library)
-- **THEN** the completion is returned unchanged
-
-#### Scenario: Clean completion passes
-- **WHEN** the model returns " has been received and is being reviewed." and the conversation has no other words
-- **THEN** the completion is returned, and the reply carries no `withheld`
-
-#### Scenario: Sourced figure allowed
-- **WHEN** the setting is `allow`, the canned response "Your request has been received and will be processed within 3 working days; …" was sent, and the model returns " will be processed within 3 working days"
-- **THEN** the completion is returned
-
-#### Scenario: Paraphrased figure still blocked under allow
-- **WHEN** the setting is `allow` and the model returns " will be done in 3 days." which is not verbatim in any source sent
-- **THEN** the completion is empty and the reply carries `withheld: "figure"`
-
-#### Scenario: Identifier blocked under allow
-- **WHEN** the setting is `allow` and the model returns a sourced continuation that contains an email address
-- **THEN** the completion is empty and the reply carries `withheld: "identifier"`
 
 #### Scenario: Completing an unfinished word
 - **WHEN** the prefix is "It hasn't been proce" and the model returns `{ "word": "processed", "rest": " yet, but it is under review." }`
@@ -203,7 +153,7 @@ When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropp
 
 #### Scenario: Name from the conversation completed
 - **WHEN** the customer wrote "How does Ollama work?", the agent typed "Before jumping into Ollam", and the model returns `{ "word": "Ollama", "rest": ", I can help you." }`
-- **THEN** the completion is "a, I can help you." and nothing is withheld: the safety filter checks the suggested text, and the agent started that word themselves
+- **THEN** the completion is "a, I can help you." and nothing is withheld
 
 #### Scenario: Word that doesn't extend what was typed
 - **WHEN** the prefix is "…you could have be" and the model returns `{ "word": "seen", "rest": " helpful." }` or `{ "word": "", "rest": " n easily confused." }`
@@ -212,3 +162,23 @@ When `COMPLETION_SOURCED_FIGURES` is `allow`, a continuation that would be dropp
 #### Scenario: Unparseable output
 - **WHEN** the model's output isn't valid JSON of the expected shape
 - **THEN** the completion is empty and the reply carries `withheld: "format"`
+
+#### Scenario: Figures and dates returned
+- **WHEN** the model returns `{ "word": "request", "rest": " will be processed within 3 working days." }` for the prefix "Thank you, your request"
+- **THEN** the completion is " will be processed within 3 working days." and the reply carries no `withheld`
+
+#### Scenario: Arabic timeline returned
+- **WHEN** the model returns `{ "word": "", "rest": " وسيتم معالجته خلال ثلاثة أيام عمل." }` for the prefix "تم استلام طلبك،"
+- **THEN** the completion is " وسيتم معالجته خلال ثلاثة أيام عمل." and the reply carries no `withheld`
+
+#### Scenario: Identifiers kept whole
+- **WHEN** the model returns `{ "word": "", "rest": " see www.gosi.gov.sa for details. Anything else?" }` for the prefix "Thank you,"
+- **THEN** the completion is " see www.gosi.gov.sa for details."
+
+#### Scenario: Email after an Arabic prefix
+- **WHEN** the model returns `{ "word": "إلى", "rest": " noura@example.com." }` for the prefix "شكراً، سنرسل التحديث إلى"
+- **THEN** the completion is " noura@example.com.": the email doesn't count as English for the script check
+
+#### Scenario: Name and identifier from the conversation returned
+- **WHEN** the customer wrote "Hello, this is Noura, my email is noura@example.com" and the model returns `{ "word": "", "rest": " Noura, we will write to noura@example.com." }` for the prefix "Thank you,"
+- **THEN** the completion is " Noura, we will write to noura@example.com." and the reply carries no `withheld`

@@ -4,10 +4,10 @@ import { classify, type Lang } from '../eval/error-types.ts';
 
 const COMPLETION = ['completion-shown', 'completion-accepted', 'completion-dismissed', 'completion-withheld'] as const;
 /**
- * Why a completion was withheld: the server's safety filter (safety.ts),
- * model output it couldn't use (format), or a client-side word check
- * (spelling, accepted though no client sends it now). Nothing else may be
- * stored for it.
+ * Why a completion was withheld. The service now writes only `format` (model
+ * output it couldn't use); `figure`, `date`, `identifier` and `conversation`
+ * (the removed safety filter) and `spelling` (a former client word check) are
+ * accepted so older log lines still count. Nothing else may be stored for it.
  */
 const WITHHELD_REASONS = ['figure', 'date', 'identifier', 'conversation', 'format', 'spelling'] as const;
 const SPELLING = ['autocorrect', 'revert', 'accept', 'ignore'] as const;
@@ -197,7 +197,7 @@ export function renderSummary(s: ReturnType<typeof summarize>): string {
 <div class="grid">
 <div>Completion acceptance<div class="k">${pct(s.completion.acceptanceRate)}</div>${s.completion.accepted} of ${s.completion.shown} shown</div>
 <div>Completion latency<div class="k">${ms(s.completion.latencyP50)}</div>p50 · p95 ${ms(s.completion.latencyP95)}</div>
-<div>Completions withheld (Req 3.7, format)<div class="k">${Object.values(s.completion.withheld).reduce((a, b) => a + b, 0)}</div>${Object.entries(s.completion.withheld).map(([r, n]) => `${r} ${n}`).join(' · ')} · next to ${s.completion.shown} shown</div>
+<div>Completions withheld<div class="k">${Object.values(s.completion.withheld).reduce((a, b) => a + b, 0)}</div>${Object.entries(s.completion.withheld).map(([r, n]) => `${r} ${n}`).join(' · ')} · next to ${s.completion.shown} shown</div>
 <div>Auto-correct revert rate<div class="k">${pct(s.autocorrect.revertRate)}</div>${s.autocorrect.reverts} of ${s.autocorrect.count}</div>
 <div>Polish acceptance<div class="k">${pct(s.polish.acceptanceRate)}</div>${s.polish.accepted} of ${s.polish.shownWithChanges} previews · p50 ${ms(s.polish.latencyP50)}</div>
 </div>

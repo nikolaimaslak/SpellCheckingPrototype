@@ -25,8 +25,8 @@ export interface CompleteReply {
   sources: string[];
   /** With a completion: the agent's unfinished word (`typed`), its completed form and what follows. */
   edit?: { typed: string; word: string; rest: string };
-  /** Set when the completion was withheld: unusable model output (`format`) or the safety filter. The reason only, never the text. */
-  withheld?: 'format' | 'figure' | 'date' | 'identifier' | 'conversation';
+  /** Set when the model's output couldn't be used. The reason only, never the text. */
+  withheld?: 'format';
 }
 
 export interface GenerationOptions {

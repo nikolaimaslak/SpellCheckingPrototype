@@ -98,7 +98,7 @@ describe('polish telemetry', () => {
 });
 
 
-describe('withheld completions (Req 3.7)', () => {
+describe('withheld completions (older log lines from the removed safety filter)', () => {
   it('stores only an allowed reason, never text', () => {
     expect(sanitize({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'figure', completion: ' within 3 days' })).toEqual({ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'figure' });
     expect(sanitize({ type: 'completion-withheld', ts: 1, reason: 'secret text' })).toEqual({ type: 'completion-withheld', ts: 1 });
@@ -134,5 +134,13 @@ describe('unusable model output (completion-structured-output)', () => {
     const s = summarize([ev(), ev(), ev(), ev()]);
     expect(s.completion.withheld).toMatchObject({ format: 4 });
     expect(renderSummary(s)).toContain('format 4');
+  });
+});
+
+describe('summary label (completion-remove-safety-filter)', () => {
+  it('labels withheld completions without Req 3.7', () => {
+    const html = renderSummary(summarize([{ type: 'completion-withheld', ts: 1, lang: 'en', reason: 'format' }]));
+    expect(html).toContain('Completions withheld<div');
+    expect(html).not.toContain('Req 3.7');
   });
 });

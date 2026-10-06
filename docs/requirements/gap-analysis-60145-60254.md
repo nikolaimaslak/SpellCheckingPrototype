@@ -45,7 +45,7 @@ The prototype covers the core mechanics of both functions: ghost text with Tab t
 | 3.6.3 | Knowledge base articles | Met | High-confidence retrieval from synthetic `kb.json`. |
 | 3.6.4 | Global canned responses | Met | Synthetic `canned.json`. |
 | 3.6.5 | Agent messages from previous relevant interactions | Gap | No retrieval over past transcripts. |
-| 3.7 | **No PII, identifiers, amounts, dates or timelines** | Met (pending SV question 3) | A deterministic server-side filter withholds any completion with digits, number words (EN/AR), currency, percentages, month or weekday names, relative days, timelines ("within a few days", "خلال أسبوع"), emails, links, or words copied from the customer's messages (names). The prompt forbids the same. `COMPLETION_SOURCED_FIGURES=allow` lets figures through only when worded verbatim in an approved text sent with the request; the default `block` follows Req 3.7 as written. Withheld counts per reason are on `/summary` (`completion-safety-filter`). |
+| 3.7 | **No PII, identifiers, amounts, dates or timelines** | Not enforced, by decision (pending SV question 3) | Production completion runs on a local LLM so that generation can use customer data (interaction history, the current conversation, the internal KB). The earlier server-side safety filter (`completion-safety-filter`) withheld exactly those details and mostly blocked harmless suggestions, so it was removed (`completion-remove-safety-filter`). The prompt asks the model to use names, figures, dates and identifiers only as they appear in the content sent, and never to invent them. Development uses synthetic data only. |
 
 ### Req 4: Auto-correct
 
