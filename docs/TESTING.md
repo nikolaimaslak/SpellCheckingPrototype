@@ -140,6 +140,19 @@ A fix happens **when you type the space or punctuation right after the word**. T
 
 With the offline test model, the suggestions are canned and may not fit perfectly. With Gemini they vary, but should always be a single sentence in the language you're typing.
 
+### T4b. Loading a conversation (preset **Everything on**, best with a live model)
+
+Instead of building the conversation message by message, load one you already have. The file is read in your browser and isn't uploaded. The format is described in `docs/COMPLETION-EVAL.md` ("Input formats"), and `eval/completion/examples/chat-example.txt` is a ready example.
+
+| # | Do | Expected |
+|---|---|---|
+| T4b.1 | Open **Load conversation…** under the chat, pick `eval/completion/examples/chat-example.txt` with the file button (or paste its text). Choose conversation **2** (Arabic) and **Before agent message 2**, then **Load** | The chat history shows three messages, customer, agent and customer, right to left. Settings → Completion context now has **Canned responses** unticked, and the loader says it turned them off. |
+| T4b.2 | Type the agent's reply in Arabic, for example `سجل الاشتراكات الخاص بك محد`, and pause | A grey suggestion continues it from the conversation, not from the demo's canned wording. |
+| T4b.3 | Load conversation **1** (English) with **Before agent message 2**, type `Your contribution rec` and pause | The suggestion completes the word ("…ords…") from the conversation. |
+| T4b.4 | Paste text without any `Customer:` or `Agent:` label | The loader says no turns were found, and the chat history is unchanged. |
+
+With the **offline test model**, completions come from canned text, so with canned responses off you'll see few or none. Tick **Canned responses** again, or use a live model (see the banner).
+
 ### T5. Knowledge-base grounding (preset **Everything on**)
 
 | # | Do | Expected |

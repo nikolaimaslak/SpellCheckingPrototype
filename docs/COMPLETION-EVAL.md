@@ -27,6 +27,8 @@ Everything the tool reads and writes is under `eval/local/completion/`, which gi
 
 **Plain text (`--plain`):** every paragraph is an agent message with no conversation. Add `--split sentences` to make every sentence a message instead.
 
+The demo page's **Load conversation…** control (under the chat) reads the same chat format, so you can load an eval input and try the model on it live. Loading turns canned responses off. See `docs/TESTING.md` T4b.
+
 ## Building a set
 
 ```sh

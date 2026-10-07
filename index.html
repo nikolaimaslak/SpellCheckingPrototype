@@ -102,6 +102,18 @@
           </select>
           <button type="button" id="next-customer">Next customer message</button>
           <form id="customer-says"><input name="text" dir="auto" placeholder="Customer says…" aria-label="Customer says" /><button type="submit">Send as customer</button></form>
+          <details id="load-conversation" class="load-conversation">
+            <summary>Load conversation…</summary>
+            <textarea name="conversation" dir="auto" rows="6" aria-label="Conversation text"
+                      placeholder="Customer: …&#10;Agent: …&#10;(or العميل: / الموظف:, --- between conversations)"></textarea>
+            <div class="load-row">
+              <input type="file" accept=".txt,text/plain" aria-label="Conversation file" />
+              <select name="which" aria-label="Conversation" hidden></select>
+              <select name="upTo" aria-label="Load up to"></select>
+              <button type="button" data-load disabled>Load</button>
+            </div>
+            <output aria-live="polite"></output>
+          </details>
         </div>
         <ol id="chat-transcript" class="transcript" aria-label="Chat transcript"></ol>
         <div id="chat-composer" class="composer chat" contenteditable="true" dir="auto" role="textbox"

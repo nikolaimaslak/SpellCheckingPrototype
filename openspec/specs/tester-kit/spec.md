@@ -59,7 +59,7 @@ The repository SHALL include `.env.example` documenting what each setting means 
 The repository SHALL include `docs/TESTING.md` with:
 - requirements (Node version, `uv`, supported browsers);
 - the start command;
-- a numbered scenario for each feature (spell check, auto-correct, inline completion, knowledge base grounding, grammar polish, admin and agent settings, telemetry summary), each with exact input text in English and Arabic where relevant and the expected result;
+- a numbered scenario for each feature (spell check, auto-correct, inline completion, knowledge base grounding, grammar polish, admin and agent settings, loading a conversation, telemetry summary), each with exact input text in English and Arabic where relevant and the expected result;
 - known limitations;
 - data-handling rules (synthetic text only when the Gemini banner shows);
 - how to report a problem.
@@ -80,6 +80,10 @@ The repository SHALL include `docs/TESTING.md` with:
 #### Scenario: uv in the requirements
 - **WHEN** a tester reads the requirements section
 - **THEN** it lists `uv` with its install command next to Node
+
+#### Scenario: Conversation loading scenario
+- **WHEN** a tester follows the conversation-loading scenario
+- **THEN** it has them load `eval/completion/examples/chat-example.txt`, choose a conversation and "before agent message 2", check that canned responses are now off, and type the agent's message to watch the suggestions, in English and in Arabic
 
 ### Requirement: Report template
 The repository SHALL include a test report template (`docs/TEST-REPORT-TEMPLATE.md`, mirrored as `.github/ISSUE_TEMPLATE/test-report.md`) asking for scenario number, steps, exact input text, expected and actual result, browser and version, language, the model banner shown, the version stamp, and an optional screenshot.

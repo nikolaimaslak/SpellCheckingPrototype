@@ -8,6 +8,7 @@ import { createSpellService } from '../spell/service';
 import { createTelemetry } from '../telemetry';
 import { mountChat, mountChatControls, readTranscript, setChatFidelity } from './chat';
 import { mountEmail } from './email';
+import { mountConversationLoader, turnCannedOff } from './conversation';
 import { mountScenarios } from './scenarios';
 import { fetchModelState, highlightsSupported, renderBrowserNotice, renderModelBanner, renderVersion } from './model-banner';
 import { clearSettings, loadSettings, mountEventCounter, mountSettings, saveSettings, type DemoSettings } from './settings';
@@ -29,6 +30,8 @@ mountChat(chat, transcript);
 mountChatControls(chat, document.querySelector<HTMLElement>('.chat-controls')!);
 mountEmail(email, document.querySelector<HTMLElement>('.email-toolbar')!);
 mountScenarios(transcript, byId<HTMLSelectElement>('scenario'), byId<HTMLButtonElement>('next-customer'), byId<HTMLFormElement>('customer-says'));
+// A loaded conversation is tried without canned responses: untick and apply, as a tester would in Settings.
+mountConversationLoader(byId('load-conversation'), transcript, { onLoaded: () => turnCannedOff(byId<HTMLFormElement>('assist-settings')) });
 byId<HTMLInputElement>('fidelity-toggle').addEventListener('change', (e) => setChatFidelity(chat, (e.target as HTMLInputElement).checked));
 
 const telemetry = createTelemetry({ url: '/api/v1/events', session: crypto.randomUUID() });
