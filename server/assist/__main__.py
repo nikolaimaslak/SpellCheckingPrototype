@@ -27,7 +27,8 @@ def startup_line(settings: Settings) -> str:
     else:
         where = f"{m.name} (local model: text stays on this machine)"
     cache = "on (.cache/llm/ stores the text sent to the model)" if settings.cache else "off"
-    return f"assistance server on http://{HOST}:{settings.port} · model: {where} · LLM cache: {cache}"
+    capture = "off" if settings.capture == "off" else f"{settings.capture} (capture/ stores request and answer text)"
+    return f"assistance server on http://{HOST}:{settings.port} · model: {where} · LLM cache: {cache} · capture: {capture}"
 
 
 def uvicorn_config(settings: Settings) -> uvicorn.Config:

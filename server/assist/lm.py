@@ -81,3 +81,15 @@ def classify_error(err: BaseException) -> Failure:
             return "format"
         e = e.__cause__ or e.__context__
     return "failed"
+
+
+def raw_from_error(err: BaseException) -> str | None:
+    """The model's text carried by a parse error, if any (for the capture log)."""
+    seen: set[int] = set()
+    e: BaseException | None = err
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        if isinstance(e, AdapterParseError):
+            return getattr(e, "lm_response", None)
+        e = e.__cause__ or e.__context__
+    return None

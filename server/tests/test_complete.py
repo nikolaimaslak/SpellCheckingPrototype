@@ -24,8 +24,10 @@ def answer(continuation: str) -> str:
 
 
 def events(tmp_path):
+    """The completion events in the log; the service's text-free llm-* counters are tested in test_capture.py."""
     f = tmp_path / "telemetry" / "events.jsonl"
-    return [json.loads(line) for line in f.read_text("utf-8").splitlines()] if f.exists() else []
+    rows = [json.loads(line) for line in f.read_text("utf-8").splitlines()] if f.exists() else []
+    return [e for e in rows if not e["type"].startswith("llm-")]
 
 
 class TestEndpoint:

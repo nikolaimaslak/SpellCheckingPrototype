@@ -104,6 +104,7 @@ The server is a Python `uv` project (pinned Python 3.13, locked dependencies). I
 | `assist/complete.py` | `/v1/complete`: retrieval, `ContinueText`, then `join`, `finalize` and the `edit` derivation. |
 | `assist/postprocess.py` | `join`: no space after a space, one after punctuation, a rewritten unfinished word dropped. `finalize`: one line, one sentence, 20 words, same script, no restated prefix. The join inside a word isn't checked against a dictionary (KI-6). |
 | `assist/polish.py` | `/v1/polish`: `PolishDraft`, then wrapper cleanup and the safety checks. Protected tokens (placeholders, links, emails, digits) must be unchanged, the length must stay within 70–130%, and line breaks must be kept. |
+| `assist/capture.py` | LLM output issues: one observation per completion or polish request with its reasons (failures such as `format`, `wrong-script`, `protected-changed`; repairs such as `rewrote-word`, `multi-sentence`). Text-free `llm-request` / `llm-issue` counters always go to telemetry (`/summary`). With `ASSIST_CAPTURE=errors` or `all`, the input, raw answer and shown text go to `capture/llm.jsonl`; `npm run capture:report` summarizes it. |
 | `assist/spelling_report.py` | The spelling error report (`npm run telemetry:spelling`, and the `/summary` section): every error word, plus candidates for the custom dictionary, the misspellings lists and removal, for human review. |
 | `assist/telemetry.py` + `error_types.py` | An allowlist per event type (**no text** except single words for spelling events), a JSONL log in `telemetry/` (gitignored), and the `/summary` page. The spelling error taxonomy is a port shared with the TypeScript eval through a fixture. |
 
@@ -137,6 +138,7 @@ sequenceDiagram
 - **Hosted-model traffic** (Gemini) is for synthetic text only. Production uses a local LLM, so suggestions may use customer data (Req 3.7 is pending SV).
 - **Telemetry stores no completion, draft, transcript or composer text.** The server's allowlist enforces this. Spelling events carry single words.
 - The **LLM request cache** stores prompts, so it's **off by default**. When on, it's written to the gitignored `.cache/llm/`.
+- The **LLM capture log** (`ASSIST_CAPTURE`) stores request and answer text, so it's **off by default** too. When on, it's written to the gitignored `capture/`. Its issue counts are also kept text-free in telemetry, always.
 
 ## Evaluation and tooling
 

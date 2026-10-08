@@ -10,8 +10,9 @@ from typing import Any
 
 import dspy
 
-from .lm import classify_error, running
-from .postprocess import Edit, derive_edit, join, script_of
+from .capture import Observation
+from .lm import classify_error, raw_from_error, running
+from .postprocess import Edit, derive_edit, join_explained, script_of
 from .programs import CompletionProgram, Turn
 from .retrieval import CannedResponse, KbPassage, retrieve, retrieve_kb
 
@@ -33,6 +34,8 @@ class CompletionDeps:
     timeout: float = 2.0
     # Told the reason (never the text) whenever model output can't be used.
     on_withheld: OnWithheld | None = None
+    # Told every request's observation: reasons, input, raw output, what was shown (llm-capture).
+    observe: Callable[[Observation], None] | None = None
 
 
 @dataclass(frozen=True)
@@ -62,10 +65,12 @@ def parse_request(data: object) -> CompleteRequest | str:
     return CompleteRequest(prefix, turns, s.get("transcript") is not False, s.get("canned") is not False, s.get("kb") is not False)
 
 
-def build(prefix: str, continuation: str) -> tuple[str, Edit | None]:
-    """The model's continuation → the suggestion and its edit. An empty result means nothing to add, not a failure."""
-    completion = join(prefix, continuation)
-    return completion, derive_edit(prefix, completion) if completion else None
+def build(prefix: str, continuation: str) -> tuple[str, Edit | None, list[str]]:
+    """The model's continuation → the suggestion, its edit and the issue reasons. An empty answer means nothing to add, not a failure."""
+    if not continuation.strip():
+        return "", None, ["empty-answer"]
+    completion, reasons = join_explained(prefix, continuation)
+    return completion, derive_edit(prefix, completion) if completion else None, reasons
 
 
 async def complete(data: object, deps: CompletionDeps) -> tuple[int, dict[str, Any]]:
@@ -82,27 +87,42 @@ async def complete(data: object, deps: CompletionDeps) -> tuple[int, dict[str, A
     kb = retrieve_kb(deps.kb, last_customer) if req.use_kb and deps.kb else []
 
     lang = script_of(req.prefix)
+    inputs = {
+        "agent_text": req.prefix,
+        "conversation": [{"role": t.role, "text": t.text} for t in (req.transcript if req.use_transcript else [])],
+        "approved_responses": [h.item.text for h in canned],
+        "knowledge_base": [h.item.text for h in kb],
+    }
+
+    def observe(reasons: list[str], raw: str | None, output: str) -> None:
+        if deps.observe:
+            deps.observe(Observation("complete", deps.model_name, lang, reasons, inputs, raw, output, round((time.perf_counter() - started) * 1000)))
+
     try:
         with running(deps.lm):
             prediction = await asyncio.wait_for(
                 deps.program.acall(
                     agent_text=req.prefix,
                     conversation=req.transcript if req.use_transcript else [],
-                    approved_responses=[h.item.text for h in canned],
-                    knowledge_base=[h.item.text for h in kb],
+                    approved_responses=inputs["approved_responses"],
+                    knowledge_base=inputs["knowledge_base"],
                     config={"timeout": deps.timeout},
                 ),
                 deps.timeout,
             )
-        completion, edit = build(req.prefix, prediction.continuation)
+        raw: str | None = prediction.continuation
+        completion, edit, reasons = build(req.prefix, raw)
         withheld = None
     except Exception as err:  # noqa: BLE001 - every failure maps to a fixed status and reason
         kind = classify_error(err)
-        if kind == "timeout":
-            return 504, {"error": "completion model timed out"}
-        if kind == "failed":
+        if kind in ("timeout", "failed"):
+            observe([kind], None, "")
+            if kind == "timeout":
+                return 504, {"error": "completion model timed out"}
             return 502, {"error": "completion model request failed"}
-        completion, edit, withheld = "", None, "format"
+        completion, edit, withheld, raw, reasons = "", None, "format", raw_from_error(err), ["format"]
+
+    observe(reasons, raw, completion)
 
     if withheld and deps.on_withheld:
         deps.on_withheld(withheld, lang)

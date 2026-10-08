@@ -111,3 +111,20 @@ class TestPolish:
         assert "Fix only errors" in PolishDraft.instructions
         assert "placeholder" in PolishDraft.instructions
         assert safety_check("a b", "a b") is None
+
+
+class TestPolishIssueReasons:
+    def test_protected_content(self):
+        from assist.polish import safety_code
+
+        assert safety_code("Dear $(user.firstName), your request is ready.", "Dear user, your request is ready.") == "protected-changed"
+        assert safety_code("He go to the office yesterday and buyed a pen.", "He went.") == "length-changed"
+        assert safety_code("Hello,\nhe go home.", "Hello, he went home.") == "line-breaks-changed"
+        assert safety_code("He go home.", "He went home.") is None
+
+    def test_arabic_wrapped_in_quotes(self):
+        from assist.polish import clean_output_explained
+
+        assert clean_output_explained("«تم استلام هذا الطلب.»") == ("تم استلام هذا الطلب.", True)
+        assert clean_output_explained("```\nHe went home.\n```") == ("He went home.", True)
+        assert clean_output_explained("He went home.") == ("He went home.", False)

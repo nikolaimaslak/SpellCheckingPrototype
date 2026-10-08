@@ -71,15 +71,29 @@ def join(prefix: str, continuation: str) -> str:
     and one after punctuation. A join the model makes inside a word is kept as
     written; it is not checked against a dictionary. Then finalize's checks.
     """
-    out = regex.split(r"\r?\n", continuation, maxsplit=1)[0]
+    return join_explained(prefix, continuation)[0]
+
+
+def join_explained(prefix: str, continuation: str) -> tuple[str, list[str]]:
+    """join, plus the issue reasons for every repair or rejection it made (llm-capture)."""
+    reasons: list[str] = []
+    first, *more = regex.split(r"\r?\n", continuation, maxsplit=1)
+    if more and more[0].strip():
+        reasons.append("multi-line")
+    out = first
     typed = typed_part(prefix)
     if typed and out[: len(typed)].lower() == typed.lower() and _WORD_START.match(out[len(typed) :]):
         out = out[len(typed) :]
+        reasons.append("rewrote-word")
     if _ENDS_SPACE.search(prefix):
+        if out != out.lstrip():
+            reasons.append("space-after-space")
         out = out.lstrip()
     elif not typed and _ALNUM_START.search(out):
         out = f" {out}"
-    return finalize(prefix, out)
+        reasons.append("missing-space")
+    text, more_reasons = finalize_explained(prefix, out)
+    return text, list(dict.fromkeys(reasons + more_reasons))
 
 
 def derive_edit(prefix: str, completion: str) -> Edit:
@@ -98,7 +112,18 @@ def finalize(prefix: str, completion: str) -> str:
     word. Returns '' when nothing usable remains. The leading characters
     assemble produced (a join or a space) are kept.
     """
-    out = regex.split(r"\r?\n", completion, maxsplit=1)[0].rstrip()
+    return finalize_explained(prefix, completion)[0]
+
+
+def finalize_explained(prefix: str, completion: str) -> tuple[str, list[str]]:
+    """finalize, plus the issue reasons for what it removed or rejected (llm-capture)."""
+    reasons: list[str] = []
+    if not completion.strip():
+        return "", reasons
+    first, *more = regex.split(r"\r?\n", completion, maxsplit=1)
+    if more and more[0].strip():
+        reasons.append("multi-line")
+    out = first.rstrip()
 
     # A new word that restates the prefix's tail ("…your request " + "your request will…").
     mid_word = bool(_TYPED.search(prefix)) and bool(_WORD_START.search(out))
@@ -112,20 +137,24 @@ def finalize(prefix: str, completion: str) -> str:
                 out = body[len(tail) :].lstrip()
                 if not _ENDS_SPACE.search(prefix) and _ALNUM_START.search(out):
                     out = f" {out}"
+                reasons.append("restated-prefix")
                 break
 
     end = _TERMINATOR.search(out)
     if end:
+        if out[end.start() + 1 :].strip():
+            reasons.append("multi-sentence")
         out = out[: end.start() + 1]
     words = [w for w in regex.split(r"\s+", out) if w]
     if len(words) > MAX_WORDS:
         out = (" " if _STARTS_SPACE.search(out) else "") + " ".join(words[:MAX_WORDS])
+        reasons.append("too-long")
     if not _ALNUM.search(out):
-        return ""
+        return "", reasons + ["nothing-left"]
 
     want = script_of(prefix)
-    first = _LETTERS.search(_IDENTIFIER.sub(" ", out))
-    got = script_of(first.group(0) if first else "")
+    first_word = _LETTERS.search(_IDENTIFIER.sub(" ", out))
+    got = script_of(first_word.group(0) if first_word else "")
     if want and got and want != got:
-        return ""
-    return out
+        return "", reasons + ["wrong-script"]
+    return out, reasons

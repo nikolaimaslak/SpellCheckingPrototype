@@ -55,7 +55,7 @@ def test_no_framework_pages(tmp_path):
 class TestHealth:
     def test_offline_model(self, tmp_path):
         res = client(tmp_path, {}).get("/health").json()
-        assert res == {"ok": True, "model": "fake", "mode": "auto", "external": False, "cache": False}
+        assert res == {"ok": True, "model": "fake", "mode": "auto", "external": False, "cache": False, "capture": "off"}
 
     def test_gemini(self, tmp_path):
         assert client(tmp_path).get("/health").json() == {
@@ -64,6 +64,7 @@ class TestHealth:
             "mode": "auto",
             "external": True,
             "cache": False,
+            "capture": "off",
         }
 
     def test_gemini_forced_without_a_key_still_serves_telemetry(self, tmp_path):

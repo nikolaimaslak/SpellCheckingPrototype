@@ -206,3 +206,23 @@ class TestSpellingErrorEvents:
             {"type": "flag", "ts": 4, "lang": "ar", "original": "النضام"},
         ]
         assert summarize(base + extra)["spelling"] == summarize(base)["spelling"]
+
+
+class TestLlmIssueEvents:
+    def test_issue_stored_without_text(self):
+        e = sanitize({"type": "llm-issue", "ts": 5, "lang": "en", "endpoint": "complete", "reason": "multi-sentence", "model": "m", "prefix": "Thank you", "raw": "x"})
+        assert e == {"type": "llm-issue", "ts": 5, "lang": "en", "endpoint": "complete", "reason": "multi-sentence", "model": "m"}
+
+    def test_unknown_reason_and_endpoint_dropped(self):
+        e = sanitize({"type": "llm-issue", "ts": 5, "endpoint": "elsewhere", "reason": "the model said: secret"})
+        assert e == {"type": "llm-issue", "ts": 5}
+
+    def test_summary_rates(self):
+        events = [{"type": "llm-request", "ts": i, "endpoint": "complete", "lang": "en"} for i in range(10)]
+        events += [{"type": "llm-issue", "ts": i, "endpoint": "complete", "reason": "format"} for i in (0, 1)]
+        events += [{"type": "llm-issue", "ts": i, "endpoint": "complete", "reason": "multi-sentence"} for i in (2, 3, 4)]
+        s = summarize(events)["llm"]["complete"]
+        assert (s["requests"], s["failureRate"], s["repairRate"]) == (10, 0.2, 0.3)
+        assert s["reasons"] == {"format": 2, "multi-sentence": 3}
+        html = render_summary(summarize(events))
+        assert "LLM output issues" in html and "20%" in html and "30%" in html and "multi-sentence 3" in html

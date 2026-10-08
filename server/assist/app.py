@@ -11,6 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .capture import Observation, append_capture, counter_events, should_capture
 from .complete import CompletionDeps, complete
 from .lm import build_lm, configure_cache
 from .polish import PolishDeps, polish
@@ -66,8 +67,14 @@ def create_app(settings: Settings) -> FastAPI:
         # The reason only (unusable model output): the text never reaches the log.
         append_events(settings.events_path, [{"type": "completion-withheld", "reason": reason, **({"lang": lang} if lang else {})}])
 
-    completion_deps = CompletionDeps(completion_program, lm, available, name, load_library(), load_kb(), on_withheld=on_withheld)
-    polish_deps = PolishDeps(polish_program, lm, available, name)
+    def observe(obs: Observation) -> None:
+        # Text-free counters always; the request and answer text only when capture is on.
+        append_events(settings.events_path, counter_events(obs))
+        if should_capture(settings.capture, obs):
+            append_capture(settings.capture_path, obs)
+
+    completion_deps = CompletionDeps(completion_program, lm, available, name, load_library(), load_kb(), on_withheld=on_withheld, observe=observe)
+    polish_deps = PolishDeps(polish_program, lm, available, name, observe=observe)
 
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -117,7 +124,7 @@ def create_app(settings: Settings) -> FastAPI:
     @app.get("/health")
     async def health_route() -> JSONResponse:
         return JSONResponse(
-            {"ok": True, "model": choice.name, "mode": choice.mode, "external": choice.external, "cache": settings.cache}
+            {"ok": True, "model": choice.name, "mode": choice.mode, "external": choice.external, "cache": settings.cache, "capture": settings.capture}
         )
 
     return app

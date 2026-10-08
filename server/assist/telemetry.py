@@ -9,6 +9,7 @@ from html import escape as _html_escape
 from pathlib import Path
 from typing import Any
 
+from .capture import FAILURES, REASONS, REPAIRS
 from .error_types import classify
 
 COMPLETION = ("completion-shown", "completion-accepted", "completion-dismissed", "completion-withheld")
@@ -21,12 +22,16 @@ SPELLING = ("flag", "unresolved", "autocorrect", "revert", "accept", "ignore")
 # The events the field figures on /summary are computed from (flags and words left misspelled feed the spelling report).
 _SPELLING_RATES = ("autocorrect", "revert", "accept", "ignore")
 POLISH = ("polish-shown", "polish-accepted", "polish-dismissed", "polish-reverted")
+# Written by the service itself for every completion and polish request (llm-capture): no text.
+LLM = ("llm-request", "llm-issue")
+LLM_ENDPOINTS = ("complete", "polish")
 
 _COMMON = ("type", "ts", "lang", "session")
 _EXTRA = {
     "completion": ("latencyMs", "shownLength", "acceptedLength"),
     "spelling": ("original", "replacement", "rank", "offered"),
     "polish": ("latencyMs", "changes"),
+    "llm": ("model",),
 }
 
 Event = dict[str, Any]
@@ -39,6 +44,8 @@ def _kind(t: object) -> str | None:
         return "spelling"
     if t in POLISH:
         return "polish"
+    if t in LLM:
+        return "llm"
     return None
 
 
@@ -57,6 +64,11 @@ def sanitize(data: object) -> Event | None:
     out: Event = {k: o[k] for k in (*_COMMON, *_EXTRA[kind]) if k in o and _allowed(o[k])}
     if o["type"] == "completion-withheld" and o.get("reason") in WITHHELD_REASONS:
         out["reason"] = o["reason"]
+    if kind == "llm":
+        if o.get("endpoint") in LLM_ENDPOINTS:
+            out["endpoint"] = o["endpoint"]
+        if o["type"] == "llm-issue" and o.get("reason") in REASONS:
+            out["reason"] = o["reason"]
     out["type"] = o["type"]
     if not isinstance(out.get("ts"), (int, float)):
         out["ts"] = int(time.time() * 1000)
@@ -139,9 +151,33 @@ def summarize(events: list[Event]) -> dict[str, Any]:
             "acceptanceRate": polish_accepted / polish_shown if polish_shown else None,
             "latencyP50": _percentile(polish_latencies, 50),
         },
+        "llm": llm_issues(events),
         "byType": tally("type"),
         "byLang": tally("lang"),
     }
+
+
+def llm_issues(events: list[Event]) -> dict[str, dict[str, Any]]:
+    """Per endpoint: requests, the share with a failure or a repair, and counts per issue reason."""
+    out: dict[str, dict[str, Any]] = {}
+    issues: dict[str, dict[int, set[str]]] = {}
+    for e in events:
+        endpoint = e.get("endpoint")
+        if endpoint not in LLM_ENDPOINTS:
+            continue
+        s = out.setdefault(endpoint, {"requests": 0, "reasons": {}, "failureRate": None, "repairRate": None})
+        if e.get("type") == "llm-request":
+            s["requests"] += 1
+        elif e.get("type") == "llm-issue" and e.get("reason") in REASONS:
+            s["reasons"][e["reason"]] = s["reasons"].get(e["reason"], 0) + 1
+            # Reasons of one request share its timestamp: count each request once per rate.
+            issues.setdefault(endpoint, {}).setdefault(e.get("ts", 0), set()).add(e["reason"])
+    for endpoint, s in out.items():
+        per_request = issues.get(endpoint, {}).values()
+        if s["requests"]:
+            s["failureRate"] = sum(bool(r & FAILURES) for r in per_request) / s["requests"]
+            s["repairRate"] = sum(bool(r & REPAIRS) and not r & FAILURES for r in per_request) / s["requests"]
+    return out
 
 
 def _type_of(e: Event, lang: str) -> str:
@@ -226,10 +262,27 @@ def render_summary(s: dict[str, Any], extra: str = "") -> str:
 <div>Polish acceptance<div class="k">{_pct(p["acceptanceRate"])}</div>{p["accepted"]} of {p["shownWithChanges"]} previews · p50 {_ms(p["latencyP50"])}</div>
 </div>
 {_render_spelling(s["spelling"])}
+{_render_llm(s.get("llm", {}))}
 {extra}
 <h2>By event type</h2><table><tr><th>Type</th><th>Count</th></tr>{rows(s["byType"])}</table>
 <h2>By language</h2><table><tr><th>Language</th><th>Count</th></tr>{rows(s["byLang"])}</table>
 </body></html>"""
+
+
+def _render_llm(llm: dict[str, dict[str, Any]]) -> str:
+    if not llm:
+        return ""
+    rows = "".join(
+        f"<tr><td>{endpoint}</td><td>{s['requests']}</td><td>{_pct(s['failureRate'])}</td><td>{_pct(s['repairRate'])}</td><td>"
+        + " · ".join(f"{_esc(r)} {n}" for r, n in sorted(s["reasons"].items(), key=lambda x: -x[1]))
+        + "</td></tr>"
+        for endpoint, s in llm.items()
+    )
+    return (
+        "<h2>LLM output issues</h2><p>How often the model's answer had to be rejected (failure) or fixed by the server before it was shown (repair). "
+        "No text is recorded here; turn on <code>ASSIST_CAPTURE</code> and run <code>npm run capture:report</code> for examples.</p>"
+        f"<table><tr><th>Endpoint</th><th>Requests</th><th>Failures</th><th>Repairs</th><th>Reasons</th></tr>{rows}</table>"
+    )
 
 
 def _render_spelling(spelling: dict[str, dict[str, Any]]) -> str:

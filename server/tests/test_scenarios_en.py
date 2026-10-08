@@ -600,7 +600,7 @@ def _(tmp_path, scripted):
 
 @scenario("assist-service", "Default without a key")
 def _(tmp_path):
-    assert client(tmp_path, {}).get("/health").json() == {"ok": True, "model": "fake", "mode": "auto", "external": False, "cache": False}
+    assert client(tmp_path, {}).get("/health").json() == {"ok": True, "model": "fake", "mode": "auto", "external": False, "cache": False, "capture": "off"}
 
 
 @scenario("assist-service", "Default with a key")

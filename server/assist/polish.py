@@ -5,13 +5,15 @@ from __future__ import annotations
 import asyncio
 import math
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
 import dspy
 import regex
 
-from .lm import classify_error, running
+from .capture import Observation
+from .lm import classify_error, raw_from_error, running
 from .programs import PolishProgram
 
 MAX_CHARS = 4000
@@ -43,25 +45,44 @@ def majority_script(text: str) -> Literal["en", "ar"]:
 
 def clean_output(raw: str) -> str:
     """Strips wrappers models sometimes add: code fences and surrounding quotes."""
+    return clean_output_explained(raw)[0]
+
+
+def clean_output_explained(raw: str) -> tuple[str, bool]:
+    """clean_output, plus whether a fence or quotes were removed (the `wrapped` issue reason)."""
     out = regex.sub(r"\r\n?", "\n", raw).strip()
+    wrapped = False
     fence = _FENCE.match(out)
     if fence:
-        out = fence.group(1).strip()
+        out, wrapped = fence.group(1).strip(), True
     if _QUOTED.match(out):
-        out = out[1:-1].strip()
-    return out
+        out, wrapped = out[1:-1].strip(), True
+    return out, wrapped
+
+
+SAFETY_REASONS = {
+    "protected-changed": "protected content (placeholders, links, numbers) would change",
+    "length-changed": "the correction would rewrite too much of the message",
+    "line-breaks-changed": "the correction would change line breaks",
+}
+
+
+def safety_code(draft: str, polished: str) -> str | None:
+    """The issue reason when the corrected text is unsafe to offer, or None."""
+    if protected_tokens(draft) != protected_tokens(polished):
+        return "protected-changed"
+    ratio = len(polished) / max(len(draft), 1)
+    if ratio < 0.7 or ratio > 1.3:
+        return "length-changed"
+    if draft.count("\n") != polished.count("\n"):
+        return "line-breaks-changed"
+    return None
 
 
 def safety_check(draft: str, polished: str) -> str | None:
     """Returns a reason when the corrected text is unsafe to offer, or None."""
-    if protected_tokens(draft) != protected_tokens(polished):
-        return "protected content (placeholders, links, numbers) would change"
-    ratio = len(polished) / max(len(draft), 1)
-    if ratio < 0.7 or ratio > 1.3:
-        return "the correction would rewrite too much of the message"
-    if draft.count("\n") != polished.count("\n"):
-        return "the correction would change line breaks"
-    return None
+    code = safety_code(draft, polished)
+    return SAFETY_REASONS[code] if code else None
 
 
 @dataclass
@@ -71,6 +92,8 @@ class PolishDeps:
     available: bool
     model_name: str
     timeout: float = 4.0
+    # Told every request's observation: reasons, input, raw output, what was shown (llm-capture).
+    observe: Callable[[Observation], None] | None = None
 
 
 async def polish(data: object, deps: PolishDeps) -> tuple[int, dict[str, Any]]:
@@ -84,6 +107,13 @@ async def polish(data: object, deps: PolishDeps) -> tuple[int, dict[str, Any]]:
     if not deps.available:
         return 503, {"error": "polish model unavailable (no API key configured)"}
 
+    lang = majority_script(text)
+
+    def observe(reasons: list[str], raw: str | None, output: str) -> None:
+        if deps.observe:
+            deps.observe(Observation("polish", deps.model_name, lang, reasons, {"draft": text}, raw, output, round((time.perf_counter() - started) * 1000)))
+
+    unparsed: str | None = None
     try:
         with running(deps.lm):
             prediction = await asyncio.wait_for(
@@ -93,22 +123,33 @@ async def polish(data: object, deps: PolishDeps) -> tuple[int, dict[str, Any]]:
         raw: str | None = prediction.polished
     except Exception as err:  # noqa: BLE001 - every failure maps to a fixed status and reason
         kind = classify_error(err)
-        if kind == "timeout":
-            return 504, {"error": "polish model timed out"}
-        if kind == "failed":
+        if kind in ("timeout", "failed"):
+            observe([kind], None, text)
+            if kind == "timeout":
+                return 504, {"error": "polish model timed out"}
             return 502, {"error": "polish model request failed"}
         raw = None
+        unparsed = raw_from_error(err)
 
-    base = {"lang": majority_script(text), "model": deps.model_name}
+    base = {"lang": lang, "model": deps.model_name}
     # Models drop surrounding whitespace (e.g. the trailing line break of an
     # email paragraph); keep the draft's own, so only the inner text is compared.
-    inner = clean_output(raw) if raw is not None else ""
+    inner, wrapped = clean_output_explained(raw) if raw is not None else ("", False)
     candidate = _LEADING_WS.match(text).group(0) + inner + _TRAILING_WS.search(text).group(0) if inner else ""  # type: ignore[union-attr]
+    reasons = ["wrapped"] if wrapped else []
     if raw is None:
         reason: str | None = "the model's answer could not be used"
+        reasons.append("format")
+    elif not candidate:
+        reason = "the model returned nothing"
+        reasons.append("empty")
     else:
-        reason = safety_check(text, candidate) if candidate else "the model returned nothing"
+        code = safety_code(text, candidate)
+        reason = SAFETY_REASONS[code] if code else None
+        if code:
+            reasons.append(code)
     latency = round((time.perf_counter() - started) * 1000)
+    observe(reasons, raw if raw is not None else unparsed, text if reason else candidate)
     if reason:
         return 200, {"polished": text, "changed": False, "reason": reason, "latencyMs": latency, **base}
     return 200, {"polished": candidate, "changed": candidate != text, "latencyMs": latency, **base}

@@ -32,3 +32,6 @@ __pycache__/
 
 # Local completion eval workspace: inputs, generated sets, run reports (never committed)
 /eval/local/
+
+# Opt-in LLM capture log (ASSIST_CAPTURE): request and answer text, never committed
+/capture/

@@ -55,6 +55,9 @@ class Settings:
     max_turns: int | None
     events_path: Path
     cache_dir: Path
+    # off | errors | all: the opt-in capture log of LLM requests and answers (holds text).
+    capture: str = "off"
+    capture_path: Path = ROOT / "capture" / "llm.jsonl"
     warnings: tuple[str, ...] = ()
 
 
@@ -111,6 +114,13 @@ def _cache(raw: str | None) -> tuple[bool, str | None]:
     return False, f'ASSIST_LLM_CACHE "{raw}" is not on or off, leaving the cache off'
 
 
+def _capture(raw: str | None) -> tuple[str, str | None]:
+    value = (raw or "off").strip().lower()
+    if value in ("off", "errors", "all"):
+        return value, None
+    return "off", f'ASSIST_CAPTURE "{raw}" is not off, errors or all, leaving capture off'
+
+
 def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     """Settings from `env` (default: the process environment after loading the repository's .env)."""
     if env is None:
@@ -119,6 +129,7 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
     model, w1 = select_model(env)
     max_turns, w2 = _max_turns(env.get("COMPLETION_MAX_TURNS"))
     cache, w3 = _cache(env.get("ASSIST_LLM_CACHE"))
+    capture, w4 = _capture(env.get("ASSIST_CAPTURE"))
     return Settings(
         port=int(env.get("PORT") or 5175),
         model=model,
@@ -126,5 +137,6 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         max_turns=max_turns,
         events_path=ROOT / "telemetry" / "events.jsonl",
         cache_dir=ROOT / ".cache" / "llm",
-        warnings=tuple(w for w in (w1, w2, w3) if w),
+        capture=capture,
+        warnings=tuple(w for w in (w1, w2, w3, w4) if w),
     )

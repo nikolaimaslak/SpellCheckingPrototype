@@ -14,7 +14,7 @@ GEMINI_ENV = {"GEMINI_API_KEY": "test-key"}
 
 
 def client(tmp_path: Path, env: dict[str, str] | None = None) -> TestClient:
-    settings = replace(load_settings(env if env is not None else GEMINI_ENV), events_path=tmp_path / "telemetry" / "events.jsonl", cache_dir=tmp_path / "llm-cache")
+    settings = replace(load_settings(env if env is not None else GEMINI_ENV), events_path=tmp_path / "telemetry" / "events.jsonl", cache_dir=tmp_path / "llm-cache", capture_path=tmp_path / "capture" / "llm.jsonl")
     return TestClient(create_app(settings), raise_server_exceptions=False)
 
 

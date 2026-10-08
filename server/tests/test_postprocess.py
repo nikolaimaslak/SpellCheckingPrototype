@@ -1,6 +1,6 @@
 import pytest
 
-from assist.postprocess import Edit, derive_edit, finalize, join
+from assist.postprocess import Edit, derive_edit, finalize, finalize_explained, join, join_explained
 
 
 def shown(prefix: str, continuation: str) -> str:
@@ -119,3 +119,32 @@ class TestFinalize:
     def test_terminator_before_a_final_newline_is_javascript_end_of_text(self):
         # JavaScript's $ doesn't match before a trailing newline; the port keeps that.
         assert finalize("The rate is", " 2.5 percent.") == " 2.5 percent."
+
+
+class TestIssueReasons:
+    """join_explained / finalize_explained: the reason for every repair or rejection (llm-capture)."""
+
+    @pytest.mark.parametrize(
+        ("prefix", "continuation", "shown", "reasons"),
+        [
+            # spec scenarios
+            ("It hasn't been proce", "Processed yet.", "ssed yet.", ["rewrote-word"]),
+            ("Thank you, your request ", " will be processed. Anything else?", "will be processed.", ["space-after-space", "multi-sentence"]),
+            ("تم استلام طلبك", " and will be processed.", "", ["wrong-script"]),
+            ("شكراً، سأرسل الرابط to your email,", "today.", " today.", ["missing-space"]),
+            ("Thank you, your request", " will be processed soon.", " will be processed soon.", []),
+            # the other reasons
+            ("Your request ", "will be processed\nThanks for waiting", "will be processed", ["multi-line"]),
+            ("Thank you, your request ", "your request will be processed.", "will be processed.", ["restated-prefix"]),
+            ("Your request", " " + " ".join(f"w{i}" for i in range(30)), " " + " ".join(f"w{i}" for i in range(20)), ["too-long"]),
+            ("Please upload the form.", "..", "", ["nothing-left"]),
+            ("تم استلا", "م طلبك وسيتم معالجته. شكراً لك", "م طلبك وسيتم معالجته.", ["multi-sentence"]),
+            ("Your request", "", "", []),
+        ],
+    )
+    def test_reasons(self, prefix, continuation, shown, reasons):
+        assert join_explained(prefix, continuation) == (shown, reasons)
+        assert join(prefix, continuation) == shown
+
+    def test_finalize_wrapper_unchanged(self):
+        assert finalize_explained("Thank you,", " see www.gosi.gov.sa for details. Anything else?") == (" see www.gosi.gov.sa for details.", ["multi-sentence"])
