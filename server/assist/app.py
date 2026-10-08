@@ -17,6 +17,7 @@ from .polish import PolishDeps, polish
 from .programs import build_programs
 from .retrieval import load_kb, load_library
 from .settings import Settings
+from .spelling_report import render_html_section, spelling_report
 from .telemetry import append_events, read_events, render_summary, summarize
 
 MAX_BODY = 64 * 1024
@@ -110,7 +111,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     @app.get("/summary")
     async def summary_route() -> HTMLResponse:
-        return HTMLResponse(render_summary(summarize(read_events(settings.events_path))))
+        events = read_events(settings.events_path)
+        return HTMLResponse(render_summary(summarize(events), render_html_section(spelling_report(events))))
 
     @app.get("/health")
     async def health_route() -> JSONResponse:

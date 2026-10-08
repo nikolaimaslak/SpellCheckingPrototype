@@ -5,7 +5,8 @@ Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spe
 - `docs/requirements/60145-60254-formal-requirements.md`: the **formal requirements** (authoritative where they differ from the tickets)
 - `docs/requirements/gap-analysis-60145-60254.md`: how the prototype measures against them, with proposed changes and open questions
 - `docs/requirements/60254-auto-correct.txt`, `docs/requirements/60145-auto-complete.txt`: the customer tickets
-- `docs/architecture/composer-assistance-architecture.txt`: the architecture draft (tiers, components, phases)
+- `docs/ARCHITECTURE.md`: the architecture as built (tiers, modules, request flows, data handling, tooling)
+- `docs/architecture/composer-assistance-architecture.txt`: the original architecture draft, from before the code (tiers, components, phases)
 - `openspec/config.yaml`: project context and constraints for all planning
 - `docs/known-issues.md`: deferred issues to address (check before touching auto-correct)
 - `docs/EVALUATION.md`: how spelling quality is measured (criteria, datasets, error types, field metrics)
@@ -32,6 +33,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 | `npm run eval:inject` / `eval:words` / `eval:build` / `eval:manifest` | Insert typed misspellings, build word lists, compile hand-marked dataset sources, re-hash the dataset manifest |
 | `npm run eval:completion:build -- <input> --name <set>` | Build a local completion test set from chat text (`Customer:`/`Agent:` turns) or `--plain` text, cut at mid-word, end-of-word, after-space and after-punctuation points, into `eval/local/completion/sets/` (gitignored). Inputs: synthetic, public or redacted only. See `docs/COMPLETION-EVAL.md` |
 | `npm run eval:completion -- --set <set>` | Run a set through the real completion program in process (canned responses and KB off, cache off; `--samples`, `--concurrency`); writes `report.md` / `.json` with shown, withheld, word completion and spacing errors under `eval/local/completion/runs/` |
+| `npm run telemetry:spelling` | Spelling error report from `telemetry/events.jsonl`: every flagged, accepted, left-misspelled (`unresolved`), ignored, auto-corrected and reverted word per language, with candidates for the custom dictionary (words left misspelled), the misspellings lists and removal (human review only). Writes `telemetry/spelling-report.md` / `.json`; `/summary` shows the candidates. Flagged words can be names: the log stays local |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (see `dev/ad-loader/loader.ts`) |
 
 ## Layout

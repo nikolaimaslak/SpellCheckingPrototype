@@ -171,3 +171,38 @@ def test_appended_lines_are_compact_json_like_the_node_server(tmp_path):
     line = file.read_text("utf-8").strip()
     assert json.loads(line)["original"] == "اذا"
     assert ", " not in line and "\\u" not in line
+
+
+class TestSpellingErrorEvents:
+    def test_flag_stores_only_the_allowed_fields(self):
+        assert sanitize({"type": "flag", "ts": 1, "lang": "en", "session": "s", "original": "chek", "text": "please chek the form", "prefix": "x"}) == {
+            "type": "flag",
+            "ts": 1,
+            "lang": "en",
+            "session": "s",
+            "original": "chek",
+        }
+
+    def test_unresolved_stores_only_the_allowed_fields(self):
+        assert sanitize({"type": "unresolved", "ts": 1, "lang": "ar", "original": "النضام", "message": "secret"}) == {
+            "type": "unresolved",
+            "ts": 1,
+            "lang": "ar",
+            "original": "النضام",
+        }
+
+    def test_accept_keeps_rank_and_offered(self):
+        e = sanitize({"type": "accept", "ts": 1, "lang": "en", "original": "recieve", "replacement": "relieve", "rank": 2, "offered": 4})
+        assert (e["rank"], e["offered"], e["replacement"]) == (2, 4, "relieve")
+
+    def test_flags_and_unresolved_leave_the_field_figures_unchanged(self):
+        base = [
+            {"type": "autocorrect", "ts": 0, "lang": "en", "original": "seperate", "replacement": "separate"},
+            {"type": "accept", "ts": 1, "lang": "en", "original": "recieve", "replacement": "receive"},
+        ]
+        extra = [
+            {"type": "flag", "ts": 2, "lang": "en", "original": "chek"},
+            {"type": "unresolved", "ts": 3, "lang": "en", "original": "chek"},
+            {"type": "flag", "ts": 4, "lang": "ar", "original": "النضام"},
+        ]
+        assert summarize(base + extra)["spelling"] == summarize(base)["spelling"]

@@ -17,13 +17,15 @@ COMPLETION = ("completion-shown", "completion-accepted", "completion-dismissed",
 # (the removed safety filter) and `spelling` (a former client word check) are
 # accepted so older log lines still count. Nothing else may be stored for it.
 WITHHELD_REASONS = ("figure", "date", "identifier", "conversation", "format", "spelling")
-SPELLING = ("autocorrect", "revert", "accept", "ignore")
+SPELLING = ("flag", "unresolved", "autocorrect", "revert", "accept", "ignore")
+# The events the field figures on /summary are computed from (flags and words left misspelled feed the spelling report).
+_SPELLING_RATES = ("autocorrect", "revert", "accept", "ignore")
 POLISH = ("polish-shown", "polish-accepted", "polish-dismissed", "polish-reverted")
 
 _COMMON = ("type", "ts", "lang", "session")
 _EXTRA = {
     "completion": ("latencyMs", "shownLength", "acceptedLength"),
-    "spelling": ("original", "replacement"),
+    "spelling": ("original", "replacement", "rank", "offered"),
     "polish": ("latencyMs", "changes"),
 }
 
@@ -154,7 +156,7 @@ def spelling_by_lang(events: list[Event]) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for e in events:
         lang = e.get("lang")
-        if lang not in ("en", "ar") or e.get("type") not in SPELLING:
+        if lang not in ("en", "ar") or e.get("type") not in _SPELLING_RATES:
             continue
         s = out.setdefault(
             lang,
@@ -205,7 +207,8 @@ def _esc(s: str) -> str:
     return _html_escape(s, quote=False).replace('"', "&quot;")
 
 
-def render_summary(s: dict[str, Any]) -> str:
+def render_summary(s: dict[str, Any], extra: str = "") -> str:
+    """The /summary page; `extra` is HTML placed after the spelling section (the dictionary candidates)."""
     def rows(o: dict[str, int]) -> str:
         return "".join(f"<tr><td>{_esc(k)}</td><td>{v}</td></tr>" for k, v in o.items())
 
@@ -223,6 +226,7 @@ def render_summary(s: dict[str, Any]) -> str:
 <div>Polish acceptance<div class="k">{_pct(p["acceptanceRate"])}</div>{p["accepted"]} of {p["shownWithChanges"]} previews · p50 {_ms(p["latencyP50"])}</div>
 </div>
 {_render_spelling(s["spelling"])}
+{extra}
 <h2>By event type</h2><table><tr><th>Type</th><th>Count</th></tr>{rows(s["byType"])}</table>
 <h2>By language</h2><table><tr><th>Language</th><th>Count</th></tr>{rows(s["byLang"])}</table>
 </body></html>"""

@@ -186,6 +186,7 @@ With the **offline test model**, completions come from canned text, so with cann
 | # | Do | Expected |
 |---|---|---|
 | T8.1 | After some of the scenarios, wait about 5 seconds and open **Telemetry summary** (link under the settings) | A page shows completion and polish acceptance rates, latency, the number of withheld completions (per reason; only "format", model output the server couldn't use, is recorded now; the other reasons appear only in older logs), and the auto-correct revert rate. It records counts and timings only: no typed text, suggestions or drafts. |
+| T8.2 | With preset **Spell check only**, type `please chek the form and recieve it ` and, in Arabic, `تم تحديث النضام اليوم `. Fix `recieve` from its menu, leave `chek` and `النضام` underlined, then send the message (Enter). Wait about 5 seconds, reload **Telemetry summary**, and run `npm run telemetry:spelling` in a terminal | The report (`telemetry/spelling-report.md`) lists `chek` and `النضام` as flagged and **left** (not corrected), and `recieve` as flagged and accepted (→ receive). Words left misspelled in 3 or more sessions become custom dictionary candidates. |
 
 ## 4. Known limitations (not bugs)
 

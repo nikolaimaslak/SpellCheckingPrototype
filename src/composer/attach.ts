@@ -17,11 +17,15 @@ export interface ComposerEnv {
 }
 
 export interface AssistEvent {
-  type: 'autocorrect' | 'revert' | 'accept' | 'ignore';
+  type: 'flag' | 'unresolved' | 'autocorrect' | 'revert' | 'accept' | 'ignore';
   lang: Lang;
   original: string;
   replacement?: string;
+  /** accept: the chosen suggestion's 1-based position, and how many were shown. */
+  rank?: number;
+  offered?: number;
 }
+
 
 export interface AttachOptions {
   service: SpellService;
@@ -140,6 +144,8 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   /** Words completed by . @ : / whose decision waits for whitespace (KI-2). */
   let held: Token[] = [];
   let flagged: Token[] = [];
+  /** Words already reported as `flag` in this message (lang:text). */
+  const reported = new Set<string>();
   let generation = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
   let popover: PopoverHandle | undefined;
@@ -162,7 +168,20 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     if (detached) return;
     const mine = ++generation;
     const map = buildTextMap(el);
-    if (!map.text.trim()) held = []; // cleared or sent: nothing is waiting any more
+    if (!map.text.trim()) {
+      // Sent or cleared: words still underlined in the last check were left misspelled.
+      const left = new Set<string>();
+      for (const t of flagged) {
+        if (!left.has(keyOf(t))) {
+          left.add(keyOf(t));
+          emit({ type: 'unresolved', lang: t.lang, original: t.text });
+        }
+      }
+      // Nothing is waiting any more, and the next message reports its own flags.
+      flagged = [];
+      held = [];
+      reported.clear();
+    }
     const tokens = tokenize(map, caretOffset(map, doc.getSelection())).filter(checkable);
 
     const unknown: Partial<Record<Lang, string[]>> = {};
@@ -179,6 +198,12 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
       (t) => service.misspelled(t.lang, t.text) === true && (!t.pending || previously.has(`${t.start}:${keyOf(t)}`)),
     );
     highlights.setRanges(flagged.map((t) => t.range));
+    for (const t of flagged) {
+      if (!reported.has(keyOf(t))) {
+        reported.add(keyOf(t));
+        emit({ type: 'flag', lang: t.lang, original: t.text });
+      }
+    }
     // A correction the agent has since edited can no longer be reverted.
     corrections = corrections.filter((c) => c.range.toString() === c.replacement);
   }
@@ -375,7 +400,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     const suggestions = known ? [known, ...engine.filter((s) => s !== known)] : engine;
     openAt(token.range, token.lang, {
       suggestions,
-      onPick: (s) => accept(token, s),
+      onPick: (s) => accept(token, s, suggestions.indexOf(s) + 1, suggestions.length),
       onIgnore: () => {
         ignored.add(keyOf(token));
         emit({ type: 'ignore', lang: token.lang, original: token.text });
@@ -384,10 +409,10 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     });
   }
 
-  function accept(token: Token, suggestion: string) {
+  function accept(token: Token, suggestion: string, rank?: number, offered?: number) {
     if (token.range.toString() !== token.text) return; // the word changed since the popover opened
     env.replace(token.range, suggestion);
-    emit({ type: 'accept', lang: token.lang, original: token.text, replacement: suggestion });
+    emit({ type: 'accept', lang: token.lang, original: token.text, replacement: suggestion, rank, offered });
     void recheck();
   }
 

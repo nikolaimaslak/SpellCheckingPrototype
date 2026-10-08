@@ -443,7 +443,10 @@ describe('reverting an auto-correction', () => {
     el.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     await vi.waitFor(() => expect(popover()).not.toBeNull());
     options().find((o) => o.textContent === 'Ignore')!.click();
-    expect(events).toEqual([{ type: 'ignore', lang: 'en', original: 'afte' }]);
+    expect(events).toEqual([
+      { type: 'flag', lang: 'en', original: 'afte' },
+      { type: 'ignore', lang: 'en', original: 'afte' },
+    ]);
   });
 
   it('emits accept when a suggestion is chosen', async () => {
@@ -456,6 +459,9 @@ describe('reverting an auto-correction', () => {
     await vi.waitFor(() => expect(popover()).not.toBeNull());
     options().find((o) => o.textContent === 'after')!.click();
     expect(el.textContent).toBe('after ');
-    expect(events).toEqual([{ type: 'accept', lang: 'en', original: 'afte', replacement: 'after' }]);
+    expect(events).toEqual([
+      { type: 'flag', lang: 'en', original: 'afte' },
+      { type: 'accept', lang: 'en', original: 'afte', replacement: 'after', rank: 4, offered: 5 },
+    ]);
   });
 });

@@ -32,7 +32,8 @@
     "eval:words": "node --import ./eval/register.ts eval/cli/words.ts",
     "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts",
     "eval:completion:build": "uv run --project server --locked python -m assist_eval build",
-    "eval:completion": "uv run --project server --locked python -m assist_eval run"
+    "eval:completion": "uv run --project server --locked python -m assist_eval run",
+    "telemetry:spelling": "uv run --project server --locked python -m assist.spelling_report"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",

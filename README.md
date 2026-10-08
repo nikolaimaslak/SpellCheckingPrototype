@@ -43,7 +43,7 @@ Spell checking and auto-correct always run locally, with or without a key.
 ## What the demo contains
 
 - **Two composers:** a chat composer that behaves like Agent Desktop's (Enter sends) and an email composer with formatting.
-- **Customer side:** a scripted customer conversation in English or Arabic.
+- **Customer side:** a scripted customer conversation in English or Arabic, or your own: **Load conversation…** (under the chat) takes pasted text or a file with `Customer:` / `Agent:` turns and loads it up to the agent message you choose, with canned responses turned off. See the [tester guide](docs/TESTING.md) T4b.
 - **Settings panel:** stands in for the administrator and agent settings, with presets ("Spell check only", "Auto-correct", "Everything on").
 - **Usage summary:** acceptance rates, latency and revert rate. It records no typed text.
 
@@ -61,13 +61,16 @@ All customer messages, canned responses and knowledge-base articles are **synthe
 | `npm run build` | Production build of the demo page to `dist/` |
 | `npm run fetch-dicts` | Provision both dictionaries into `public/dicts/` (offline) |
 | `npm run build:wasm` | Recompile Hunspell to WASM in Docker (pinned tag and toolchain) |
+| `npm run eval` / `eval:check` | Spelling benchmark on synthetic datasets, and its gate (see `docs/EVALUATION.md`) |
+| `npm run eval:completion:build -- <file> --name <set>` | Build a local completion test set from chat or plain text (gitignored `eval/local/completion/`) |
+| `npm run eval:completion -- --set <set>` | Run it through the completion program and write a report (see `docs/COMPLETION-EVAL.md`) |
 | `npm run ad-loader` | Dev-only loader for trying the layer on a live Agent Desktop tenant (not for testers) |
 
-**Architecture:**
+**Architecture:** see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**. In short:
 - **Spelling (Tier 1):** Hunspell compiled to WebAssembly runs in a Web Worker, with no network calls. Underlines use the CSS Custom Highlight API and are never written into the editor's DOM.
-- **Completion and polish (Tier 2):** server-side. The dev server (`server/`, Python) stands in for the Intelligence Engine: FastAPI handles requests, and every model call goes through a typed DSPy program, so the model (Gemini in dev, a local model in production) is chosen by configuration.
+- **Completion and polish (Tier 2):** the dev server (`server/`, Python) stands in for the Intelligence Engine. FastAPI handles requests, and every model call goes through a typed DSPy program, so the model (Gemini in dev, a local model in production) is chosen by configuration. The model returns just the text that continues the agent's sentence.
 
-`CLAUDE.md` describes the layout and constraints. Requirements and the architecture draft are in `docs/`. Work is planned and tracked with OpenSpec under `openspec/`.
+`CLAUDE.md` describes the layout and constraints. Requirements and the original architecture draft are in `docs/`. Work is planned and tracked with OpenSpec under `openspec/`.
 
 ## Licensing and terms
 
