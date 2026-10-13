@@ -118,6 +118,9 @@ Every token in a dataset message SHALL get exactly one outcome against its gold 
   - `wrong-fix` (auto-replaced with another word);
   - `flagged` (not auto-replaced).
 - **Gold excluded** (URL, email, token with digits, substitution field): `excluded` when the pipeline neither checks nor changes any part of it, otherwise `exclusion-leak`. A replacement made while typing inside an excluded span is an `exclusion-leak`; one inside a gold-correct word is a `corruption`.
+- **Gold unscored** (a word the data marks as edited for reasons other than spelling): `unscored`, recording whether it was flagged or auto-replaced. It counts in no metric. A replacement made while typing inside an unscored word is part of that word's `unscored` outcome, not a `corruption`.
+
+Every gold misspelling MUST also record whether it is a **real-word** misspelling: the spelling engine accepts the typed word, so it can only be detected by other means, such as a misspellings list.
 
 Comparison with the intended word MUST ignore Arabic diacritics and tatweel, and MUST NOT fold hamza or alef variants.
 
@@ -145,13 +148,34 @@ Comparison with the intended word MUST ignore Arabic diacritics and tatweel, and
 - **WHEN** "info@gosi.gov.sa" is labelled excluded and "gosi" is replaced while typing
 - **THEN** the email's outcome is `exclusion-leak`
 
+#### Scenario: English unscored word
+- **WHEN** "go" in "He go to the office" is labelled unscored and the pipeline leaves it alone
+- **THEN** its outcome is `unscored`, and it counts as neither correct nor misspelled
+
+#### Scenario: Arabic unscored word changed
+- **WHEN** "هذه" in "هذه الطلب" is labelled unscored and the pipeline auto-replaces it
+- **THEN** its outcome is `unscored`, recorded as changed, and no `corruption` is counted
+
+#### Scenario: English real-word misspelling
+- **WHEN** "form" is labelled misspelled with intended "from", and the engine accepts "form"
+- **THEN** its outcome is `missed`, and it is marked real-word
+
+#### Scenario: Arabic real-word misspelling
+- **WHEN** "ان" is labelled misspelled with intended "أن", and the engine accepts "ان"
+- **THEN** it is marked real-word, whatever its outcome
+
+#### Scenario: Mixed message
+- **WHEN** a message holds the English non-word "recieve" and the Arabic real-word misspelling "ان", both labelled misspelled
+- **THEN** "recieve" is a non-word misspelling and "ان" a real-word one, each in its own language's figures
+
 ### Requirement: Metrics
 The report SHALL compute, per language, per dataset and per error type, in three layers.
 
 **Detection:**
 - **detection recall:** detected misspellings ÷ gold-misspelled tokens;
+- **non-word detection recall** and **real-word detection recall:** the same ratio over non-word and over real-word gold misspellings, with each kind's count;
 - **false-flag rate:** (`false-flag` + `corruption`) ÷ gold-correct tokens;
-- **detection precision:** detected misspellings ÷ all flagged or auto-replaced tokens.
+- **detection precision:** detected misspellings ÷ all flagged or auto-replaced tokens, not counting `unscored` tokens.
 
 **Correction** (whether the system arrives at the intended word, applied or offered):
 - **correction accuracy@1** and **@5:** gold-misspelled tokens whose intended word is ranked 1 (or 1–5) ÷ gold-misspelled tokens;
@@ -163,7 +187,10 @@ The report SHALL compute, per language, per dataset and per error type, in three
 - **corruption rate:** `corruption` per 10,000 gold-correct tokens, with its 95% upper bound;
 - **by source:** auto-replace precision and coverage, and the counts of `fixed`, `wrong-fix` and `corruption`, for each source of the replacement: `list` (a known misspelling), `case` (the case-only fix) and `neighbor` (the single-neighbor rule).
 
-**Also reported:** exclusion leaks, and engine latency p50 and p95 for the correctness check and for corrections.
+**Also reported:**
+- exclusion leaks;
+- engine latency p50 and p95 for the correctness check and for corrections;
+- unscored tokens: how many, how many flagged and how many auto-replaced.
 
 Error type comes from the label, or from the classifier when the label has none.
 
@@ -178,6 +205,18 @@ Error type comes from the label, or from the classifier when the label has none.
 #### Scenario: Breakdown by source
 - **WHEN** an English dataset has 30 `fixed` tokens from the list, 20 `fixed` and 1 `wrong-fix` from the single-neighbor rule, and 2 `corruption` from the list
 - **THEN** the report shows list precision 30 ÷ 32 and neighbor precision 20 ÷ 21, with each source's counts
+
+#### Scenario: Real-word recall
+- **WHEN** an Arabic dataset has 80 non-word misspellings, all detected, and 20 real-word misspellings, 2 of them detected through the misspellings list
+- **THEN** detection recall is 82%, non-word detection recall is 100% over 80, and real-word detection recall is 10% over 20
+
+#### Scenario: English unscored tokens
+- **WHEN** an English dataset has 50 unscored tokens, 5 flagged and 1 auto-replaced
+- **THEN** the report shows 50, 5 and 1 for unscored tokens, and the false-flag rate, detection precision and corruption rate are unchanged by them
+
+#### Scenario: Committed data unchanged
+- **WHEN** the benchmark runs on the committed datasets only, which have no real-word misspellings and no unscored tokens
+- **THEN** every existing metric equals the value it had before this change, and real-word counts are 0
 
 ### Requirement: Error-type matrix
 For each language, the benchmark SHALL evaluate the committed word list in per-word mode across every error type of that language. Each variant is evaluated as a single word followed by a typed boundary. It MUST produce a matrix with one row per error type and these columns:
@@ -260,11 +299,13 @@ Every other metric MUST use, for each token, the result that at least two of the
 - **THEN** it counts toward suggestion instability, not decision instability
 
 ### Requirement: Datasets and provenance
-Each dataset SHALL be one file of labelled messages. Every token carries a language and a gold label: correct, misspelled (with intended word and optional error type), or excluded. A manifest MUST record each dataset's and word list's source, license, size, hash and, for generated data, the generator version, options and seed. A dataset that is unlisted, or whose hash doesn't match, MUST be refused. The committed data MUST include:
+Each dataset SHALL be one file of labelled messages. Every token carries a language and a gold label: correct, misspelled (with intended word and optional error type), excluded, or unscored. A manifest MUST record each dataset's and word list's source, license, size, hash and, for generated data, the generator version, options and seed. A dataset that is unlisted, or whose hash doesn't match, MUST be refused. The committed data MUST include:
 - English and Arabic curated typo sets;
 - clean in-domain agent messages in English, Arabic and mixed Arabic/English, with names, product terms, transliterations and excluded tokens;
 - the English and Arabic word lists;
 - inserted-error datasets generated from the clean messages.
+
+Committed datasets MUST NOT use the `unscored` label: it exists for imported corpora whose edits go beyond spelling.
 
 #### Scenario: Unlisted dataset
 - **WHEN** a dataset file is not in the manifest
@@ -274,8 +315,14 @@ Each dataset SHALL be one file of labelled messages. Every token carries a langu
 - **WHEN** a label's span matches no token the pipeline produces
 - **THEN** the run fails, naming the dataset and the message id
 
+#### Scenario: Unscored label in committed data
+- **WHEN** a committed dataset has a label with gold `unscored`
+- **THEN** the run fails, naming the dataset and the message id
+
 ### Requirement: Private datasets
-Datasets in the gitignored private directory SHALL be evaluated when present, including type classification of their labelled misspellings. For them, the report MUST contain only aggregate metrics and counts (including per-type counts), never message text, words or examples. They MUST NOT be part of the committed baseline.
+Datasets in the gitignored private directory SHALL be evaluated when present, including type classification of their labelled misspellings. For them, the report MUST contain only aggregate metrics and counts (including per-type, real-word and unscored counts), never message text, words or examples. They MUST NOT be part of the committed baseline.
+
+Data from a licensed corpus (such as QALB) MUST stay in the private directory with its license file beside it, and its manifest entry MUST name that license. No command may copy words from a private dataset into committed files, word lists, misspellings lists or dictionaries.
 
 #### Scenario: Pilot export
 - **WHEN** a private dataset of real agent messages with labelled misspellings is present
@@ -284,6 +331,10 @@ Datasets in the gitignored private directory SHALL be evaluated when present, in
 #### Scenario: No private data
 - **WHEN** the private directory is empty or missing
 - **THEN** the run succeeds with the committed datasets only
+
+#### Scenario: Converted QALB set
+- **WHEN** `qalb14-dev` was converted from QALB-2014 dev and the benchmark runs
+- **THEN** the report shows its aggregate metrics, real-word and unscored counts under `qalb14-dev`, no word from it appears anywhere in the report, and the baseline is unchanged
 
 ### Requirement: Report
 Each run SHALL write a machine-readable report and a human-readable report containing:
@@ -324,3 +375,52 @@ It MUST print every regression. Per-type figures MUST be compared and printed, b
 #### Scenario: Per-type drop
 - **WHEN** Arabic `dots` correction accuracy@1 drops but every criterion metric holds
 - **THEN** `eval:check` passes and prints the per-type drop
+
+### Requirement: Importing ARETA-tagged corpora
+The eval SHALL provide a command that converts an ARETA-tagged alignment file into a private dataset. The input has one `source ⇥ target ⇥ tag` line per aligned word after a `SOURCE ⇥ TARGET` header, with sentences separated by blank lines; a source or target may hold several space-separated words, or be empty.
+
+Each sentence becomes one message, whose text is its source words joined by single spaces. Words are labelled by tag:
+- `UC`: no label (gold correct);
+- a tag made only of `REPLACE_O…` parts (one or more joined by `+`), with a single source word and a single target word: gold `misspelled`, with the target as the intended word;
+- any other tag, or an orthographic tag on a multi-word source or target: gold `unscored` on every source word;
+- an empty source (an insertion): nothing.
+
+A label on a word the project's tokenizer produces no word for at all (a one-letter word, a token with digits) MUST be dropped and counted: the composer never checks that word, so it can't be measured. Every remaining label MUST line up with a word the tokenizer produces. A sentence where one doesn't (a labelled word the tokenizer splits) is skipped and counted, never written with misaligned labels.
+
+The command MUST take `--name`, the input path, `--source` (a provenance line), `--license` (the license name) and `--license-file` (the corpus license text), and MAY take `--limit N` (first N sentences). It writes `eval/datasets/private/<name>.jsonl` and copies the license file next to it. It also adds or replaces the dataset's entry in the private `MANIFEST.json`, with source, license, the converter's version and options, and the hash. It prints counts of messages, gold correct, misspelled and unscored words, dropped labels and skipped sentences. It MUST refuse to write outside `eval/datasets/private/`, and it MUST fail without writing anything when `--license-file` is missing or unreadable.
+
+#### Scenario: Orthographic edit
+- **WHEN** a sentence has the lines "ليضهر ⇥ ليظهر ⇥ REPLACE_OR" and "أنه ⇥ أنه ⇥ UC"
+- **THEN** "ليضهر" is labelled misspelled with intended "ليظهر", and "أنه" has no label
+
+#### Scenario: Combined orthographic tags
+- **WHEN** a line is "انشاء ⇥ إنشاء ⇥ REPLACE_OH+REPLACE_OM"
+- **THEN** "انشاء" is labelled misspelled with intended "إنشاء"
+
+#### Scenario: Grammar edit unscored
+- **WHEN** a line is "مسلمون ⇥ مسلمين ⇥ REPLACE_XC" or "يحب ⇥ تحب ⇥ REPLACE_XG"
+- **THEN** the source word is labelled unscored
+
+#### Scenario: Merge and split
+- **WHEN** a line is "التصر فات ⇥ التصرفات ⇥ MERGE" and another is "لوكان ⇥ لو كان ⇥ SPLIT"
+- **THEN** "التصر", "فات" and "لوكان" are each labelled unscored
+
+#### Scenario: Insertion
+- **WHEN** a line has an empty source and the tag `INSERT_XM`
+- **THEN** it adds no word to the message and no label
+
+#### Scenario: Mixed text
+- **WHEN** a sentence holds the Latin word "Facebook" tagged `UC` among Arabic words
+- **THEN** "Facebook" has no label and is evaluated as a correct English word
+
+#### Scenario: Label doesn't align
+- **WHEN** a labelled source word is split by the project's tokenizer into two words
+- **THEN** that sentence is skipped and counted, and the other sentences are written
+
+#### Scenario: Word the tokenizer doesn't check
+- **WHEN** a sentence has the line "أ ⇥ (empty) ⇥ DELETE_XM", and "أ" is a one-letter word the tokenizer produces no word for
+- **THEN** its label is dropped and counted, and the sentence is written
+
+#### Scenario: No license file
+- **WHEN** the command runs without a readable `--license-file`
+- **THEN** it fails, writes no dataset and leaves the manifest unchanged
