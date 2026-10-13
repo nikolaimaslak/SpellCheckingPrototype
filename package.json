@@ -31,6 +31,7 @@
     "eval:manifest": "node --import ./eval/register.ts eval/cli/manifest.ts",
     "eval:words": "node --import ./eval/register.ts eval/cli/words.ts",
     "eval:inject": "node --import ./eval/register.ts eval/cli/inject.ts",
+    "eval:qalb": "node --import ./eval/register.ts eval/cli/qalb.ts",
     "eval:completion:build": "uv run --project server --locked python -m assist_eval build",
     "eval:completion": "uv run --project server --locked python -m assist_eval run",
     "telemetry:spelling": "uv run --project server --locked python -m assist.spelling_report",

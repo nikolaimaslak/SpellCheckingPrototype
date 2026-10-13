@@ -107,6 +107,13 @@ function documentForTokenizer(): Document {
   return dom.window.document;
 }
 
+/** The words the composer's tokenizer finds in a plain message, in the given languages (shared with the corpus importer). */
+export function tokensOf(text: string, languages: Lang[] = ['en', 'ar']): Token[] {
+  const el = documentForTokenizer().createElement('div');
+  el.textContent = text;
+  return tokenize(buildTextMap(el)).filter((t) => languages.includes(t.lang));
+}
+
 export async function createPipeline(options: PipelineOptions = {}): Promise<Pipeline> {
   const { languages = ['en', 'ar'], customWords = [], autoReplace = 'list-and-rule' } = options;
   const handle = createHandler(loadRuntime, loadDictionary);
@@ -125,13 +132,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
   }
   const custom = new Set(customWords);
   const ctx = { ignored: new Set<string>(), customWords: custom };
-  const doc = documentForTokenizer();
-
-  const tokensOf = (text: string): Token[] => {
-    const el = doc.createElement('div');
-    el.textContent = text;
-    return tokenize(buildTextMap(el)).filter((t) => languages.includes(t.lang));
-  };
+  const messageTokens = (text: string): Token[] => tokensOf(text, languages);
 
   const timed = async <T>(work: () => Promise<T>): Promise<[T, number]> => {
     const begin = performance.now();
@@ -199,7 +200,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
         if (kind === 'none') continue;
         const soFar = typed.slice(0, i + 1);
         const from = lastWhitespaceBefore(typed, Math.min(i - 3, runStartBefore(typed, i))) + 1;
-        const tokens = tokensOf(typed.slice(from, i + 1)).map((t) => ({ ...t, start: t.start + from, end: t.end + from }));
+        const tokens = messageTokens(typed.slice(from, i + 1)).map((t) => ({ ...t, start: t.start + from, end: t.end + from }));
         const done = completedWord(input, { text: soFar }, i + 1, tokens);
         const ready: Token[] = [];
         if (kind === 'decide' && done) ready.push(done);
@@ -220,7 +221,7 @@ export async function createPipeline(options: PipelineOptions = {}): Promise<Pip
 
       const tokens: TokenResult[] = [];
       const final = new Set<string>();
-      for (const t of tokensOf(text)) {
+      for (const t of messageTokens(text)) {
         const key = `${t.start}:${t.end}:${t.text}`;
         final.add(key);
         const { flagged, ms: checkMs } = await misspelled(t.text, t.lang);

@@ -60,3 +60,25 @@ describe('datasets and manifest', () => {
     expect(loadAll(dir).datasets[0].customWords).toEqual(['GOSI', 'Absher']);
   });
 });
+
+describe('unscored labels', () => {
+  const UNSCORED = '{"id":"m7","text":"He go home.","labels":[{"start":3,"word":"go","gold":"unscored"}]}\n';
+
+  it('refuses an unscored label in a committed dataset, naming the dataset and message', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'datasets-'));
+    writeFileSync(join(dir, 'a.jsonl'), UNSCORED);
+    writeFileSync(join(dir, 'MANIFEST.json'), JSON.stringify({ datasets: [entry('a.jsonl', UNSCORED)] }));
+    expect(() => loadAll(dir)).toThrow(ManifestError);
+    expect(() => loadAll(dir)).toThrow(/a message m7/);
+  });
+
+  it('loads an unscored label in a private dataset', () => {
+    const dir = fixture();
+    const priv = join(dir, 'private');
+    mkdirSync(priv);
+    writeFileSync(join(priv, 'p.jsonl'), UNSCORED);
+    writeFileSync(join(priv, 'MANIFEST.json'), JSON.stringify({ datasets: [entry('p.jsonl', UNSCORED, { kind: 'public' })] }));
+    const { datasets } = loadAll(dir);
+    expect(datasets.find((d) => d.name === 'p')?.entry.kind).toBe('private');
+  });
+});

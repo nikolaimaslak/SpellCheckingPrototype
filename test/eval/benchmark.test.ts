@@ -85,6 +85,7 @@ describe('stability', () => {
     gold: 'misspelled',
     intended: 'الإلكترونية',
     errorType: 'keyboard-sub',
+    realWord: null,
     rank: null,
     replacement: null,
     source: null,

@@ -29,6 +29,11 @@ Every word of every message gets one **outcome** against its gold label:
 | correct | `untouched`, `false-flag` (underlined), `corruption` (auto-replaced) |
 | misspelled | `missed` (not flagged); if detected, the rank of the intended word among the system's corrections, plus `fixed`, `wrong-fix` or `flagged` (not changed) |
 | excluded (URL, email, digits, `$(…)`) | `excluded`, or `exclusion-leak` if any part was checked or changed |
+| unscored (private and imported data only) | `unscored`, recording whether it was underlined or changed; it counts in no rate |
+
+A misspelling the engine accepts as a dictionary word is marked **real-word** ("form" for "from", "ان" for "أن"). Hunspell can't flag those, so they are reported separately from non-word misspellings.
+
+**Unscored** marks a word that imported data (such as QALB, below) edits for reasons other than spelling: grammar, word choice, merged or split words. Counting it as correct would turn every underline on it into a false flag, and counting it as misspelled would demand a grammar fix from a spell checker. Committed datasets can't use it, so the run refuses one that does.
 
 The system's corrections are the auto-replacement first, then the suggestions in order. Comparison ignores Arabic diacritics and tatweel, but hamza counts.
 
@@ -41,6 +46,7 @@ This catches replacements that happen mid-typing. Such a replacement inside a fi
 **Metrics, in three layers:**
 - **Detection**
   - recall: detected ÷ misspellings;
+  - non-word and real-word recall: the same, over each kind, with the number of real-word misspellings (shown as "Non-word / real-word recall (real words)", or "–" when there are none);
   - false-flag rate: (false flags + corruptions) ÷ correct words;
   - precision.
 - **Correction**
@@ -53,6 +59,7 @@ This catches replacements that happen mid-typing. Such a replacement inside a fi
   - **by source:** the same precision and coverage, with counts, for each rule that made the change: `list` (a known misspelling from the curated lists in `src/autocorrect/lists/`), `case` (the case-only fix) and `neighbor` (the single-neighbor rule).
 - **Also reported:**
   - exclusion leaks;
+  - unscored words: how many, how many underlined and how many auto-replaced (a table appears only when a dataset has them);
   - engine latency p95: correctness check, correction (suggestions) and, for information, the auto-replace decision (the worker's neighbors request);
   - **decision instability**: tokens whose flag or auto-replacement differs between the three normal runs and one run under CPU load. Gated at 0;
   - **suggestion instability**: tokens with the same decision in every run whose top suggestion differs. Reported without a threshold; it comes from Hunspell's time-limited `suggest()`, which only the popover uses.
@@ -129,9 +136,38 @@ All committed data is synthetic. Claude drafted the clean and typo messages, and
 2. Run `npm run eval:build`.
 3. Add a manifest entry with source and license, then `npm run eval:manifest -- --write`.
 
-A misspelling must be a non-word: the engine rejects it. Real-word errors are out of scope.
+A misspelling in a curated or inserted dataset must be a non-word: the engine rejects it. Real-word errors are counted separately, and come from imported corpora (below).
 
 **Private data** (for example a GOSI pilot export with corrected versions) goes in the gitignored `eval/datasets/private/` with its own `MANIFEST.json`. It's evaluated with everything else, but the report contains only its aggregates and per-type counts, never words. It's never part of the baseline.
+
+### Importing QALB (ARETA-tagged corpora)
+
+The QALB corpus (Arabic writer errors with gold corrections) comes with CAMeL Lab's [arabic-gec](https://github.com/CAMeL-Lab/arabic-gec) release, aligned word by word and tagged with ARETA error types. `npm run eval:qalb` turns one of those files into a private dataset:
+
+```
+npm run eval:qalb -- ../arabic-gec/data/areta_tags/wo_camelira/qalb14/qalb14_dev.areta+.nopnx.txt \
+  --name qalb14-dev --source "QALB-2014 dev, CAMeL-Lab/arabic-gec" \
+  --license "QALB 0.9.1: internal research and evaluation only" \
+  --license-file ../arabic-gec/data/gec/QALB-0.9.1-Dec03-2021-SharedTasks/LICENSE.txt [--limit N]
+```
+
+It writes `eval/datasets/private/<name>.jsonl`, copies the license to `<name>.LICENSE.txt` and adds the dataset to the private `MANIFEST.json`. Each sentence becomes one message (its source words, without punctuation: the `nopnx` files), labelled by tag:
+
+| ARETA tag | Label |
+|---|---|
+| `UC` (unchanged) | none: gold correct |
+| only `REPLACE_O…` parts (hamza, ta marbuta, alif maqsura, characters), one word to one word | misspelled, the correction as intended word |
+| anything else: grammar (`X…`), morphology, word choice (`S…`), `MERGE`, `SPLIT`, `DELETE`, `UNK` | unscored |
+| empty source (an insertion) | nothing |
+
+A label on a word the tokenizer never checks (one-letter words, tokens with digits) is dropped and counted. A sentence with a labelled word the tokenizer splits is skipped and counted. QALB-2014 dev gives 1,017 messages: about 38,600 correct, 7,200 misspelled and 2,800 unscored words, with 924 labels dropped and none skipped. It adds several minutes to `npm run eval`; use `--limit` for a quick run.
+
+**License rules (read before running it):**
+- QALB is licensed for internal research and evaluation only. It may not be redistributed or modified, and its notice must stay with internal copies. The converted file is an internal, evaluation-only copy with the notice beside it. **Pending:** legal confirmation that reformatting counts as evaluation use and not as a prohibited modification.
+- The data stays in the gitignored `eval/datasets/private/` and is never committed. Reports show only its aggregates.
+- Nothing from it may feed misspellings lists, the REP table, word lists or dictionaries. It tells us what to fix; the fixes come from our own sources.
+- ZAEBUC (in the same release) is CC BY-NC-SA 4.0. Don't convert it until its non-commercial terms are cleared for our use.
+- QALB is news comments, not agent chat. Read its figures as the error mix of real writers, not as a measure of GOSI text.
 
 ## Offline and field metrics
 
@@ -182,7 +218,7 @@ Committed synthetic data only; Claude drafted the data and human review is pendi
   - `ta-marbuta`, `alef-maqsura` and `hamza` are handled well.
   - English `transpose`, `double` and `insert` are strong; `substitute` and `delete` are weakest.
 - **Arabic suggestions are slow and unstable.** They take about 130 ms (p95), and 7–11 Arabic decisions change between runs or under load (KI-1). Several are auto-replacements that appear or disappear.
-- **Detection recall of 100% is an artefact.** Every misspelling in the data is a non-word by construction, so Hunspell always flags it. Real-word errors and real agent data will lower it.
+- **Detection recall of 100% is an artefact.** Every misspelling in the committed data is a non-word by construction, so Hunspell always flags it. Real-word errors and real agent data will lower it; the QALB import below measures both.
 
 ### Baseline after `autocorrect-reliability` (October 5, 2026)
 

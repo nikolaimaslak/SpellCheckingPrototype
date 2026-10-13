@@ -21,12 +21,25 @@ export interface Counts {
   rank5: number;
   excluded: number;
   exclusionLeaks: number;
+  /** Gold misspellings the engine rejects (non-words) and accepts (real words), and how many of each were detected. */
+  nonWord: number;
+  nonWordDetected: number;
+  realWord: number;
+  realWordDetected: number;
+  /** Unscored words (imported data, edited for reasons other than spelling): counted here only, in no rate. */
+  unscored: number;
+  /** Underlined, not changed. */
+  unscoredFlagged: number;
+  /** Auto-replaced, at the end or while typing. */
+  unscoredReplaced: number;
 }
 
 export interface Metrics {
   counts: Counts;
   // Detection
   detectionRecall: number | null;
+  nonWordDetectionRecall: number | null;
+  realWordDetectionRecall: number | null;
   falseFlagRate: number | null;
   detectionPrecision: number | null;
   // Correction
@@ -69,6 +82,13 @@ export function countOutcomes(outcomes: WordOutcome[]): Counts {
     rank5: 0,
     excluded: 0,
     exclusionLeaks: 0,
+    nonWord: 0,
+    nonWordDetected: 0,
+    realWord: 0,
+    realWordDetected: 0,
+    unscored: 0,
+    unscoredFlagged: 0,
+    unscoredReplaced: 0,
   };
   for (const o of outcomes) {
     switch (o.outcome) {
@@ -99,6 +119,11 @@ export function countOutcomes(outcomes: WordOutcome[]): Counts {
       case 'exclusion-leak':
         c.exclusionLeaks++;
         break;
+      case 'unscored':
+        c.unscored++;
+        if (o.replacement !== null) c.unscoredReplaced++;
+        else if (o.corrections.length) c.unscoredFlagged++;
+        break;
     }
     if (o.gold === 'correct') c.correct++;
     if (o.gold === 'misspelled') {
@@ -106,6 +131,13 @@ export function countOutcomes(outcomes: WordOutcome[]): Counts {
       if (o.outcome !== 'missed') c.detected++;
       if (o.rank === 1) c.rank1++;
       if (o.rank !== null && o.rank <= 5) c.rank5++;
+      if (o.realWord) {
+        c.realWord++;
+        if (o.outcome !== 'missed') c.realWordDetected++;
+      } else {
+        c.nonWord++;
+        if (o.outcome !== 'missed') c.nonWordDetected++;
+      }
     }
   }
   return c;
@@ -118,6 +150,8 @@ export function computeMetrics(outcomes: WordOutcome[]): Metrics {
   return {
     counts: c,
     detectionRecall: ratio(c.detected, c.misspelled),
+    nonWordDetectionRecall: ratio(c.nonWordDetected, c.nonWord),
+    realWordDetectionRecall: ratio(c.realWordDetected, c.realWord),
     falseFlagRate: ratio(c.falseFlag + c.corruption, c.correct),
     detectionPrecision: ratio(c.detected, c.detected + c.falseFlag + c.corruption),
     correctionAt1: ratio(c.rank1, c.misspelled),

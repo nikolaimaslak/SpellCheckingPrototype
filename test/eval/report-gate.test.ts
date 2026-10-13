@@ -18,6 +18,7 @@ const o = (over: Partial<WordOutcome> & { outcome: Outcome }): WordOutcome => ({
   gold: 'correct',
   intended: null,
   errorType: null,
+  realWord: null,
   rank: null,
   replacement: null,
   source: null,
@@ -164,5 +165,25 @@ describe('regression gate', () => {
     const gate = compare(now, before, criteria);
     expect(gate.regressions).toEqual([]);
     expect(gate.typeChanges).toContain('ar dots correctionAt1: 80.00% → 50.00%');
+  });
+});
+
+describe('report: real-word misspellings and unscored words', () => {
+  it('shows a private dataset’s real-word and unscored counts and none of its words', () => {
+    const r = result(clean(5));
+    const priv = [
+      o({ outcome: 'flagged', dataset: 'pilot', gold: 'misspelled', intended: 'SECRETFIX', rank: 1, realWord: false, word: 'SECRETTYPO', context: 'SECRET text' }),
+      o({ outcome: 'missed', dataset: 'pilot', gold: 'misspelled', intended: 'SECRETFIX', realWord: true, word: 'SECRETREAL', context: 'SECRET text' }),
+      o({ outcome: 'unscored', dataset: 'pilot', gold: 'unscored', word: 'SECRETGRAMMAR', corrections: ['SECRETX'], context: 'SECRET text' }),
+      o({ outcome: 'unscored', dataset: 'pilot', gold: 'unscored', word: 'SECRETGRAMMAR2', replacement: 'SECRETY', corrections: ['SECRETY'], context: 'SECRET text' }),
+    ];
+    r.datasets[1].metrics = computeMetrics(priv);
+    const dir = mkdtempSync(join(tmpdir(), 'report-'));
+    const { json, md } = writeReports(r, dir);
+    const text = readFileSync(md, 'utf8');
+    expect(text).toContain('| pilot | 2 | 1 | 1 |');
+    expect(text).toContain('100.0% / 0.0% (1)');
+    expect(JSON.parse(readFileSync(json, 'utf8')).datasets[1].metrics.counts).toMatchObject({ realWord: 1, nonWord: 1, unscored: 2 });
+    for (const file of [json, md]) expect(readFileSync(file, 'utf8')).not.toMatch(/SECRET/);
   });
 });

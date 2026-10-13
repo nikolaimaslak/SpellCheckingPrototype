@@ -12,6 +12,7 @@ const make = (n: number, o: Partial<WordOutcome> & { outcome: Outcome }): WordOu
     gold: 'correct',
     intended: null,
     errorType: null,
+    realWord: null,
     rank: null,
     replacement: null,
     source: null,
@@ -113,5 +114,38 @@ describe('bySource', () => {
     expect(s.list).toMatchObject({ fixed: 30, corruption: 2, autoReplacePrecision: 30 / 32, autoReplaceCoverage: 0.3 });
     expect(s.neighbor).toMatchObject({ fixed: 20, wrongFix: 1, autoReplacePrecision: 20 / 21, autoReplaceCoverage: 0.2 });
     expect(s.case).toMatchObject({ fixed: 0, autoReplacePrecision: null });
+  });
+});
+
+describe('real-word misspellings and unscored words', () => {
+  it('reports non-word and real-word recall beside overall recall (spec: Real-word recall)', () => {
+    const outcomes = [
+      ...miss(80, 'flagged', 1, { lang: 'ar', realWord: false }),
+      ...miss(18, 'missed', null, { lang: 'ar', realWord: true }),
+      ...miss(2, 'fixed', 1, { lang: 'ar', realWord: true, source: 'list' }),
+    ];
+    const m = computeMetrics(outcomes);
+    expect(m.detectionRecall).toBeCloseTo(0.82);
+    expect(m.nonWordDetectionRecall).toBe(1);
+    expect(m.realWordDetectionRecall).toBeCloseTo(0.1);
+    expect([m.counts.nonWord, m.counts.realWord]).toEqual([80, 20]);
+  });
+
+  it('counts English unscored words without changing any rate (spec: English unscored tokens)', () => {
+    const base = [...make(990, { outcome: 'untouched' }), ...make(10, { outcome: 'false-flag' }), ...miss(10, 'flagged', 1), ...miss(2, 'fixed', 1)];
+    const unscored = [
+      ...make(44, { outcome: 'unscored', gold: 'unscored' }),
+      ...make(5, { outcome: 'unscored', gold: 'unscored', corrections: ['went'] }),
+      ...make(1, { outcome: 'unscored', gold: 'unscored', corrections: ['went'], replacement: 'went', source: 'neighbor' }),
+    ];
+    const without = computeMetrics(base);
+    const withUnscored = computeMetrics([...base, ...unscored]);
+    expect([withUnscored.counts.unscored, withUnscored.counts.unscoredFlagged, withUnscored.counts.unscoredReplaced]).toEqual([50, 5, 1]);
+    for (const k of ['falseFlagRate', 'detectionPrecision', 'corruptionPer10k', 'detectionRecall', 'autoReplacePrecision'] as const) expect(withUnscored[k]).toBe(without[k]);
+  });
+
+  it('treats outcomes without the flag (committed data) as non-words', () => {
+    const m = computeMetrics(miss(10, 'flagged', 1));
+    expect([m.counts.nonWord, m.counts.realWord, m.realWordDetectionRecall]).toEqual([10, 0, null]);
   });
 });

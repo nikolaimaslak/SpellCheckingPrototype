@@ -19,6 +19,7 @@ function metricRow(name: string, m: Metrics): string[] {
     String(m.counts.correct),
     String(m.counts.misspelled),
     pct(m.detectionRecall),
+    m.counts.realWord ? `${pct(m.nonWordDetectionRecall)} / ${pct(m.realWordDetectionRecall)} (${m.counts.realWord})` : '–',
     pct(m.falseFlagRate, 2),
     pct(m.correctionAt1),
     pct(m.correctionAt5),
@@ -28,7 +29,7 @@ function metricRow(name: string, m: Metrics): string[] {
     String(m.counts.exclusionLeaks),
   ];
 }
-const METRIC_HEAD = ['', 'Correct words', 'Misspellings', 'Detection recall', 'False flags', 'Correction@1', 'Correction@5', 'Auto-replace precision', 'Auto-replace coverage', 'Corruption /10k (95% ≤)', 'Exclusion leaks'];
+const METRIC_HEAD = ['', 'Correct words', 'Misspellings', 'Detection recall', 'Non-word / real-word recall (real words)', 'False flags', 'Correction@1', 'Correction@5', 'Auto-replace precision', 'Auto-replace coverage', 'Corruption /10k (95% ≤)', 'Exclusion leaks'];
 
 const TYPE_HEAD = ['Error type', 'Misspellings', 'Detection recall', 'Correction@1', 'Correction@5', 'Auto-replace coverage', 'Wrong fixes'];
 const typeRows = (byType: Record<string, Metrics>) =>
@@ -72,6 +73,20 @@ export function renderMarkdown(r: BenchmarkResult): string {
   out.push('## Detection, correction and auto-replace', '');
   out.push('### By language (committed data)', '', table(METRIC_HEAD, Object.entries(r.byLang).map(([l, b]) => metricRow(l, b.metrics))), '');
   out.push('### By dataset', '', table(METRIC_HEAD, r.datasets.map((d) => metricRow(d.name, d.metrics))), '');
+  const unscored = r.datasets.filter((d) => d.metrics.counts.unscored);
+  if (unscored.length) {
+    out.push(
+      '### Unscored words',
+      '',
+      'Words imported data marks as edited for reasons other than spelling (grammar, word choice, merges and splits). They count in no rate above.',
+      '',
+      table(
+        ['Dataset', 'Unscored words', 'Flagged, not changed', 'Auto-replaced'],
+        unscored.map((d) => [d.name, String(d.metrics.counts.unscored), String(d.metrics.counts.unscoredFlagged), String(d.metrics.counts.unscoredReplaced)]),
+      ),
+      '',
+    );
+  }
 
   out.push(
     '### Auto-replace by source',

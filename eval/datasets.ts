@@ -90,7 +90,13 @@ export function loadAll(dir = 'eval/datasets'): LoadedData {
       wordLists.push({ name, entry, words: fromTsv(readFileSync(path, 'utf8')) });
     } else {
       const customWords = entry.customWords ? readWordFile(join(base, entry.customWords)) : [];
-      datasets.push({ name, entry, messages: parseJsonl(readFileSync(path, 'utf8'), path), customWords });
+      const messages = parseJsonl(readFileSync(path, 'utf8'), path) as Message[];
+      // Unscored words are for imported corpora whose edits go beyond spelling; curated data must label every word.
+      if (entry.kind !== 'private') {
+        const m = messages.find((msg) => msg.labels?.some((l) => l.gold === 'unscored'));
+        if (m) throw new ManifestError(`${name} message ${m.id}: the unscored label is only allowed in private datasets`);
+      }
+      datasets.push({ name, entry, messages, customWords });
     }
   }
   return { datasets, wordLists };

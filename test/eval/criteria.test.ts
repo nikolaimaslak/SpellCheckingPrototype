@@ -13,6 +13,7 @@ const outcome = (o: Partial<WordOutcome>): WordOutcome => ({
   intended: 'x',
   outcome: 'flagged',
   errorType: 'hamza',
+  realWord: null,
   rank: 1,
   replacement: null,
   source: null,

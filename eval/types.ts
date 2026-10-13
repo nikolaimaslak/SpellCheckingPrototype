@@ -1,7 +1,8 @@
 // Shared shapes of the evaluation data.
 import type { ErrorType, Lang } from './error-types.ts';
 
-export type Gold = 'correct' | 'misspelled' | 'excluded';
+/** `unscored`: a word imported data marks as edited for reasons other than spelling (grammar, word choice); it counts in no metric. */
+export type Gold = 'correct' | 'misspelled' | 'excluded' | 'unscored';
 
 /** A labelled span of a message. Tokens without a label are gold correct. */
 export interface Label {
@@ -31,7 +32,8 @@ export type Outcome =
   | 'wrong-fix'
   | 'flagged'
   | 'excluded'
-  | 'exclusion-leak';
+  | 'exclusion-leak'
+  | 'unscored';
 
 export interface WordOutcome {
   dataset: string;
@@ -42,6 +44,8 @@ export interface WordOutcome {
   gold: Gold;
   intended: string | null;
   outcome: Outcome;
+  /** Gold misspellings: true when the engine accepts the typed word (a real-word error); null for other gold labels. */
+  realWord: boolean | null;
   /** Gold misspellings: the error type (from the label, else classified). */
   errorType: ErrorType | null;
   /** Detected misspellings: 1-based rank of the intended word among the system's corrections, or null. */

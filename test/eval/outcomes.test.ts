@@ -109,3 +109,66 @@ describe('word outcomes', () => {
     expect(rankedCorrections({ replacement: null, suggestions: [] })).toEqual([]);
   });
 });
+
+describe('unscored words and real-word misspellings', () => {
+  it('English unscored word left alone counts as neither correct nor misspelled', () => {
+    const text = 'He go to the office';
+    const out = one({ id: '1', text, labels: [{ start: 3, word: 'go', gold: 'unscored' }] }, result(['He', 'go', 'to', 'the', 'office'].map((w) => tok(text, w))));
+    expect(out[1]).toMatchObject({ word: 'go', gold: 'unscored', outcome: 'unscored', replacement: null, realWord: null });
+    expect(out.filter((o) => o.gold === 'correct')).toHaveLength(4);
+  });
+
+  it('Arabic unscored word changed: recorded as changed, no corruption', () => {
+    const text = 'هذه الطلب';
+    const out = one(
+      { id: '1', text, labels: [{ start: 0, word: 'هذه', gold: 'unscored' }] },
+      result([tok(text, 'هذه', { flagged: true, suggestions: ['هذا'], replacement: 'هذا', replacementSource: 'list' }), tok(text, 'الطلب')]),
+    );
+    expect(out[0]).toMatchObject({ gold: 'unscored', outcome: 'unscored', replacement: 'هذا' });
+    expect(out.some((o) => o.outcome === 'corruption')).toBe(false);
+  });
+
+  it('a replacement typed inside an unscored word belongs to that word', () => {
+    const text = 'هذه الطلب';
+    const out = one(
+      { id: '1', text, labels: [{ start: 0, word: 'هذه', gold: 'unscored' }] },
+      result([tok(text, 'هذه'), tok(text, 'الطلب')], [{ word: 'هذ', lang: 'ar', start: 0, end: 2, replacement: 'هذا', replacementSource: 'neighbor' }]),
+    );
+    expect(out[0]).toMatchObject({ outcome: 'unscored', replacement: 'هذا', source: 'neighbor' });
+    expect(out.some((o) => o.outcome === 'corruption')).toBe(false);
+  });
+
+  it('English real-word misspelling: missed and marked real-word', () => {
+    const text = 'a letter form the office';
+    const out = one(
+      { id: '1', text, labels: [{ start: 9, word: 'form', gold: 'misspelled', intended: 'from' }] },
+      result(['a', 'letter', 'form', 'the', 'office'].map((w) => tok(text, w))),
+    );
+    expect(out[2]).toMatchObject({ outcome: 'missed', realWord: true });
+  });
+
+  it('Arabic real-word misspelling is marked real-word', () => {
+    const text = 'نعلم ان الطلب';
+    const out = one({ id: '1', text, labels: [{ start: 5, word: 'ان', gold: 'misspelled', intended: 'أن' }] }, result(['نعلم', 'ان', 'الطلب'].map((w) => tok(text, w))));
+    expect(out[1]).toMatchObject({ gold: 'misspelled', realWord: true });
+  });
+
+  it('mixed message: English non-word and Arabic real-word, each in its own language', () => {
+    const text = 'recieve ان';
+    const out = one(
+      {
+        id: '1',
+        text,
+        labels: [
+          { start: 0, word: 'recieve', gold: 'misspelled', intended: 'receive' },
+          { start: 8, word: 'ان', gold: 'misspelled', intended: 'أن' },
+        ],
+      },
+      result([tok(text, 'recieve', { flagged: true, suggestions: ['receive'] }), tok(text, 'ان')]),
+    );
+    expect(out.map((o) => [o.lang, o.realWord])).toEqual([
+      ['en', false],
+      ['ar', true],
+    ]);
+  });
+});

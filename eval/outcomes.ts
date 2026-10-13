@@ -32,32 +32,26 @@ export function outcomesFor(dataset: string, message: Message, result: PipelineR
 
   const excluded = labels.filter((l) => l.gold === 'excluded').map((l) => ({ label: l, start: l.start, end: l.start + l.word.length }));
   const wordLabels = new Map(labels.filter((l) => l.gold !== 'excluded').map((l) => [l.start, l]));
+  const unscored = labels.filter((l) => l.gold === 'unscored').map((l) => ({ label: l, start: l.start, end: l.start + l.word.length }));
+  // A replacement typed inside an unscored word belongs to that word's outcome, not to corruption.
+  const changedWhileTyping = new Map<Label, { replacement: string; source: TokenResult['replacementSource'] }>();
   const base = { dataset, messageId: message.id, context: message.text };
   const out: WordOutcome[] = [];
   const leaked = new Set<Label>();
 
-  for (const t of result.tokens) {
-    const span = excluded.find((x) => overlaps(x, t));
-    if (span) {
-      leaked.add(span.label);
-      continue;
-    }
-    const label = wordLabels.get(t.start);
-    if (label) {
-      wordLabels.delete(t.start);
-      if (label.word !== t.word) fail(`label "${label.word}" at ${label.start} doesn't match the word "${t.word}"`);
-    }
-    out.push(outcomeOf(t, label, base));
-  }
-  for (const l of wordLabels.values()) fail(`label "${l.word}" at ${l.start} matches no word the tokenizer produces`);
-
+  // Transient replacements first, so a replacement typed inside an unscored word is known
+  // before that word's outcome; their corruptions still come after the words, as before.
+  const transientCorruptions: WordOutcome[] = [];
   for (const r of result.transient) {
     const span = excluded.find((x) => overlaps(x, r));
+    const own = span ? undefined : unscored.find((x) => overlaps(x, r));
     if (span) leaked.add(span.label);
-    else {
+    else if (own) {
+      if (!changedWhileTyping.has(own.label)) changedWhileTyping.set(own.label, { replacement: r.replacement, source: r.replacementSource });
+    } else {
       // A word of the text typed so far that the finished text doesn't have,
       // changed while typing: a corruption of correct text.
-      out.push({
+      transientCorruptions.push({
         ...base,
         lang: r.lang,
         word: r.word,
@@ -71,9 +65,26 @@ export function outcomesFor(dataset: string, message: Message, result: PipelineR
         source: r.replacementSource,
         corrections: [r.replacement],
         correctionType: classify(r.word, r.replacement, r.lang)?.type ?? null,
+        realWord: null,
       });
     }
   }
+  for (const t of result.tokens) {
+    const span = excluded.find((x) => overlaps(x, t));
+    if (span) {
+      leaked.add(span.label);
+      continue;
+    }
+    const label = wordLabels.get(t.start);
+    if (label) {
+      wordLabels.delete(t.start);
+      if (label.word !== t.word) fail(`label "${label.word}" at ${label.start} doesn't match the word "${t.word}"`);
+    }
+    out.push(outcomeOf(t, label, base, label ? changedWhileTyping.get(label) : undefined));
+  }
+  for (const l of wordLabels.values()) fail(`label "${l.word}" at ${l.start} matches no word the tokenizer produces`);
+  out.push(...transientCorruptions);
+
   for (const { label } of excluded) {
     out.push({
       ...base,
@@ -89,12 +100,18 @@ export function outcomesFor(dataset: string, message: Message, result: PipelineR
       source: null,
       corrections: [],
       correctionType: null,
+      realWord: null,
     });
   }
   return out.sort((a, b) => a.start - b.start);
 }
 
-function outcomeOf(t: TokenResult, label: Label | undefined, base: { dataset: string; messageId: string; context: string }): WordOutcome {
+function outcomeOf(
+  t: TokenResult,
+  label: Label | undefined,
+  base: { dataset: string; messageId: string; context: string },
+  typed?: { replacement: string; source: TokenResult['replacementSource'] },
+): WordOutcome {
   const lang: Lang = t.lang;
   const detected = t.flagged || t.replacement !== null;
   const corrections = detected ? rankedCorrections(t) : [];
@@ -103,12 +120,18 @@ function outcomeOf(t: TokenResult, label: Label | undefined, base: { dataset: st
 
   if (!label || label.gold === 'correct') {
     const outcome = t.replacement ? 'corruption' : t.flagged ? 'false-flag' : 'untouched';
-    return { ...common, gold: 'correct', intended: null, outcome, errorType: null, rank: null };
+    return { ...common, gold: 'correct', intended: null, outcome, errorType: null, rank: null, realWord: null };
+  }
+  if (label.gold === 'unscored') {
+    // Counts in no metric; keeps whether it was flagged (corrections) or changed (replacement), also while typing.
+    const changed = t.replacement ? { replacement: t.replacement, source: t.replacementSource } : typed;
+    return { ...common, ...(changed ?? {}), gold: 'unscored', intended: null, outcome: 'unscored', errorType: null, rank: null, realWord: null };
   }
   const intended = label.intended!;
   const errorType = label.type ?? classify(t.word, intended, lang)?.type ?? null;
   const index = corrections.findIndex((c) => sameWord(c, intended));
   const rank = detected && index >= 0 ? index + 1 : null;
   const outcome = !detected ? 'missed' : t.replacement ? (sameWord(t.replacement, intended) ? 'fixed' : 'wrong-fix') : 'flagged';
-  return { ...common, gold: 'misspelled', intended, outcome, errorType, rank };
+  // The engine accepted the typed word: a real-word error, which only a misspellings list can catch.
+  return { ...common, gold: 'misspelled', intended, outcome, errorType, rank, realWord: !t.flagged };
 }
