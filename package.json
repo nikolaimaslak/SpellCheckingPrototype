@@ -34,6 +34,8 @@
     "eval:qalb": "node --import ./eval/register.ts eval/cli/qalb.ts",
     "eval:completion:build": "uv run --project server --locked python -m assist_eval build",
     "eval:completion": "uv run --project server --locked python -m assist_eval run",
+    "eval:polish:build": "uv run --project server --locked python -m assist_eval polish-build",
+    "eval:polish": "uv run --project server --locked python -m assist_eval polish-run",
     "telemetry:spelling": "uv run --project server --locked python -m assist.spelling_report",
     "capture:report": "uv run --project server --locked python -m assist.capture"
   },

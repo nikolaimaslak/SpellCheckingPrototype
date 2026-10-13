@@ -1,4 +1,4 @@
-"""The local, gitignored eval workspace: eval/local/completion/{sources,sets,runs}."""
+"""The local, gitignored eval workspaces: eval/local/<kind>/{sources,sets,runs}, kind completion or polish."""
 
 from __future__ import annotations
 
@@ -6,7 +6,9 @@ from pathlib import Path
 
 from assist.settings import ROOT
 
-WORKSPACE = ROOT / "eval" / "local" / "completion"
+LOCAL = ROOT / "eval" / "local"
+WORKSPACE = LOCAL / "completion"
+POLISH_WORKSPACE = LOCAL / "polish"
 
 
 def workspace(root: Path = WORKSPACE) -> Path:
