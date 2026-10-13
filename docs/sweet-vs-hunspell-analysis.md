@@ -1,6 +1,6 @@
 # Replacing Hunspell with SWEET for Arabic: analysis
 
-October 12, 2026 · Change: `openspec/changes/sweet-vs-hunspell-analysis/` · Background: [Arabic GEC research notes](arabic-gec-research-notes.md)
+October 12, 2026 · Change: `openspec/changes/archive/2026-10-12-sweet-vs-hunspell-analysis/` · Background: [Arabic GEC research notes](arabic-gec-research-notes.md)
 
 **Recommendation: don't replace Hunspell (option 1, plus option 4 for grammar).** Keep Hunspell as the Tier 1 spelling engine for both languages, and leave Arabic grammar to the existing polish program on the production local LLM. SWEET in the browser would cost about 70–140 times today's Tier 1 download and several times its memory. It would also take hundreds of milliseconds per sentence on CPU-only desktops and fit poorly with the per-word underlines, popover and auto-correct. Its weights can't be used commercially today either. SWEET is worth revisiting only as a server-side pass (option 3), and only if a measured comparison shows it beats the local LLM's polish on Arabic and its weights become licensable.
 
