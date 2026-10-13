@@ -21,7 +21,7 @@ Then open **http://localhost:5173/** and follow the **[tester guide](docs/TESTIN
 **Which model is used?** The banner at the top of the page tells you:
 - **Offline test model** (default, no setup): completion and polish show canned results, and nothing leaves your machine.
 - **Gemini (yellow banner):** live results. Enable it by copying `.env.example` to `.env` and setting `GEMINI_API_KEY`. Text you type in the composers may then be sent to Google, so **use made-up text only**.
-- **A local model** (for example `COMPLETION_MODEL=ollama_chat/<model>` in `.env`): live results from a model on your machine; the banner says nothing leaves it. Any other remote model gets the yellow warning too.
+- **A local model** (for example `COMPLETION_MODEL=ollama_chat/<model>` in `.env`): live results from a model on your machine; the banner says nothing leaves it. Any other remote model gets the yellow warning too. For Ollama on another machine's GPU (through an SSH tunnel), see [`docs/REMOTE-OLLAMA.md`](docs/REMOTE-OLLAMA.md).
 
 Spell checking and auto-correct always run locally, with or without a key.
 

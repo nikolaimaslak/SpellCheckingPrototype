@@ -10,6 +10,7 @@ Prototype of the Bright Pattern Agent Desktop **composer assistance layer**: spe
 - `openspec/config.yaml`: project context and constraints for all planning
 - `docs/known-issues.md`: deferred issues to address (check before touching auto-correct)
 - `docs/sweet-vs-hunspell-analysis.md`: why Hunspell stays the spelling engine rather than the SWEET Arabic model (browser cost, fit, licensing), and what would reopen it. Background in `docs/arabic-gec-research-notes.md`, with review comments
+- `docs/REMOTE-OLLAMA.md`: running completion and polish on Ollama on a remote GPU (SSH tunnel so it stays local, Ollama settings, model choice for 12 GB, comparing against Gemini)
 - `docs/EVALUATION.md`: how spelling quality is measured (criteria, datasets, error types, field metrics)
 - `docs/TESTING.md`: the external tester guide. Keep its scenarios and expected results in sync with behavior changes. Report template: `docs/TEST-REPORT-TEMPLATE.md`, mirrored in `.github/ISSUE_TEMPLATE/`
 
