@@ -75,6 +75,11 @@ def run_command(args, root: Path = POLISH_WORKSPACE, env: Mapping[str, str] | No
         return 1
     settings = eval_settings(env)
     model = settings.model
+    meta_path = path.with_suffix(".meta.json")
+    meta = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
+    if meta.get("localOnly") and model.external:
+        print(f"✖ set {args.set} is local-only: {model.name} sends text outside this machine (use a local model, see docs/REMOTE-OLLAMA.md)")
+        return 1
     if model.lm_id is None:
         print("✖ no model available (COMPLETION_MODEL=gemini needs GEMINI_API_KEY)")
         return 1
@@ -89,8 +94,6 @@ def run_command(args, root: Path = POLISH_WORKSPACE, env: Mapping[str, str] | No
     started = time.perf_counter()
     samples = asyncio.run(run_cases(cases, build_deps(settings), args.samples, args.concurrency, out))
     seconds = time.perf_counter() - started
-    meta_path = path.with_suffix(".meta.json")
-    meta = json.loads(meta_path.read_text("utf-8")) if meta_path.exists() else {}
     info = {"set": args.set, "model": model.name, "samples": args.samples, "input": meta.get("input"), "seconds": round(seconds, 1)}
     report = write_report(out, cases, samples, info)
     print(report.summary)

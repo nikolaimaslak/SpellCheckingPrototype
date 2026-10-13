@@ -1,4 +1,5 @@
-"""Importing GEC sentence-pair CSVs (a draft with errors and its reference correction) into polish test sets, as is."""
+"""Importing GEC sentence pairs (a draft with errors and its reference correction) into polish test sets, as is:
+from a CSV, or from two line-aligned text files (QALB's .sent / .cor)."""
 
 from __future__ import annotations
 
@@ -58,30 +59,52 @@ def _columns(header: list[str], source: str | None, target: str | None, kind: st
     raise LayoutError(f"unknown layout; the file has the columns: {', '.join(header)} (name them with --source-column and --target-column)")
 
 
-def read_pairs(path: Path, set_name: str, source: str | None = None, target: str | None = None, kind: str | None = None) -> Imported:
-    """Every row kept and its text unedited; identical (source, target) pairs become one case with a count."""
+def _collect(rows, set_name: str, layout: str) -> Imported:
+    """(row number, source, target, error type) rows → cases: every row kept and its text unedited; empty sides skipped;
+    identical (source, target) pairs become one case with a count."""
+    first: dict[tuple[str, str], tuple[int, str]] = {}
+    counts: Counter[tuple[str, str]] = Counter()
+    read = skipped = 0
+    for n, src, tgt, error_type in rows:
+        read += 1
+        if not src.strip() or not tgt.strip():
+            skipped += 1
+            continue
+        key = (src, tgt)
+        counts[key] += 1
+        first.setdefault(key, (n, error_type))
+    cases = [
+        PolishCase(f"{set_name}:{n}", set_name, language(src), error_type, src, tgt, counts[(src, tgt)], n)
+        for (src, tgt), (n, error_type) in first.items()
+    ]
+    return Imported(cases, read, skipped, layout)
+
+
+def read_pairs(path: Path, set_name: str, source: str | None = None, target: str | None = None, kind: str | None = None, default_type: str = "unknown") -> Imported:
+    """A CSV of sentence pairs; the error type comes from its type column, else `default_type`."""
     with path.open(encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         header = [h.strip() for h in reader.fieldnames or []]
         reader.fieldnames = header
         s, t, k, layout = _columns(header, source, target, kind)
-        first: dict[tuple[str, str], tuple[int, str]] = {}
-        counts: Counter[tuple[str, str]] = Counter()
-        rows = skipped = 0
-        for n, row in enumerate(reader, start=2):  # row 1 is the header
-            rows += 1
-            src, tgt = row.get(s) or "", row.get(t) or ""
-            if not src.strip() or not tgt.strip():
-                skipped += 1
-                continue
-            key = (src, tgt)
-            counts[key] += 1
-            first.setdefault(key, (n, (row.get(k) or "").strip() or "unknown" if k else "unknown"))
-    cases = [
-        PolishCase(f"{set_name}:{n}", set_name, language(src), error_type, src, tgt, counts[(src, tgt)], n)
-        for (src, tgt), (n, error_type) in first.items()
-    ]
-    return Imported(cases, rows, skipped, layout)
+        rows = [
+            (n, row.get(s) or "", row.get(t) or "", ((row.get(k) or "").strip() or "unknown") if k else default_type)
+            for n, row in enumerate(reader, start=2)  # row 1 is the header
+        ]
+    return _collect(rows, set_name, layout)
+
+
+def _lines(path: Path) -> list[str]:
+    text = path.read_text("utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    return (text[:-1] if text.endswith("\n") else text).split("\n")
+
+
+def read_parallel(source: Path, target: Path, set_name: str, default_type: str = "unknown") -> Imported:
+    """Two line-aligned text files: line n of `target` corrects line n of `source`."""
+    src, tgt = _lines(source), _lines(target)
+    if len(src) != len(tgt):
+        raise LayoutError(f"line counts differ: {source.name} has {len(src)} lines, {target.name} has {len(tgt)}")
+    return _collect([(n, a, b, default_type) for n, (a, b) in enumerate(zip(src, tgt), start=1)], set_name, "parallel")
 
 
 def subset(cases: list[PolishCase], limit: int, seed: int) -> list[PolishCase]:
@@ -105,8 +128,15 @@ def build_command(args, root: Path = POLISH_WORKSPACE) -> int:
     if not path.exists():
         print(f"✖ input not found: {args.input} (looked in the current folder and {root / 'sources'})")
         return 1
+    target = resolve_input(args.target_file, root) if args.target_file else None
+    if target is not None and not target.exists():
+        print(f"✖ target file not found: {args.target_file} (looked in the current folder and {root / 'sources'})")
+        return 1
     try:
-        imported = read_pairs(path, args.name, args.source_column, args.target_column, args.type_column)
+        if target is not None:
+            imported = read_parallel(path, target, args.name, args.type)
+        else:
+            imported = read_pairs(path, args.name, args.source_column, args.target_column, args.type_column, args.type)
     except LayoutError as err:
         print(f"✖ {err}")
         return 1
@@ -117,7 +147,7 @@ def build_command(args, root: Path = POLISH_WORKSPACE) -> int:
     out = set_path(args.name, root)
     write_cases(cases, out)
     meta = {
-        "input": path.name, "layout": imported.layout, "rows": imported.rows, "skipped": imported.skipped, "distinct": len(imported.cases),
+        "input": path.name, "targetInput": target.name if target else None, "layout": imported.layout, "localOnly": args.local_only, "rows": imported.rows, "skipped": imported.skipped, "distinct": len(imported.cases),
         "limit": args.limit, "seed": args.seed, "cases": len(cases), "built": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
     out.with_suffix(".meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1) + "\n", "utf-8")
@@ -125,6 +155,8 @@ def build_command(args, root: Path = POLISH_WORKSPACE) -> int:
     unchanged = sum(c.source == c.target for c in cases)
     print(f"{imported.rows} rows read ({imported.layout}), {imported.skipped} skipped, {len(imported.cases)} distinct pairs; {len(cases)} cases → {out}")
     print(f"  {unchanged} cases need no change")
+    if args.local_only:
+        print("  local-only: runs on a model that sends text outside this machine are refused")
     print("  by language: " + ", ".join(f"{k} {by_lang[k]}" for k in ("en", "ar", "mixed") if by_lang[k]))
     print("  by error type: " + ", ".join(f"{k} {v}" for k, v in by_type.items()))
     return 0

@@ -1,7 +1,8 @@
 """Usage:
   npm run eval:completion:build -- <input> --name <set> [--plain [--split sentences]] [--per-category N] [--seed N] [--limit N]
   npm run eval:completion -- --set <set> [--samples N] [--concurrency N] [--allow-fake]
-  npm run eval:polish:build -- <csv> --name <set> [--source-column C --target-column C [--type-column C]] [--limit N] [--seed N]
+  npm run eval:polish:build -- <csv> --name <set> [--source-column C --target-column C [--type-column C]] [--type T] [--local-only] [--limit N] [--seed N]
+  npm run eval:polish:build -- <source-file> --target-file <target-file> --name <set> [--type T] [--local-only] [--limit N] [--seed N]
   npm run eval:polish -- --set <set> [--samples N] [--concurrency N] [--allow-fake]
 """
 
@@ -28,7 +29,10 @@ def parser() -> argparse.ArgumentParser:
     r.add_argument("--concurrency", type=int, default=4, help="requests in flight (default 4)")
     r.add_argument("--allow-fake", action="store_true", help="allow the offline test model (for testing the tool)")
     pb = sub.add_parser("polish-build", help="import a GEC sentence-pair CSV as a polish test set")
-    pb.add_argument("input", help="CSV file (a path, or a name under eval/local/polish/sources/)")
+    pb.add_argument("input", help="CSV file, or the source text file with --target-file (a path, or a name under eval/local/polish/sources/)")
+    pb.add_argument("--target-file", default=None, help="line-aligned text file of reference corrections: reads input and this as parallel files")
+    pb.add_argument("--type", default="unknown", help="error type for cases whose input has none (default unknown)")
+    pb.add_argument("--local-only", action="store_true", help="never send this set outside the machine: runs on hosted models are refused")
     pb.add_argument("--name", required=True, help="set name: written to eval/local/polish/sets/<name>.jsonl")
     pb.add_argument("--source-column", default=None, help="column holding the draft (other layouts)")
     pb.add_argument("--target-column", default=None, help="column holding the reference correction (other layouts)")

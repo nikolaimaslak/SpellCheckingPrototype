@@ -18,14 +18,35 @@ Sets and reports contain the datasets' text. **Never commit them.**
 
 ## Datasets and licensing
 
-Two English GEC datasets are known to work:
+Three datasets are known to work: two English GEC CSVs, and QALB-2014 for Arabic.
 
 | Dataset | File | Rows | Cases | Notes |
 |---|---|---|---|---|
 | GEC-data | `../GEC-data/Grammar Correction.csv` | 2,018 | 2,016 | 36 error types; about half are rewrites polish is told not to make (tautology, idioms, slang, register, abbreviations); 68 pairs need no change; 200 rows start with a list number |
 | GEC2 | `../GEC2/College_Level_English_Writing_Dataset.csv` | 15,000 | 78 | Each pair repeated 145–244 times with unrelated metadata; some references invent content (sentence fragments) or change singular "their" |
 
-**Their licenses are unknown.** Until the source and terms are confirmed, treat them like QALB: local, evaluation only, never committed, no word lists or dictionaries built from them, and **don't run them through a hosted model** (Gemini). Use a local model (`docs/REMOTE-OLLAMA.md`).
+**The two CSVs' licenses are unknown.** Treat them as local and evaluation only: never committed, no word lists or dictionaries built from them. Running them on Gemini was accepted for model comparison (October 2026); prefer a local model (`docs/REMOTE-OLLAMA.md`).
+
+### QALB-2014 (Arabic)
+
+QALB-2014's shared-task release comes with line-aligned text files: the text as written and its correction, one sentence-sized chunk of an Al Jazeera news comment per line (dev: 1,017 lines, about 300 characters each, up to 550). In `../arabic-gec/data/gec/QALB-0.9.1-Dec03-2021-SharedTasks/data/2014/`:
+
+| Split | Source file | Target file |
+|---|---|---|
+| Dev | `dev/QALB-2014-L1-Dev.sent.no_ids` | `dev/QALB-2014-L1-Dev.cor.no_ids` |
+| Test | `test/QALB-2014-L1-Test.sent.no_ids` | `test/QALB-2014-L1-Test.cor.no_ids` |
+
+Use the `.no_ids` files (the others start each line with a document id) with punctuation and diacritics kept (not `.nopnx` or `.dediac`): polish is asked to fix punctuation too.
+
+```sh
+Q=../arabic-gec/data/gec/QALB-0.9.1-Dec03-2021-SharedTasks/data/2014/dev
+npm run eval:polish:build -- $Q/QALB-2014-L1-Dev.sent.no_ids --target-file $Q/QALB-2014-L1-Dev.cor.no_ids --name qalb14-dev --type qalb14 --local-only
+npm run eval:polish:build -- $Q/QALB-2014-L1-Dev.sent.no_ids --target-file $Q/QALB-2014-L1-Dev.cor.no_ids --name qalb14-dev-200 --type qalb14 --local-only --limit 200
+```
+
+- **Licensing:** QALB is licensed for internal research and evaluation only, with no redistribution or modification. Always import it with **`--local-only`**: runs of the set on a model that sends text outside the machine (Gemini, or an API base that isn't a loopback address) are then refused. Never commit the set or its reports, and don't build word lists from it. The set file holds the same text in the eval's format; whether that counts as a modification is the open question also noted for the spelling import (`docs/EVALUATION.md`).
+- **What to expect:** these are native speakers' informal comments, with far more errors per line than an agent's draft (several misspellings per line plus punctuation). Exact matches are rare, some correct answers trip the safety check's length limit (listed under Rejections), and QALB normalizes some spellings a careful polish may leave alone. Read it as a measure of Arabic correction ability, not of expected agent results.
+- **No error types:** every case gets the `--type` value, so the report has one type row.
 
 ## Importing a set
 
@@ -35,11 +56,14 @@ npm run eval:polish:build -- ../GEC2/College_Level_English_Writing_Dataset.csv -
 npm run eval:polish:build -- "../GEC-data/Grammar Correction.csv" --name gec-data-200 --limit 200
 ```
 
-- **Layouts:** recognized by the header: `Ungrammatical Statement` / `Standard English` / `Error Type` (GEC-data), or `original_text` / `corrected_text` / `primary_error_type` (GEC2). For any other CSV, name the columns: `--source-column`, `--target-column` and optionally `--type-column`. Without them, an unknown header fails and lists the columns found.
+- **Inputs:** a CSV, or two line-aligned text files: the source file, and `--target-file` with the reference corrections (line *n* corrects line *n*). Different line counts fail with both counts; line endings and a byte-order mark are handled.
+- **CSV layouts:** recognized by the header: `Ungrammatical Statement` / `Standard English` / `Error Type` (GEC-data), or `original_text` / `corrected_text` / `primary_error_type` (GEC2). For any other CSV, name the columns: `--source-column`, `--target-column` and optionally `--type-column`. Without them, an unknown header fails and lists the columns found.
 - **As is:** every row and error type is kept, and the text isn't edited. List numbers ("31. "), and pairs whose reference equals the draft, stay. A row with an empty draft or reference is skipped and counted.
 - **Duplicates:** identical pairs become one case with a `count`. That's what turns GEC2's 15,000 rows into 78 cases. Every case counts once in the figures.
 - **`--limit N`** keeps N cases, chosen with `--seed` (default 1), in input order. The same input and options always give the same set.
-- **Language:** each case is `en`, `ar` or `mixed` (both Arabic and Latin letters), so an Arabic CSV works the same way.
+- **Language:** each case is `en`, `ar` or `mixed` (both Arabic and Latin letters), so Arabic input works the same way.
+- **`--type T`:** the error type for cases whose input has none (parallel files, or a CSV without a type column); default `unknown`.
+- **`--local-only`:** stored with the set; running it on a model that sends text outside the machine is refused before any request. Use it for every licensed corpus.
 
 ## Running a set
 
@@ -85,5 +109,5 @@ The report then lists every rejection with its reason, and up to 30 samples each
 ## Not covered
 
 - **No gate or baseline**, and no committed results.
-- **No Arabic or mixed-text data yet:** both datasets are English. A synthetic customer-service set (Arabic, mixed text, protected tokens, line breaks) is planned separately.
+- **Arabic only from QALB-2014** (news comments), and no mixed-text data. A synthetic customer-service set (Arabic, mixed text, protected tokens, line breaks) is planned separately.
 - **Not comparable with published GEC scores** (M2/ERRANT).
