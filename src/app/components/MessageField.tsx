@@ -1,13 +1,13 @@
-import type { KeyboardEvent, RefObject } from 'react';
-import type { Assistant, AssistantState } from '../../assistant';
+import { useRef, type KeyboardEvent } from 'react';
+import type { AssistantOptions } from '../../assistant';
+import { useAssistant } from '../hooks/useAssistant';
 import { GhostText } from './GhostText';
 import { PolishBar } from './PolishBar';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
-  ref: RefObject<HTMLDivElement | null>;
-  assistant: Assistant | undefined;
-  state: AssistantState;
+  /** Undefined until the spell checker is ready. Re-attaches when it changes; pass a stable object. */
+  options: AssistantOptions | undefined;
   /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
   onSend: (text: string) => void;
 }
@@ -17,7 +17,10 @@ interface Props {
  * field's content is owned by the browser and the assistant, never rendered
  * by React: it has no children here.
  */
-export function MessageField({ ref, assistant, state, onSend }: Props) {
+export function MessageField({ options, onSend }: Props) {
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const { assistant, state } = useAssistant(fieldRef, options);
+
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !e.defaultPrevented) {
       e.preventDefault();
@@ -31,7 +34,7 @@ export function MessageField({ ref, assistant, state, onSend }: Props) {
   return (
     <section className="space-y-2">
       <div
-        ref={ref}
+        ref={fieldRef}
         contentEditable
         dir="auto"
         role="textbox"

@@ -6,9 +6,9 @@ import type { AppSettings } from '../lib/settings';
 import { Checkbox, RadioGroup, Section, TextArea } from './fields';
 import { ScenarioControls } from './ScenarioControls';
 
-const CONFIDENCE: { value: AutoReplaceConfidence; label: string }[] = [
-  { value: 'list', label: 'Known misspellings list only' },
-  { value: 'list-and-rule', label: 'List, then case fix, then a single one-edit neighbor' },
+const AUTO_CORRECT_WHEN: { value: AutoReplaceConfidence; label: string }[] = [
+  { value: 'list', label: "It's on the list of common typos (teh → the)" },
+  { value: 'list-and-rule', label: "It's on the list, only a capital is wrong (oNly → only), or exactly one word is one typo away (paymnet → payment)" },
 ];
 const LANG_NAMES: Record<Lang, string> = { en: 'English', ar: 'Arabic' };
 
@@ -40,11 +40,11 @@ export function SettingsPanel({ settings, spellStatus, onUpdate, onReset }: Prop
           disabled={!settings.spellCheck}
           onChange={(autoCorrect) => onUpdate({ autoCorrect })}
         />
-        <p className="text-xs text-slate-500">Auto-correct confidence</p>
+        <p className="text-xs text-slate-500">Auto-correct when</p>
         <RadioGroup
           name="autoReplace"
           value={settings.autoReplace}
-          options={CONFIDENCE}
+          options={AUTO_CORRECT_WHEN}
           disabled={!settings.spellCheck || !settings.autoCorrect}
           onChange={(autoReplace) => onUpdate({ autoReplace })}
         />

@@ -22,7 +22,14 @@ const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
 export function SuggestionPopover({ popover, onPick, onIgnore, onRevert, onClose }: Props) {
   const items = popover.revertTo
     ? [{ label: `Revert to ${popover.revertTo}`, run: onRevert, strong: false }]
-    : [...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })), { label: 'Ignore', run: onIgnore, strong: false }];
+    : [
+        ...popover.suggestions.map((s) => ({
+        label: s,
+        run: () => onPick(s),
+        strong: true
+      })),
+      { label: 'Ignore', run: onIgnore, strong: false }
+    ];
   const [focused, setFocused] = useState(0);
   const box = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number }>();

@@ -3,7 +3,6 @@ import { EventLog } from './components/EventLog';
 import { MessageField } from './components/MessageField';
 import { ModelLine } from './components/ModelLine';
 import { SettingsPanel } from './components/SettingsPanel';
-import { useAssistant } from './hooks/useAssistant';
 import { useDebounced } from './hooks/useDebounced';
 import { useEventLog } from './hooks/useEventLog';
 import { useSettings } from './hooks/useSettings';
@@ -33,8 +32,6 @@ export function App() {
     () => (checker ? assistantOptions(JSON.parse(attachedKey), checker, readConversation, logEvent) : undefined),
     [attachedKey, checker, readConversation, logEvent],
   );
-  const messageFieldRef = useRef<HTMLDivElement>(null);
-  const { assistant, state } = useAssistant(messageFieldRef, options);
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
@@ -42,7 +39,7 @@ export function App() {
       <main className="space-y-4">
         <h1 className="text-xl font-semibold">Composer assistance</h1>
         <ModelLine apiKey={appliedSettings.apiKey} />
-        <MessageField ref={messageFieldRef} assistant={assistant} state={state} onSend={addAgentMessage} />
+        <MessageField options={options} onSend={addAgentMessage} />
         <EventLog entries={logEntries} onClear={clearLog} />
       </main>
     </div>

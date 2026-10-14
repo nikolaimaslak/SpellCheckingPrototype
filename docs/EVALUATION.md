@@ -171,7 +171,7 @@ A label on a word the tokenizer never checks (one-letter words, tokens with digi
 
 ## Offline and field metrics
 
-`npm run server` → `/summary` shows the field counterparts, from telemetry events (no new events, no text beyond the existing allowlist):
+The field counterparts, to measure from agents' events (the demo page only shows its events, it doesn't collect them):
 
 | Field | Offline counterpart | Bias |
 |---|---|---|

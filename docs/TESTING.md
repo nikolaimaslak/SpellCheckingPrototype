@@ -14,28 +14,27 @@ Thank you for testing it. Each scenario below tells you what to type and what yo
 
 **Requirements:**
 - Node.js **23.6 or newer** (check with `node --version`) and npm.
-- **uv** (check with `uv --version`), which runs the completion server and installs its Python by itself. Install it once with `curl -LsSf https://astral.sh/uv/install.sh | sh` (macOS: `brew install uv`; Windows: `winget install astral-sh.uv`). The first `npm run demo` downloads Python and the server's packages, so it needs a network connection and takes a minute.
 - A supported browser: current **Chrome** or **Edge** (recommended), **Safari 17.2+**, or **Firefox 140+**.
 
 **Start:**
 
 ```sh
 npm install
-npm run demo
+npm run dev
 ```
 
-Open **http://localhost:5173/** (printed in the terminal, with the active model). Stop with **Ctrl+C**.
+Open **http://localhost:5173/** (printed in the terminal). Stop with **Ctrl+C**.
 
-**Optional: live completion and polish.** Copy `.env.example` to `.env` and put a Gemini API key in `GEMINI_API_KEY`. Without a key, completion and polish use an **offline test model** that returns canned results. Spell checking and auto-correct always run entirely in your browser and never need a key.
+**Completion and polish need an OpenAI API key.** Type it in **OpenAI API key** in the settings (saved in your browser). The page then sends your draft, the conversation, canned responses and KB to OpenAI (`gpt-4.1-mini`), so use made-up text only. Without a key there are no grey suggestions and Polish shows nothing. Spell checking and auto-correct always run entirely in your browser and never need a key.
 
 ## 2. What the page shows
 
 - **Settings** (left), saved in your browser; **Reset** puts the defaults back:
-  - **Spelling:** spell check on or off, auto-correct on or off, the auto-correct confidence, the languages (with how long each dictionary took to load), the custom dictionary.
-  - **Completion:** on or off.
+  - **Spelling:** spell check on or off, auto-correct on or off, when auto-correct applies, the languages (with how long each dictionary took to load), the custom dictionary.
+  - **Completion:** on or off, and the OpenAI API key.
   - **Sources:** **Conversation** (`Customer:` / `Agent:` lines; a scenario picker with **Next customer message** adds the next customer line), **Canned responses** (one per line) and **Knowledge base** (`Title: text` per line). An empty field turns that source off. The note under each field says how it is used.
 - **The message field:** Enter adds your message to Conversation as an `Agent:` line and clears the field; Shift+Enter starts a new line. Under it, the **Polish** button.
-- **Events** (bottom): every event as one line of JSON, for example `{"type":"autocorrect","lang":"en","original":"teh","replacement":"the"}`, the completion requests and replies (with the model's name), and polish.
+- **Events** (bottom): every event as one line of JSON, for example `{"type":"autocorrect","lang":"en","original":"teh","replacement":"the"}`, the completion requests and replies, and polish.
 
 If something gets into a strange state, press **Reset**, or reload the page.
 
@@ -95,11 +94,11 @@ A fix happens **when you type the space or punctuation right after the word**. T
 | T2.18 | Type `please seperate`, then press **Shift+Enter** | Corrected to "separate" (a new line counts as finishing the word). |
 | T2.19 | Paste `please seperate them` from elsewhere | Not corrected; "seperate" is only underlined. |
 
-**Auto-correct confidence:**
+**Auto-correct when:**
 
 | # | Do | Expected |
 |---|---|---|
-| T2.20 | Choose **Known misspellings list only**. Type `teh paymnet␣` | "the paymnet": only the known misspelling is fixed, and "paymnet" is underlined. The choice survives a reload. |
+| T2.20 | Choose **It's on the list of common typos (teh → the)**. Type `teh paymnet␣` | "the paymnet": only the known misspelling is fixed, and "paymnet" is underlined. The choice survives a reload. |
 | T2.21 | Untick **Auto-correct**, type `teh␣` and click it | Not changed; its menu offers "the" first. |
 
 ### T3. Reverting an auto-correction (defaults)
@@ -129,11 +128,11 @@ The default Conversation already has the first English customer message.
 | T4.11 | Get an Arabic suggestion (as in T4.7) and press **Left Arrow**; get another and press **Ctrl+Left Arrow** (Option+Left on a Mac) | Left Arrow inserts the whole Arabic suggestion; Ctrl+Left inserts its first word only. Right Arrow would dismiss it instead. |
 | T4.12 | Reset, type `Thank you for contacting us, your request` and pause | The suggestion "…has been received and will be processed within 3 working days…" appears. Suggestions aren't filtered for figures, dates, links or names. |
 | T4.13 | Reset, clear Conversation, pick the Arabic scenario, click **Next customer message** once, type `شكراً لتواصلك معنا، تم استلام طلبك` and pause | An Arabic suggestion with the time period appears, for example "…وسيتم معالجته خلال ثلاثة أيام عمل…". |
-| T4.14 | **With Gemini only** (the offline model never uses names): add `Customer: Hello, this is Noura. When will my request be processed?`, then type `Thank you for contacting us,` (with the comma) and pause, a few times | A suggestion may include "Noura": details from the conversation aren't filtered (made-up data only). |
+| T4.14 | Add `Customer: Hello, this is Noura. When will my request be processed?`, then type `Thank you for contacting us,` (with the comma) and pause, a few times | A suggestion may include "Noura": details from the conversation aren't filtered (made-up data only). |
 | T4.15 | After T4.1 (two customer messages), type `Your contribution rec` (stop in the middle of the word) and pause | The suggestion completes the word with no extra space: "Your contribution rec**ords are up to date, and the latest payment…**". A suggestion never changes the letters you typed. The join inside a word isn't checked against a dictionary, so it can occasionally repeat or drop a letter. **Report any join that misspells the word**, with the exact text. |
-| T4.16 | Edit a canned response in **Canned responses** (for example change "3 working days" to "5 working days"), then repeat T4.12 | The suggestion follows your edited text. The `complete-reply` event lists `req-canned:…` sources. |
+| T4.16 | Edit a canned response in **Canned responses** (for example change "3 working days" to "5 working days"), then repeat T4.12 | The suggestion follows your edited text. |
 
-With the offline test model, the suggestions come from the canned responses and the knowledge base, so with both fields empty you'll see few or none. With Gemini they vary, but should always be a single sentence in the language you're typing.
+Suggestions vary from run to run, but should always be a single sentence in the language you're typing. All canned responses and KB articles are sent with every request, so an empty field means that source is off.
 
 ### T5. Knowledge-base grounding (defaults)
 
@@ -158,7 +157,7 @@ With the offline test model, the suggestions come from the canned responses and 
 | # | Do | Expected |
 |---|---|---|
 | T7.1 | Untick **Inline completion** | No grey suggestions, no `complete-request` events; Canned responses and Knowledge base become read-only. Conversation still protects the customer's words (T2.16). |
-| T7.2 | Untick **Spell check** | No underlines and no auto-correct; Auto-correct and its confidence are greyed out. |
+| T7.2 | Untick **Spell check** | No underlines and no auto-correct; Auto-correct and its "when" choices are greyed out. |
 | T7.3 | Untick **Arabic** | Arabic words are no longer underlined or corrected; the dictionaries line shows only English. |
 | T7.4 | Change some settings, reload the page, then press **Reset** | The changes survive the reload; Reset brings back the defaults. |
 
@@ -178,7 +177,6 @@ With the offline test model, the suggestions come from the canned responses and 
 
 Use [`docs/TEST-REPORT-TEMPLATE.md`](TEST-REPORT-TEMPLATE.md), one problem per report, and send it to the person who shared the prototype with you (or open a GitHub issue with the "Test report" template if you have access). Please always include:
 - the **version**: the output of `git rev-parse --short HEAD`;
-- the **model** (printed by `npm run demo`, and the `model` field in the events);
 - your **browser and version**;
 - the **scenario number** (for example T2.11);
 - the **exact text** you typed, plus expected vs. actual result, and the relevant lines from **Events**.
