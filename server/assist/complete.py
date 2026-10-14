@@ -14,10 +14,13 @@ from .capture import Observation
 from .lm import classify_error, raw_from_error, running
 from .postprocess import Edit, derive_edit, join_explained, script_of
 from .programs import CompletionProgram, Turn
-from .retrieval import CannedResponse, KbPassage, retrieve, retrieve_kb
+from .retrieval import CannedResponse, KbPassage, kb_passages, retrieve, retrieve_kb
 
 MAX_PREFIX = 2000
 MAX_TURNS_ACCEPTED = 50
+# Caller-supplied canned responses and KB articles (the React demo's text fields).
+MAX_SOURCE_ITEMS = 200
+MAX_SOURCE_CHARS = 2000
 
 OnWithheld = Callable[[str, str | None], None]
 
@@ -45,6 +48,20 @@ class CompleteRequest:
     use_transcript: bool
     use_canned: bool
     use_kb: bool
+    # When set, used instead of the server's canned.json / kb.json ("Title: body" per KB item).
+    canned: list[str] | None = None
+    kb: list[str] | None = None
+
+
+def _texts(value: object) -> list[str] | None | str:
+    """An optional list of non-empty strings; an error message when it is malformed or too big."""
+    if value is None:
+        return None
+    if not isinstance(value, list) or not all(isinstance(t, str) for t in value):
+        return "sources must be lists of strings"
+    if len(value) > MAX_SOURCE_ITEMS or any(len(t) > MAX_SOURCE_CHARS for t in value):
+        return "sources too long"
+    return [t.strip() for t in value if t.strip()]
 
 
 def parse_request(data: object) -> CompleteRequest | str:
@@ -62,7 +79,24 @@ def parse_request(data: object) -> CompleteRequest | str:
         if isinstance(t, dict) and t.get("role") in ("customer", "agent") and isinstance(t.get("text"), str)
     ][-MAX_TURNS_ACCEPTED:]
     s = o.get("sources") if isinstance(o.get("sources"), dict) else {}
-    return CompleteRequest(prefix, turns, s.get("transcript") is not False, s.get("canned") is not False, s.get("kb") is not False)
+    canned, kb = _texts(o.get("canned")), _texts(o.get("kb"))
+    if isinstance(canned, str):
+        return canned
+    if isinstance(kb, str):
+        return kb
+    return CompleteRequest(prefix, turns, s.get("transcript") is not False, s.get("canned") is not False, s.get("kb") is not False, canned, kb)
+
+
+def _request_library(texts: list[str]) -> list[CannedResponse]:
+    return [CannedResponse(id=f"req-canned:{i}", lang=script_of(t) or "en", text=t) for i, t in enumerate(texts)]
+
+
+def _request_kb(texts: list[str]) -> list[KbPassage]:
+    articles = []
+    for i, t in enumerate(texts):
+        title, sep, body = t.partition(": ")
+        articles.append({"id": f"req-{i}", "lang": script_of(t) or "en", "title": title if sep else "Note", "body": body if sep else t})
+    return kb_passages(articles)
 
 
 def build(prefix: str, continuation: str) -> tuple[str, Edit | None, list[str]]:
@@ -82,9 +116,11 @@ async def complete(data: object, deps: CompletionDeps) -> tuple[int, dict[str, A
         return 503, {"error": "completion model unavailable (no API key configured)"}
 
     last_customer = next((t.text for t in reversed(req.transcript) if t.role == "customer"), "")
-    canned = retrieve(deps.library, last_customer, req.prefix) if req.use_canned else []
+    library = deps.library if req.canned is None else _request_library(req.canned)
+    passages = deps.kb if req.kb is None else _request_kb(req.kb)
+    canned = retrieve(library, last_customer, req.prefix) if req.use_canned else []
     # Knowledge base only on a strong match with the customer's last message.
-    kb = retrieve_kb(deps.kb, last_customer) if req.use_kb and deps.kb else []
+    kb = retrieve_kb(passages, last_customer) if req.use_kb and passages else []
 
     lang = script_of(req.prefix)
     inputs = {

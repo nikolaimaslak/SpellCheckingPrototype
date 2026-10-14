@@ -48,6 +48,8 @@ export interface AttachOptions {
   shortcut?: string;
   /** How long an auto-correction stays highlighted. */
   flashMs?: number;
+  /** Backspace right after an auto-correction restores the original word (default true). Undo always does. */
+  backspaceRevert?: boolean;
   env?: Partial<ComposerEnv>;
 }
 
@@ -128,6 +130,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
     debounceMs = 150,
     shortcut = 'Ctrl+.',
     flashMs = 2000,
+    backspaceRevert: backspaceReverts = true,
   } = options;
   const customWords = new Set(options.customWords ?? []);
   const emit = (e: AssistEvent) => options.onEvent?.(e);
@@ -460,7 +463,7 @@ export function attachSpellCheck(el: HTMLElement, options: AttachOptions): Spell
   el.addEventListener('input', onInput);
   el.addEventListener('mouseup', onMouseUp);
   el.addEventListener('mousedown', onMouseDown);
-  doc.defaultView?.addEventListener('keydown', onBackspace, true);
+  if (backspaceReverts) doc.defaultView?.addEventListener('keydown', onBackspace, true);
   el.addEventListener('keydown', onKeyDown);
   doc.addEventListener('selectionchange', onSelectionChange);
   const unsubscribe = service.onStatus(() => {

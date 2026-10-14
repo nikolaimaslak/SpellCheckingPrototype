@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from pathlib import Path
 
 import litellm
 
@@ -252,3 +253,41 @@ class TestUnfinishedWords:
             "/v1/complete", json={"prefix": "It hasn't been proce", "transcript": self.FIRST, "sources": {"transcript": True, "canned": False, "kb": False}}
         ).json()
         assert res["completion"] == "ssed yet, but it is under review." and "withheld" not in res
+
+
+class TestRequestSources:
+    """Canned responses and KB articles sent in the request replace the server's files (React demo)."""
+
+    def test_uses_the_canned_responses_sent_instead_of_the_library(self, tmp_path):
+        body = {**BODY, "canned": ["Your request has been approved and the documents were sent by email."]}
+        reply = fake_client(tmp_path).post("/v1/complete", json=body).json()
+        assert reply["sources"] == ["req-canned:0"]
+        assert reply["completion"].startswith(" has been approved")
+
+    def test_uses_the_kb_articles_sent(self, tmp_path):
+        articles = json.loads((Path(__file__).parents[1] / "data" / "kb.json").read_text("utf-8"))["articles"]
+        kb = [
+            "Early retirement eligibility: Early retirement is open to members with 20 years of contributions."
+            if a["id"] == "en-early-retirement"
+            else f"{a['title']}: {a['body']}"
+            for a in articles
+        ]
+        body = {
+            "prefix": "Early retirement is",
+            "transcript": [{"role": "customer", "text": "Am I eligible for early retirement? I have 26 years of contributions."}],
+            "sources": {"transcript": True, "canned": False, "kb": True},
+            "kb": kb,
+        }
+        reply = fake_client(tmp_path).post("/v1/complete", json=body).json()
+        assert reply["sources"][0].startswith("kb:req-")
+        assert "open to members with 20 years" in reply["completion"]
+
+    def test_an_empty_list_means_no_canned_responses(self, tmp_path):
+        reply = fake_client(tmp_path).post("/v1/complete", json={**BODY, "canned": []}).json()
+        assert reply["sources"] == []
+
+    def test_rejects_malformed_or_oversized_sources(self, tmp_path):
+        c = fake_client(tmp_path)
+        assert c.post("/v1/complete", json={**BODY, "canned": "text"}).status_code == 400
+        assert c.post("/v1/complete", json={**BODY, "kb": ["x" * 2001]}).status_code == 400
+        assert c.post("/v1/complete", json={**BODY, "canned": ["x"] * 201}).status_code == 400

@@ -53,6 +53,7 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 - `src/polish/`: grammar polish client (word diff, apply/revert, button and preview panel, controller).
 - `src/policy/`: admin policy and agent preference (`resolveMode`, `resolveCompletion`).
 - `src/telemetry/`: batching client for assistance events.
+- `src/app/` + `app.html`: the React + Tailwind demo at http://localhost:5173/app.html (minimal: settings with Reset and `localStorage`, chat, on-page event log). `lib/` holds the non-UI code (settings, wiring of the composer library, request loggers); `hooks/` and `components/` only call it. Canned responses and KB come from its text fields and are sent with each completion request.
 - `src/demo/` + `index.html`: stand-in chat (rich `contenteditable`, like Agent Desktop) and email composers, scripted customer conversation, settings panel, status and event counter.
 - `server/`: Tier 2 dev stand-in, in Python (`uv` project: `pyproject.toml`, `uv.lock`, `.python-version`). The `assist` package: `app.py` (FastAPI routes and error shape), `settings.py` (env, `.env`, model selection), `programs.py` (the typed DSPy programs `ContinueText` / `PolishDraft`, the `TypedJSONAdapter`, the offline test model), `lm.py` (the `dspy.LM` through LiteLLM, cache, error classes), `complete.py` / `polish.py` (the endpoints), `retrieval.py` (over the synthetic `server/data/canned.json` and `server/data/kb.json`), `postprocess.py` (joining the continuation, `finalize`, the derived edit), `telemetry.py` + `error_types.py` (event log and `/summary`). Tests in `server/tests/` (pytest), including `test_scenarios_en.py`, which runs every English spec scenario and fails on an untested one. It doesn't import `src/`.
 - `eval/completion/`: the older hand-written case dataset (`cases.jsonl`, loader `cases.ts`, unused by the local eval), the last live run on the former Node server (`reference/`), and `examples/chat-example.txt` (the eval's input format).
@@ -78,6 +79,6 @@ All work goes through OpenSpec changes: `/opsx:propose <name>` → review → `/
 ## Conventions
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties), so `scripts/*.ts` run directly under Node.
-- Vanilla DOM, no UI framework, npm for the page and tooling.
+- The composer library (`src/composer`, `completion`, `polish`, `spell`, ...) is vanilla DOM with no UI framework. Only the demo page in `src/app/` uses React + Tailwind. npm for the page and tooling.
 - The server is Python under `uv` (pinned Python, locked dependencies). Every LLM call goes through a typed DSPy program with `TypedJSONAdapter` (never `ChatAdapter`), with no retries; post-processing (assembly, withheld checks, polish safety checks) stays deterministic code, never in the model.
 - Tests read dictionaries from `node_modules/dictionary-en/` and `dicts/ar/` directly.
