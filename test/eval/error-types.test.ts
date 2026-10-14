@@ -133,8 +133,6 @@ describe('inserting errors', () => {
   });
 });
 
-// The same fixture runs against the Python port (server/tests/test_error_types.py),
-// so the telemetry summary and the benchmark classify every pair alike.
 describe('shared error-type fixture', () => {
   const fixture = JSON.parse(readFileSync('test/fixtures/error-types.json', 'utf8')) as {
     cases: { misspelled: string; intended: string; lang: Lang; expected: ReturnType<typeof classify> }[];

@@ -24,7 +24,7 @@ describe('completion word accept with auto-correct on', () => {
       checker: fakeChecker({ en: ['seperate'] }).checker,
       spelling: 'auto',
       completion: true,
-      server: { complete: async () => ({ completion: ' days .', lang: 'en', latencyMs: 1, model: 'fake', sources: [] }), polish: async () => null },
+      server: { complete: async () => ({ completion: ' days .' }), polish: async () => null },
       env: { replace },
     });
     assistants.push(assistant);

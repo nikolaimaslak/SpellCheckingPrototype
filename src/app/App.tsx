@@ -41,7 +41,7 @@ export function App() {
       <SettingsPanel settings={settings} spellStatus={spellStatus} onUpdate={updateSettings} onReset={resetSettings} />
       <main className="space-y-4">
         <h1 className="text-xl font-semibold">Composer assistance</h1>
-        <ModelLine />
+        <ModelLine apiKey={appliedSettings.apiKey} />
         <MessageField ref={messageFieldRef} assistant={assistant} state={state} onSend={addAgentMessage} />
         <EventLog entries={logEntries} onClear={clearLog} />
       </main>

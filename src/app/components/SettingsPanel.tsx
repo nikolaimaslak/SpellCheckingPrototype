@@ -65,6 +65,17 @@ export function SettingsPanel({ settings, spellStatus, onUpdate, onReset }: Prop
 
       <Section title="Completion">
         <Checkbox label="Inline completion (Tab accepts)" checked={settings.completion} onChange={(completion) => onUpdate({ completion })} />
+        <label className="block text-sm">
+          OpenAI API key
+          <input
+            type="password"
+            className="mt-1 block w-full rounded border border-slate-300 p-2 font-mono text-xs"
+            autoComplete="off"
+            value={settings.apiKey}
+            onChange={(e) => onUpdate({ apiKey: e.target.value.trim() })}
+          />
+          <span className="mt-1 block text-xs text-slate-500">Used by completion and Polish. Saved in this browser only. Reset clears it.</span>
+        </label>
       </Section>
 
       <Section title="Sources">

@@ -24,7 +24,7 @@ function setup(
   el.focus();
   document.getSelection()!.collapse(el.firstChild!, el.textContent.length);
   const complete = vi.fn<Complete>(
-    completeImpl ?? (async () => (reply === null ? null : ({ completion: reply, lang: 'en', latencyMs: 1, model: 'fake', sources: [] } satisfies CompletionReply))),
+    completeImpl ?? (async () => (reply === null ? null : ({ completion: reply } satisfies CompletionReply))),
   );
   const replace = vi.fn((range: Range, text: string) => {
     const node = range.startContainer as Text;
@@ -32,7 +32,7 @@ function setup(
     document.getSelection()!.collapse(node, range.startOffset + text.length);
     el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: text }));
   });
-  const polish = vi.fn<Server['polish']>(async (text) => ({ polished: opts.polished ?? text, changed: opts.polished !== undefined, lang: 'en', latencyMs: 1, model: 'fake' }));
+  const polish = vi.fn<Server['polish']>(async (text) => ({ polished: opts.polished ?? text, changed: opts.polished !== undefined }));
   const { assistant, events: all } = testAssistant(el, {
     spelling: opts.spelling ?? 'off',
     checker: fakeChecker(opts.bad ?? {}).checker,
@@ -74,7 +74,6 @@ describe('inline completion', () => {
     const [body] = complete.mock.calls[0];
     expect(body.prefix).toBe('Thank you, your request');
     expect(body.transcript).toEqual([{ role: 'customer', text: 'when will it be processed?' }]);
-    expect(body.sources).toEqual({ transcript: true, canned: true, kb: false });
     expect(body.canned).toEqual(['Your request will be processed.']);
     expect(body.kb).toEqual([]);
     expect(ghostText()).toBe(' will be processed within 3 working days.');
@@ -99,7 +98,7 @@ describe('inline completion', () => {
     const pending = completion.requestNow();
     typeChar(el, 's');
     expect(signal.aborted).toBe(true);
-    resolve({ completion: ' late', lang: 'en', latencyMs: 1, model: 'x', sources: [] });
+    resolve({ completion: ' late' });
     await pending;
     expect(ghostText()).toBe('');
   });

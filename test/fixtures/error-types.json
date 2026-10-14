@@ -1,5 +1,5 @@
 {
- "_note": "Shared error-type fixture: checked against eval/error-types.ts (Vitest) and server/assist/error_types.py (pytest). Generated from the classifier test cases, the telemetry spec examples and variants() output; regenerate only on purpose.",
+ "_note": "Error-type fixture, checked against eval/error-types.ts. Generated from the classifier test cases, the telemetry spec examples and variants() output; regenerate only on purpose.",
  "cases": [
   {
    "misspelled": "اذا",

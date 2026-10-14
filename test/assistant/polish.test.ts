@@ -13,9 +13,9 @@ function setup(html: string, polished: string | null, changed = true, completion
   document.body.innerHTML = `<div id="c" contenteditable="true">${html}</div>`;
   const el = document.getElementById('c')!;
   const polish = vi.fn<Server['polish']>(async (text) =>
-    polished === null ? null : { polished: changed ? polished : text, changed, lang: 'en', latencyMs: 5, model: 'fake' },
+    polished === null ? null : { polished: changed ? polished : text, changed },
   );
-  const complete = vi.fn<Server['complete']>(async () => ({ completion: ' x', lang: 'en', latencyMs: 1, model: 'f', sources: [] }));
+  const complete = vi.fn<Server['complete']>(async () => ({ completion: ' x' }));
   const replace = vi.fn((range: Range, text: string) => {
     if (range.startContainer === range.endContainer) (range.startContainer as Text).replaceData(range.startOffset, range.endOffset - range.startOffset, text);
     else {

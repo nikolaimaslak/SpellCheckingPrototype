@@ -155,7 +155,7 @@ describe('suggestions and acceptance', () => {
   it('does not open while the polish preview is open', async () => {
     const server: Server = {
       complete: async () => null,
-      polish: async () => ({ polished: 'I will receive it ', changed: true, lang: 'en', latencyMs: 1, model: 'fake' }),
+      polish: async () => ({ polished: 'I will receive it ', changed: true }),
     };
     const { el, assistant, spelling } = setup('I will recieve it ', undefined, undefined, server);
     await spelling.recheck();

@@ -1,5 +1,5 @@
 import type { AssistantOptions, AssistEvent } from '../../assistant';
-import type { Turn } from '../../assistant/server';
+import { openAiServer, type Turn } from '../../assistant/server';
 import type { AutoReplaceConfidence } from '../../autocorrect/confidence';
 import type { SpellChecker } from '../../spell/checker';
 import type { Lang } from '../../spell/protocol';
@@ -16,6 +16,8 @@ export interface AppSettings {
   /** One word per line: never flagged, never auto-corrected. */
   customDictionary: string;
   completion: boolean;
+  /** OpenAI key for completion and polish; empty = both are off. */
+  apiKey: string;
   /** `Customer:` / `Agent:` lines: auto-correct protection, canned/KB search and LLM context. */
   conversation: string;
   /** One canned response per line; empty = no canned responses. */
@@ -31,6 +33,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   languages: ['en', 'ar'],
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   completion: true,
+  apiKey: '',
   conversation: `Customer: ${SCENARIOS['en-pension'][0]}`,
   canned: DEFAULT_CANNED,
   kb: DEFAULT_KB,
@@ -59,6 +62,7 @@ export function assistantOptions(
     languages: settings.languages,
     customWords: lines(settings.customDictionary),
     completion: settings.completion,
+    server: openAiServer(settings.apiKey),
     canned: lines(settings.canned),
     kb: lines(settings.kb),
     conversation,
@@ -79,6 +83,7 @@ export function parseSettings(input: unknown): AppSettings {
     languages: Array.isArray(stored.languages) ? LANGS.filter((lang) => (stored.languages as unknown[]).includes(lang)) : [...DEFAULT_SETTINGS.languages],
     customDictionary: textField('customDictionary'),
     completion: booleanField('completion'),
+    apiKey: textField('apiKey'),
     conversation: textField('conversation'),
     canned: textField('canned'),
     kb: textField('kb'),

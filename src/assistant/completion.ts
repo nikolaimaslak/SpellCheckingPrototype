@@ -6,7 +6,7 @@ import type { Shared } from './state';
 export interface CompletionOptions {
   server: Server;
   conversation: () => Turn[];
-  /** Searched by the server instead of its own files; empty = that source is off. */
+  /** Sent with every request; empty = that source is off. */
   canned: string[];
   kb: string[];
   debounceMs?: number;
@@ -104,8 +104,7 @@ export function createCompletion(shared: Shared, options: CompletionOptions) {
     const prefix = before.slice(-MAX_PREFIX);
     const transcript = options.conversation();
     log({ type: 'complete-request', prefix, turns: transcript.length, canned: canned.length, kb: kb.length });
-    const sources = { transcript: true, canned: canned.length > 0, kb: kb.length > 0 };
-    const reply = await server.complete({ prefix, transcript, sources, canned, kb }, ac.signal);
+    const reply = await server.complete({ prefix, transcript, canned, kb }, ac.signal);
     log({ type: 'complete-reply', reply, aborted: ac.signal.aborted });
     if (mine !== generation || detached || !reply?.completion) return;
     // Only show if nothing moved while waiting.

@@ -9,8 +9,6 @@ export default defineConfig({
     // and nothing is exposed to the network.
     host: '127.0.0.1',
     port: 5173,
-    // Completion service (npm run server); the page calls same-origin /api/...
-    proxy: { '/api': { target: 'http://127.0.0.1:5175', rewrite: (path) => path.replace(/^\/api/, '') } },
   },
   worker: {
     format: 'es',

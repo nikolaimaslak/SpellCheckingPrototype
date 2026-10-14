@@ -5,7 +5,7 @@ import { createCompletion } from './completion';
 import { detectMac } from './completion-rules';
 import { browserHighlights } from './highlights';
 import { createPolish } from './polish';
-import { server as realServer, type Server, type Turn } from './server';
+import type { Server, Turn } from './server';
 import { createSpelling } from './spelling';
 import { INITIAL_STATE, type AssistantEnv, type AssistantState, type AssistEvent, type Rect, type Shared } from './state';
 
@@ -19,14 +19,14 @@ export interface AssistantOptions {
   languages: Lang[];
   customWords: string[];
   completion: boolean;
-  /** Canned responses and KB articles ("Title: body") the server searches for completion. */
+  /** Canned responses and KB articles ("Title: body") sent with completion requests. */
   canned: string[];
   kb: string[];
   /** The conversation, read on every use. */
   conversation: () => Turn[];
   log?: (event: AssistEvent) => void;
-  /** Tests replace the server and the browser parts. */
-  server?: Server;
+  server: Server;
+  /** Tests replace the browser parts. */
   env?: Partial<AssistantEnv>;
   spellingDebounceMs?: number;
   completionDebounceMs?: number;
@@ -43,7 +43,7 @@ export type Assistant = ReturnType<typeof createAssistant>;
 export function createAssistant(el: HTMLElement, options: AssistantOptions) {
   let state: AssistantState = INITIAL_STATE;
   const listeners = new Set<() => void>();
-  const server = options.server ?? realServer;
+  const { server } = options;
   const shared: Shared = {
     el,
     env: browserEnv(el, options.env),
