@@ -19,7 +19,6 @@ export interface AppSettings {
   canned: string;
   /** One "Title: body" article per line; empty = no knowledge base. */
   kb: string;
-  polish: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -32,7 +31,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   conversation: `Customer: ${SCENARIOS['en-pension'][0]}`,
   canned: DEFAULT_CANNED,
   kb: DEFAULT_KB,
-  polish: true,
 };
 
 const KEY = 'bp-spell-react-demo-settings';
@@ -60,7 +58,6 @@ export function parseSettings(input: unknown): AppSettings {
     conversation: textField('conversation'),
     canned: textField('canned'),
     kb: textField('kb'),
-    polish: booleanField('polish'),
   };
 }
 

@@ -96,10 +96,6 @@ export function SettingsPanel({ settings, spellStatus, onUpdate, onReset }: Prop
           onChange={(kb) => onUpdate({ kb })}
         />
       </Section>
-
-      <Section title="Polish">
-        <Checkbox label="Polish button (grammar fix of the whole draft)" checked={settings.polish} onChange={(polish) => onUpdate({ polish })} />
-      </Section>
     </aside>
   );
 }

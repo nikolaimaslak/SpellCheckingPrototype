@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef } from 'react';
-import { Chat } from './components/Chat';
 import { EventLog } from './components/EventLog';
+import { MessageField } from './components/MessageField';
 import { SettingsPanel } from './components/SettingsPanel';
 import { useAssist } from './hooks/useAssist';
 import { useDebounced } from './hooks/useDebounced';
@@ -34,15 +34,15 @@ export function App() {
   const assistSettingsKey = JSON.stringify(appliedAssistSettings);
   const assistSettings = useMemo(() => JSON.parse(assistSettingsKey) as AssistSettings, [assistSettingsKey]);
 
-  const composerRef = useRef<HTMLDivElement>(null);
-  useAssist(composerRef, assistSettings, spellService, assistContext);
+  const messageFieldRef = useRef<HTMLDivElement>(null);
+  useAssist(messageFieldRef, assistSettings, spellService, assistContext);
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 p-4 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
       <SettingsPanel settings={settings} spellStatus={spellStatus} onUpdate={updateSettings} onReset={resetSettings} />
       <main className="space-y-4">
         <h1 className="text-xl font-semibold">Composer assistance (React demo)</h1>
-        <Chat composerRef={composerRef} onAgentMessage={addAgentMessage} />
+        <MessageField ref={messageFieldRef} onSend={addAgentMessage} />
         <EventLog entries={logEntries} onClear={clearLog} />
       </main>
     </div>

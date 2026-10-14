@@ -40,7 +40,7 @@ export function polishFetcher(log: AssistContext['log']): PolishFetcher {
 /** What attaching depends on: everything but the conversation, which is read live through the context. */
 export type AssistSettings = Omit<AppSettings, 'conversation'>;
 
-/** Attaches spelling, completion and polish to one composer as the settings say. Returns detach. */
+/** Attaches spelling and completion as the settings say, and polish always. Returns detach. */
 export function attachAssist(el: HTMLElement, settings: AssistSettings, spellService: SpellService, assistContext: AssistContext): () => void {
   const detach: (() => void)[] = [];
   const mode = spellMode(settings);
@@ -73,11 +73,9 @@ export function attachAssist(el: HTMLElement, settings: AssistSettings, spellSer
     detach.push(() => handle.detach());
   }
 
-  if (settings.polish) {
-    // Pressing Polish hides the completion ghost text.
-    const polish = attachPolish(el, { fetcher: polishFetcher(assistContext.log), onEvent: assistContext.log, onOpen: () => completion?.dismiss() });
-    detach.push(() => polish.detach());
-  }
+  // Polish is always on: pressing it hides the completion ghost text.
+  const polish = attachPolish(el, { fetcher: polishFetcher(assistContext.log), onEvent: assistContext.log, onOpen: () => completion?.dismiss() });
+  detach.push(() => polish.detach());
 
   return () => detach.forEach((d) => d());
 }
