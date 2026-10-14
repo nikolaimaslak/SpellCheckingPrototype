@@ -4,12 +4,11 @@
 // character by character (so . @ : / hold words as they do for an agent),
 // ending with a space so every word is completed.
 import { beforeAll, describe, expect, it, vi } from 'vitest';
-import { attachSpellCheck, type AssistEvent } from '../../src/composer';
+import { createSpellChecker, type SpellChecker } from '../../src/spell/checker';
 import { createHandler } from '../../src/spell/handler';
 import type { ResultByType, SpellCommand, SpellRequest } from '../../src/spell/protocol';
-import { createSpellService, type SpellService } from '../../src/spell/service';
 import { createPipeline, loadDictionary, loadRuntime, type Pipeline } from '../../eval/pipeline';
-import { composer, fakeHighlightEnv, textReplace, typeChars } from '../composer/fakes';
+import { field, testAssistant, textReplace, typeChars } from '../assistant/fakes';
 
 const CUSTOM = ['GOSI', 'Absher', 'التأمينات'];
 const MESSAGES = [
@@ -35,13 +34,13 @@ const MESSAGES = [
 ];
 
 let pipeline: Pipeline;
-let service: SpellService;
+let checker: SpellChecker;
 
 beforeAll(async () => {
   pipeline = await createPipeline({ customWords: CUSTOM });
   const handle = createHandler(loadRuntime, loadDictionary);
   let id = 0;
-  service = createSpellService(
+  checker = createSpellChecker(
     {
       async request<C extends SpellCommand>(command: C) {
         const reply = await handle({ ...command, id: ++id } as SpellRequest);
@@ -51,31 +50,22 @@ beforeAll(async () => {
     },
     { customWords: CUSTOM },
   );
-  await vi.waitFor(() => expect(service.isReady('ar') && service.isReady('en')).toBe(true), { timeout: 20000 });
+  await vi.waitFor(() => expect(checker.isReady('ar') && checker.isReady('en')).toBe(true), { timeout: 20000 });
 }, 30000);
 
 describe('pipeline parity with the composer', () => {
   it.each(MESSAGES)('%s', async (message) => {
-    const el = composer('');
-    const hl = fakeHighlightEnv();
-    const events: AssistEvent[] = [];
-    const handle = attachSpellCheck(el, {
-      service,
-      mode: 'auto',
-      debounceMs: 1,
-      flashMs: 1,
-      customWords: CUSTOM,
-      onEvent: (e) => events.push(e),
-      env: { highlights: hl.env, replace: textReplace(el), rectOf: () => new DOMRect(0, 0, 10, 10) },
-    });
+    const el = field('');
+    const { assistant, hl, events } = testAssistant(el, { checker, spelling: 'auto', customWords: CUSTOM, env: { replace: textReplace(el) } });
+    const spelling = assistant.spelling!;
     typeChars(el, `${message} `);
-    await handle.settled();
-    await handle.recheck();
+    await spelling.settled();
+    await spelling.recheck();
     const underlined = hl.words().sort();
-    handle.detach();
+    assistant.detach();
 
     const { tokens, transient } = await pipeline.run(message);
-    const replaced = events.filter((e) => e.type === 'autocorrect').map((e) => [e.original, e.replacement]);
+    const replaced = events.flatMap((e) => (e.type === 'autocorrect' ? [[e.original, e.replacement]] : []));
     const expected = [...tokens.filter((t) => t.replacement), ...transient].sort((a, b) => a.start - b.start);
     expect(replaced).toEqual(expected.map((t) => [t.word, t.replacement]));
     // A transient replacement leaves the composer's text different from the

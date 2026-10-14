@@ -1,16 +1,23 @@
 import type { KeyboardEvent, RefObject } from 'react';
+import type { Assistant, AssistantState } from '../../assistant';
+import { GhostText } from './GhostText';
+import { PolishBar } from './PolishBar';
+import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
   ref: RefObject<HTMLDivElement | null>;
+  assistant: Assistant | undefined;
+  state: AssistantState;
   /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
   onSend: (text: string) => void;
 }
 
 /**
- * The agent's message field. Its content is owned by the browser and the
- * composer library, never rendered by React: it has no children here.
+ * The agent's message field and what the assistant draws around it. The
+ * field's content is owned by the browser and the assistant, never rendered
+ * by React: it has no children here.
  */
-export function MessageField({ ref, onSend }: Props) {
+export function MessageField({ ref, assistant, state, onSend }: Props) {
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !e.defaultPrevented) {
       e.preventDefault();
@@ -36,6 +43,29 @@ export function MessageField({ ref, onSend }: Props) {
       <p className="text-xs text-slate-500">
         Enter adds the message to Conversation as Agent, Shift+Enter breaks the line. Click an underlined word (or Ctrl+.) for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
       </p>
+      {assistant && (
+        <>
+          <PolishBar
+            polish={state.polish}
+            onPolish={() => void assistant.polishNow()}
+            onAccept={assistant.acceptPolish}
+            onDismiss={assistant.dismissPolish}
+            onRevert={assistant.revertPolish}
+          />
+          {state.ghost && <GhostText ghost={state.ghost} />}
+          {state.popover && (
+            <SuggestionPopover
+              // A new word starts with the first item focused.
+              key={`${state.popover.rect.left}:${state.popover.rect.top}`}
+              popover={state.popover}
+              onPick={assistant.pickSuggestion}
+              onIgnore={assistant.ignoreWord}
+              onRevert={assistant.revertCorrection}
+              onClose={assistant.closePopover}
+            />
+          )}
+        </>
+      )}
     </section>
   );
 }

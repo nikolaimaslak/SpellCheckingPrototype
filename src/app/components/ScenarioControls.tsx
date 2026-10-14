@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { SCENARIOS } from '../../demo/scenarios';
+import { SCENARIOS } from '../lib/conversation';
 
 /** Scenario picker for the Conversation field: Next adds the customer's next line. */
 export function ScenarioControls({ conversation, onCustomerMessage }: { conversation: string; onCustomerMessage: (text: string) => void }) {

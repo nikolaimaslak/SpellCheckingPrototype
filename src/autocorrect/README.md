@@ -29,7 +29,7 @@ The decision is **deterministic**. `neighbors` comes from the worker's `neighbor
 - `startsSentence(text, start)` is true at the start of the text, after a line break, or after `.` `!` `?` `؟` and whitespace. A full stop after a title or abbreviation (Mr, Mrs, Ms, Dr, Prof, Eng, St, Jr, Sr, vs, etc, e.g., i.e.) doesn't count, so "Ms. Fatimah" is mid-sentence, and so is "Harbi" in "Al-Harbi".
 - `conversationWords(turns)` collects the words of the customer's turns, lowercased (English) or without marks (Arabic). `inConversation` looks a word up in that set.
 
-The composer and the eval pass both into `decide()`. Without them, the guards don't apply, as before.
+`src/assistant/spelling.ts` and the eval pass both into `decide()`. Without them, the guards don't apply, as before.
 
 ## The misspellings lists (`misspellings.ts`, `lists/`, `list-checks.ts`)
 
@@ -55,4 +55,4 @@ The project lists await human review (`docs/known-issues.md`, KI-5).
 - `completedWord` finds the word immediately before the boundary.
 - `releasable` picks the held words that are still checkable words in the same whitespace-free run when whitespace arrives. Words that end up inside an address ("info@gosi.gov.sa") are dropped.
 
-The composer (`src/composer/attach.ts`) and the eval pipeline (`eval/pipeline.ts`) both use these functions.
+`src/assistant/spelling.ts` and the eval pipeline (`eval/pipeline.ts`) both use these functions.

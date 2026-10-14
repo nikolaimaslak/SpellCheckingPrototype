@@ -1,6 +1,6 @@
 import type { AutoReplaceConfidence } from '../../autocorrect/confidence';
 import type { Lang } from '../../spell/protocol';
-import type { SpellServiceStatus } from '../../spell/service';
+import type { SpellStatus } from '../../spell/checker';
 import { appendTurn } from '../lib/conversation';
 import type { AppSettings } from '../lib/settings';
 import { Checkbox, RadioGroup, Section, TextArea } from './fields';
@@ -14,7 +14,7 @@ const LANG_NAMES: Record<Lang, string> = { en: 'English', ar: 'Arabic' };
 
 interface Props {
   settings: AppSettings;
-  spellStatus: SpellServiceStatus | undefined;
+  spellStatus: SpellStatus | undefined;
   onUpdate: (patch: Partial<AppSettings>) => void;
   onReset: () => void;
 }
@@ -100,7 +100,7 @@ export function SettingsPanel({ settings, spellStatus, onUpdate, onReset }: Prop
   );
 }
 
-function SpellStatus({ status }: { status: SpellServiceStatus | undefined }) {
+function SpellStatus({ status }: { status: SpellStatus | undefined }) {
   if (!status) return null;
   const parts = [
     ...status.loaded.map((l) => `${l.lang} ready (${l.ms} ms)`),

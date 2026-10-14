@@ -1,6 +1,9 @@
+import type { AssistantOptions, AssistEvent } from '../../assistant';
+import type { Turn } from '../../assistant/server';
 import type { AutoReplaceConfidence } from '../../autocorrect/confidence';
-import { SCENARIOS } from '../../demo/scenarios';
+import type { SpellChecker } from '../../spell/checker';
 import type { Lang } from '../../spell/protocol';
+import { SCENARIOS } from './conversation';
 import { DEFAULT_CANNED, DEFAULT_KB } from './default-sources';
 
 /** Everything the React demo lets you change. Text fields keep the raw text; `lines()` splits it. */
@@ -41,6 +44,27 @@ export const lines = (text: string) => text.split('\n').map((line) => line.trim(
 /** The composer library's mode from the two checkboxes. */
 export const spellMode = (settings: Pick<AppSettings, 'spellCheck' | 'autoCorrect'>): 'off' | 'suggest' | 'auto' =>
   !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto' : 'suggest';
+
+/** The assistant's options from the settings. The conversation is read live, so it isn't part of them. */
+export function assistantOptions(
+  settings: Omit<AppSettings, 'conversation'>,
+  checker: SpellChecker,
+  conversation: () => Turn[],
+  log: (event: AssistEvent) => void,
+): AssistantOptions {
+  return {
+    checker,
+    spelling: spellMode(settings),
+    autoReplace: settings.autoReplace,
+    languages: settings.languages,
+    customWords: lines(settings.customDictionary),
+    completion: settings.completion,
+    canned: lines(settings.canned),
+    kb: lines(settings.kb),
+    conversation,
+    log,
+  };
+}
 
 /** Stored settings over the defaults, field by field; anything malformed falls back to its default. */
 export function parseSettings(input: unknown): AppSettings {

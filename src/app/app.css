@@ -1,1 +1,11 @@
 @import 'tailwindcss';
+
+/* Drawn by the CSS Custom Highlight API over the message field's text (src/assistant/highlights.ts). */
+::highlight(bp-spelling-error) {
+  text-decoration: underline wavy #d93025;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 2px;
+}
+::highlight(bp-autocorrected) {
+  background-color: rgba(43, 108, 176, 0.18);
+}

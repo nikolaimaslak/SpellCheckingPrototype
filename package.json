@@ -21,7 +21,6 @@
     "fetch-dicts": "node scripts/fetch-dicts.ts",
     "lists:ayaspell": "node --import ./eval/register.ts scripts/extract-ayaspell-rep.ts",
     "build:wasm": "bash wasm/build.sh",
-    "ad-loader": "node dev/ad-loader/serve.ts",
     "server": "uv run --project server --locked python -m assist",
     "demo": "node scripts/demo.ts",
     "eval": "node --import ./eval/register.ts eval/cli/eval.ts",

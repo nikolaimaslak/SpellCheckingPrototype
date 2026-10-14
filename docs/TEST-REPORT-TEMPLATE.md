@@ -4,8 +4,8 @@ One problem per report, please. Send it to the person who shared the prototype w
 
 ## Build and setup
 
-- **Version stamp** (page footer, e.g. `v0.1.0 · 3abdde6`):
-- **Model banner shown at the top of the page** (Gemini / offline test model / unavailable):
+- **Version** (`git rev-parse --short HEAD`, e.g. `3abdde6`):
+- **Model** (printed by `npm run demo`; also `model` in the Events lines, e.g. `fake`, `gemini-3.5-flash-lite`):
 - **Browser and version** (e.g. Chrome 141):
 - **Operating system:**
 
