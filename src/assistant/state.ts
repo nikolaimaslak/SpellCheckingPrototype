@@ -1,6 +1,5 @@
 import type { HighlightEnv } from './highlights';
 import type { Segment } from './polish-diff';
-import type { Lang } from '../tokenizer';
 
 /** A box in viewport coordinates. */
 export interface Rect {
@@ -10,15 +9,13 @@ export interface Rect {
   bottom: number;
 }
 
-/** The suggestions popover for a flagged word, or the revert form for an auto-corrected one. */
+/** The fixes popover for an underlined word. */
 export interface PopoverState {
   /** The word, for placing the popover. */
   rect: Rect;
   dir: 'ltr' | 'rtl';
   font: string;
   suggestions: string[];
-  /** Set for an auto-corrected word: the only choice is to go back to it. */
-  revertTo?: string;
 }
 
 /** Where to draw the ghost text so its first line starts at the caret. */
@@ -46,8 +43,6 @@ export interface PolishState {
   busy: boolean;
   /** The preview of the changes, or only a message ("No changes suggested."). */
   preview?: { dir: 'ltr' | 'rtl'; segments: Segment[]; message?: string };
-  /** A multi-place polish was applied: offer a one-click revert. */
-  revertable: boolean;
 }
 
 /** Everything the page draws around the message field. */
@@ -57,31 +52,17 @@ export interface AssistantState {
   polish: PolishState;
 }
 
-export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false, revertable: false } };
+export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false } };
 
-export type SpellingEvent =
-  | { type: 'flag'; lang: Lang; original: string }
-  | { type: 'autocorrect' | 'revert'; lang: Lang; original: string; replacement: string }
-  | { type: 'accept'; lang: Lang; original: string; replacement: string; rank: number; offered: number }
-  | { type: 'ignore'; lang: Lang; original: string };
-
-export type CompletionEvent =
-  | { type: 'completion-shown'; lang: Lang; latencyMs: number; shownLength: number }
-  | { type: 'completion-accepted'; lang: Lang; latencyMs: number; shownLength: number; acceptedLength: number }
-  | { type: 'completion-dismissed'; lang: Lang; shownLength: number };
-
-export type PolishEvent =
-  | { type: 'polish-shown'; lang: Lang; latencyMs: number; changes: number }
-  | { type: 'polish-accepted'; lang: Lang; changes: number }
-  | { type: 'polish-dismissed' | 'polish-reverted'; lang: Lang };
-
-/** What the server was asked and what it answered, for the page's event console. */
-export type ServerEvent =
-  | { type: 'check-request'; text: string; completion: boolean; turns: number; canned: number; kb: number }
-  | { type: 'check-reply' | 'polish-reply'; reply: unknown; aborted?: boolean }
-  | { type: 'polish-request'; text: string };
-
-export type AssistEvent = SpellingEvent | CompletionEvent | PolishEvent | ServerEvent;
+/** What the page's event console shows: the model requests and answers, and what changed the text. */
+export type AssistEvent =
+  | { type: 'check-request'; text: string; completion: boolean }
+  | { type: 'check-reply' | 'polish-reply'; reply: unknown }
+  | { type: 'polish-request'; text: string }
+  | { type: 'autocorrect' | 'revert' | 'pick'; original: string; replacement: string }
+  | { type: 'ignore'; word: string }
+  | { type: 'completion-accepted'; text: string }
+  | { type: 'polish-accepted' };
 
 /** Browser parts the features use, replaceable in tests (jsdom has no highlights, layout or editing). */
 export interface AssistantEnv {

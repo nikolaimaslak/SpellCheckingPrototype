@@ -53,7 +53,6 @@ export function MessageField({ options, onSend }: Props) {
             onPolish={() => void assistant.polishNow()}
             onAccept={assistant.acceptPolish}
             onDismiss={assistant.dismissPolish}
-            onRevert={assistant.revertPolish}
           />
           {state.ghost && <GhostText ghost={state.ghost} />}
           {state.popover && (
@@ -63,7 +62,6 @@ export function MessageField({ options, onSend }: Props) {
               popover={state.popover}
               onPick={assistant.pickSuggestion}
               onIgnore={assistant.ignoreWord}
-              onRevert={assistant.revertCorrection}
               onClose={assistant.closePopover}
             />
           )}

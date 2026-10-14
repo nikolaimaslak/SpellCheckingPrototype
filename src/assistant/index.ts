@@ -1,10 +1,8 @@
 import { createCheck } from './check';
-import { createCompletion } from './completion';
 import { detectMac } from './completion-rules';
 import { browserHighlights } from './highlights';
 import { createPolish } from './polish';
 import type { Server, Turn } from './server';
-import { createSpelling } from './spelling';
 import { INITIAL_STATE, type AssistantEnv, type AssistantState, type AssistEvent, type Rect, type Shared } from './state';
 
 export type { AssistantState, AssistEvent } from './state';
@@ -21,9 +19,8 @@ export interface AssistantOptions {
   conversation: () => Turn[];
   log?: (event: AssistEvent) => void;
   server: Server;
-  /** Tests replace the browser parts. */
+  /** Replaces browser parts (highlights, layout, editing). */
   env?: Partial<AssistantEnv>;
-  spellingDebounceMs?: number;
   checkThrottleMs?: number;
 }
 
@@ -50,34 +47,24 @@ export function createAssistant(el: HTMLElement, options: AssistantOptions) {
     },
   };
 
-  const spelling =
-    options.spelling === 'off'
-      ? undefined
-      : createSpelling(shared, {
-          mode: options.spelling,
-          customWords: options.customWords,
-          conversation: options.conversation,
-          debounceMs: options.spellingDebounceMs,
-        });
-  const completion = options.completion ? createCompletion(shared) : undefined;
   const check =
-    spelling || completion
+    options.spelling !== 'off' || options.completion
       ? createCheck(shared, {
           server,
-          spelling,
-          completion,
+          spelling: options.spelling,
+          completion: options.completion,
+          customWords: options.customWords,
           conversation: options.conversation,
           canned: options.canned,
           kb: options.kb,
-          customWords: options.customWords,
           throttleMs: options.checkThrottleMs,
         })
       : undefined;
   const polish = createPolish(shared, {
     server,
     onStart() {
-      completion?.dismiss();
-      spelling?.closePopover();
+      check?.dismissGhost();
+      check?.closePopover();
     },
   });
 
@@ -88,24 +75,19 @@ export function createAssistant(el: HTMLElement, options: AssistantOptions) {
       return () => void listeners.delete(listener);
     },
     // Popover choices.
-    pickSuggestion: (suggestion: string) => spelling?.pick(suggestion),
-    ignoreWord: () => spelling?.ignore(),
-    revertCorrection: () => spelling?.revert(),
-    closePopover: (restoreFocus: boolean) => spelling?.closePopover(restoreFocus),
+    pickSuggestion: (suggestion: string) => check?.pick(suggestion),
+    ignoreWord: () => check?.ignore(),
+    closePopover: (restoreFocus: boolean) => check?.closePopover(restoreFocus),
     // Polish.
     polishNow: () => polish.polishNow(),
     acceptPolish: () => polish.accept(),
     dismissPolish: () => polish.dismiss(),
-    revertPolish: () => polish.revert(),
     /** Sends the spelling and completion request now instead of waiting for the throttle. */
     checkNow: async () => check?.checkNow(),
-    /** The features themselves, for tests. */
-    spelling,
-    completion,
+    /** Hides any ghost text. */
+    dismissGhost: () => check?.dismissGhost(),
     detach() {
       check?.detach();
-      spelling?.detach();
-      completion?.detach();
       polish.detach();
       listeners.clear();
     },

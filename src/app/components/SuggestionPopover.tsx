@@ -5,7 +5,6 @@ interface Props {
   popover: PopoverState;
   onPick: (suggestion: string) => void;
   onIgnore: () => void;
-  onRevert: () => void;
   /** `restoreFocus`: put the caret back in the field (Escape). */
   onClose: (restoreFocus: boolean) => void;
 }
@@ -14,22 +13,15 @@ const GAP = 4;
 const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
 
 /**
- * The suggestions for a flagged word (or "Revert to …" for an auto-corrected
- * one), next to the word. Arrow keys, Enter and Escape are taken at window
+ * The fixes for an underlined word, next to it. Arrow keys, Enter and Escape are taken at window
  * level, so Enter picks a suggestion instead of sending the message; any
  * other key, a click outside or scrolling closes it.
  */
-export function SuggestionPopover({ popover, onPick, onIgnore, onRevert, onClose }: Props) {
-  const items = popover.revertTo
-    ? [{ label: `Revert to ${popover.revertTo}`, run: onRevert, strong: false }]
-    : [
-        ...popover.suggestions.map((s) => ({
-        label: s,
-        run: () => onPick(s),
-        strong: true
-      })),
-      { label: 'Ignore', run: onIgnore, strong: false }
-    ];
+export function SuggestionPopover({ popover, onPick, onIgnore, onClose }: Props) {
+  const items = [
+    ...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })),
+    { label: 'Ignore', run: onIgnore, strong: false },
+  ];
   const [focused, setFocused] = useState(0);
   const box = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState<{ top: number; left: number }>();
@@ -78,7 +70,7 @@ export function SuggestionPopover({ popover, onPick, onIgnore, onRevert, onClose
       // Keep the field's focus and selection while choosing.
       onMouseDown={(e) => e.preventDefault()}
     >
-      {!popover.revertTo && !popover.suggestions.length && <div className="px-3 py-1 text-slate-500 italic">No suggestions</div>}
+      {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500 italic">No suggestions</div>}
       {items.map((item, i) => (
         <div key={item.label} role="option" aria-selected={i === focused}>
           {item.label === 'Ignore' && <div role="separator" className="my-1 border-t border-slate-200" />}

@@ -1,6 +1,5 @@
-import { buildTextMap } from '../tokenizer';
-import { applyPolish, revertSpans, type AppliedSpan } from './polish-apply';
-import { diff, type Hunk } from './polish-diff';
+import { buildTextMap } from './textmap';
+import { diff } from './polish-diff';
 import type { Server } from './server';
 import type { PolishState, Shared } from './state';
 
@@ -11,8 +10,8 @@ export interface PolishOptions {
   minWords?: number;
 }
 
-const langOf = (t: string): 'en' | 'ar' =>
-  (t.match(/\p{Script=Arabic}/gu) ?? []).length > (t.match(/\p{Script=Latin}/gu) ?? []).length ? 'ar' : 'en';
+const dirOf = (t: string): 'ltr' | 'rtl' =>
+  (t.match(/\p{Script=Arabic}/gu) ?? []).length > (t.match(/\p{Script=Latin}/gu) ?? []).length ? 'rtl' : 'ltr';
 const wordCount = (t: string) => (t.match(/[\p{L}\p{N}]+/gu) ?? []).length;
 
 /** On-demand grammar fix of the whole draft: Polish → preview of the changes → accept or dismiss. */
@@ -20,10 +19,8 @@ export function createPolish(shared: Shared, options: PolishOptions) {
   const { el, env, log } = shared;
   const { server, minWords = 3 } = options;
   let inFlight: AbortController | undefined;
-  /** The open preview: the draft that was sent and the changes to apply to it. */
-  let open: { sent: string; hunks: Hunk[]; lang: 'en' | 'ar' } | undefined;
-  /** What the last multi-place accept changed, for "Revert polish". */
-  let applied: { spans: AppliedSpan[]; lang: 'en' | 'ar' } | undefined;
+  /** The open preview: the draft that was sent and its polished version. */
+  let open: { sent: string; polished: string } | undefined;
   let detached = false;
 
   const update = (patch: Partial<PolishState>) => shared.setState({ polish: { ...shared.getState().polish, ...patch } });
@@ -35,13 +32,10 @@ export function createPolish(shared: Shared, options: PolishOptions) {
     if (wordCount(sent) < minWords) return;
     options.onStart();
     open = undefined;
-    applied = undefined;
-    const lang = langOf(sent);
-    const dir = lang === 'ar' ? 'rtl' : 'ltr';
+    const dir = dirOf(sent);
     const ac = new AbortController();
     inFlight = ac;
-    update({ busy: true, preview: undefined, revertable: false });
-    const started = performance.now();
+    update({ busy: true, preview: undefined });
     log({ type: 'polish-request', text: sent });
     const reply = await server.polish(sent, ac.signal);
     log({ type: 'polish-reply', reply });
@@ -54,43 +48,34 @@ export function createPolish(shared: Shared, options: PolishOptions) {
       return;
     }
     const { hunks, segments } = reply.changed ? diff(sent, reply.polished) : { hunks: [], segments: [] };
-    log({ type: 'polish-shown', lang, latencyMs: Math.round(performance.now() - started), changes: hunks.length });
     if (!hunks.length) {
       update({ preview: { dir, segments: [], message: 'No changes suggested.' } });
       return;
     }
-    open = { sent, hunks, lang };
+    open = { sent, polished: reply.polished };
     update({ preview: { dir, segments } });
   }
 
+  /** Replaces the whole draft with the polished one: one undo step. */
   function accept() {
     if (!open) return;
-    const res = applyPolish(el, open.sent, open.hunks, env.replace);
-    if (!res.ok) {
-      open = undefined;
+    const { sent, polished } = open;
+    open = undefined;
+    if (buildTextMap(el).text !== sent) {
       update({ preview: { dir: 'ltr', segments: [], message: 'The draft changed after you pressed Polish. Polish again to get fresh suggestions.' } });
       return;
     }
-    log({ type: 'polish-accepted', lang: open.lang, changes: open.hunks.length });
-    // One change undoes with one Ctrl/Cmd+Z; several get a one-click revert.
-    applied = res.mode === 'per-span' ? { spans: res.spans, lang: open.lang } : undefined;
-    open = undefined;
-    update({ preview: undefined, revertable: !!applied });
+    const all = el.ownerDocument.createRange();
+    all.selectNodeContents(el);
+    env.replace(all, polished);
+    log({ type: 'polish-accepted' });
+    update({ preview: undefined });
   }
 
   /** Closes the preview (or message) without changing the draft. */
   function dismiss() {
-    if (open) log({ type: 'polish-dismissed', lang: open.lang });
     open = undefined;
     update({ preview: undefined });
-  }
-
-  function revert() {
-    if (!applied) return;
-    revertSpans(applied.spans, env.replace);
-    log({ type: 'polish-reverted', lang: applied.lang });
-    applied = undefined;
-    update({ revertable: false });
   }
 
   const observer = new MutationObserver(sync);
@@ -101,7 +86,6 @@ export function createPolish(shared: Shared, options: PolishOptions) {
     polishNow,
     accept,
     dismiss,
-    revert,
     detach() {
       if (detached) return;
       detached = true;

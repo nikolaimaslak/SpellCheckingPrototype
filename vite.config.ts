@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
@@ -9,9 +8,5 @@ export default defineConfig({
     // and nothing is exposed to the network.
     host: '127.0.0.1',
     port: 5173,
-  },
-  test: {
-    environment: 'node',
-    include: ['test/**/*.test.{ts,tsx}'],
   },
 });
