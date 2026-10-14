@@ -1,7 +1,0 @@
-hunspell.wasm / hunspell.mjs are compiled from Hunspell v1.7.4
-(https://github.com/hunspell/hunspell, commit 92aa34b3f378ec115562fb06bd1728d566a339ec).
-
-Hunspell is tri-licensed under MPL 1.1 / GPL 2.0 / LGPL 2.1. This project
-elects the Mozilla Public License 1.1; no GPL or LGPL terms are taken.
-Source for the compiled files is available at the commit above; the binding
-is wasm/binding.cpp and the build is wasm/build.sh in this repository.

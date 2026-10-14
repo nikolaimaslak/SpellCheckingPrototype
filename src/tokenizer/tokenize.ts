@@ -1,6 +1,7 @@
-import type { Lang } from '../spell/protocol';
 import { maskExclusions } from './exclusions';
 import { rangeFor, type TextMap } from './textmap';
+
+export type Lang = 'en' | 'ar';
 
 export interface Token {
   text: string;

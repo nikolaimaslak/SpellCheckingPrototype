@@ -10,14 +10,8 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 5173,
   },
-  worker: {
-    format: 'es',
-  },
   test: {
     environment: 'node',
     include: ['test/**/*.test.{ts,tsx}'],
-    // Real-engine tests depend on Hunspell's time-limited suggest(); running
-    // files in parallel starves it and truncates results (docs/known-issues.md, KI-1).
-    fileParallelism: false,
   },
 });
