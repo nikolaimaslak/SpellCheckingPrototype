@@ -15,7 +15,7 @@ function setup(html: string, polished: string | null, changed = true, completion
   const polish = vi.fn<Server['polish']>(async (text) =>
     polished === null ? null : { polished: changed ? polished : text, changed },
   );
-  const complete = vi.fn<Server['complete']>(async () => ({ completion: ' x' }));
+  const check = vi.fn<Server['check']>(async () => ({ mistakes: [], completion: ' x' }));
   const replace = vi.fn((range: Range, text: string) => {
     if (range.startContainer === range.endContainer) (range.startContainer as Text).replaceData(range.startOffset, range.endOffset - range.startOffset, text);
     else {
@@ -24,10 +24,10 @@ function setup(html: string, polished: string | null, changed = true, completion
     }
     el.dispatchEvent(new InputEvent('input', { inputType: 'insertText', data: text }));
   });
-  const t = testAssistant(el, { spelling: 'off', completion, server: { polish, complete }, env: { replace } });
+  const t = testAssistant(el, { spelling: 'off', completion, server: { polish, check }, env: { replace } });
   detachers.push(() => t.assistant.detach());
   const polishEvents = () => t.events.filter((e) => e.type.startsWith('polish-') && !['polish-request', 'polish-reply'].includes(e.type));
-  return { ...t, el, polish, complete, replace, polishEvents, state: () => t.assistant.getState().polish };
+  return { ...t, el, polish, check, replace, polishEvents, state: () => t.assistant.getState().polish };
 }
 
 const segments = (state: ReturnType<ReturnType<typeof setup>['state']>, type: 'ins' | 'del') =>
@@ -108,12 +108,12 @@ describe('polish', () => {
     expect(down.state().preview!.message).toMatch(/unavailable/);
   });
 
-  it('completion requests nothing while the preview is open', async () => {
-    const { el, assistant, complete } = setup('He go to the office today.', 'He went to the office today.', true, true);
+  it('asks for no completion while the preview is open', async () => {
+    const { el, assistant, check } = setup('He go to the office today.', 'He went to the office today.', true, true);
     await assistant.polishNow();
     el.focus();
     document.getSelection()!.collapse(el.firstChild!, el.textContent!.length);
-    await assistant.completion!.requestNow();
-    expect(complete).not.toHaveBeenCalled();
+    await assistant.checkNow();
+    expect(check.mock.calls[0][0].prefix).toBeNull();
   });
 });

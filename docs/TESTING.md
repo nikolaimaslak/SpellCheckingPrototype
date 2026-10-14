@@ -25,16 +25,17 @@ npm run dev
 
 Open **http://localhost:5173/** (printed in the terminal). Stop with **Ctrl+C**.
 
-**Completion and polish need an OpenAI API key.** Type it in **OpenAI API key** in the settings (saved in your browser). The page then sends your draft, the conversation, canned responses and KB to OpenAI (`gpt-4.1-mini`), so use made-up text only. Without a key there are no grey suggestions and Polish shows nothing. Spell checking and auto-correct always run entirely in your browser and never need a key.
+**Everything needs an OpenAI API key.** Type it in **OpenAI API key** in the settings (saved in your browser). The page then sends your draft, the conversation, canned responses and KB to OpenAI (`gpt-4.1-mini`), so use made-up text only. Without a key nothing is underlined, there are no grey suggestions and Polish shows nothing.
 
 ## 2. What the page shows
 
 - **Settings** (left), saved in your browser; **Reset** puts the defaults back:
-  - **Spelling:** spell check on or off, auto-correct on or off, when auto-correct applies, the languages (with how long each dictionary took to load), the custom dictionary.
-  - **Completion:** on or off, and the OpenAI API key.
+  - **Model:** the OpenAI API key.
+  - **Spelling:** spell check on or off, auto-correct on or off, the custom dictionary.
+  - **Completion:** on or off.
   - **Sources:** **Conversation** (`Customer:` / `Agent:` lines; a scenario picker with **Next customer message** adds the next customer line), **Canned responses** (one per line) and **Knowledge base** (`Title: text` per line). An empty field turns that source off. The note under each field says how it is used.
 - **The message field:** Enter adds your message to Conversation as an `Agent:` line and clears the field; Shift+Enter starts a new line. Under it, the **Polish** button.
-- **Events** (bottom): every event as one line of JSON, for example `{"type":"autocorrect","lang":"en","original":"teh","replacement":"the"}`, the completion requests and replies, and polish.
+- **Events** (bottom): every event as one line of JSON, for example `{"type":"autocorrect","lang":"en","original":"teh","replacement":"the"}`, every request to the model (`check-request`) and its answer (`check-reply`, with the mistakes and the completion), and polish.
 
 If something gets into a strange state, press **Reset**, or reload the page.
 
@@ -42,72 +43,47 @@ If something gets into a strange state, press **Reset**, or reload the page.
 
 Start each section with **Reset** unless it says otherwise. A trailing space in an input (shown as `␣`) matters: type it.
 
+**How spelling works now.** While you type, the page sends the whole draft to the model at most once a second, and once more after you stop. The answer lists the misspelled words, each with fixes and whether the model is **sure**. Sure mistakes are auto-corrected; the others are underlined, with the fixes in the menu. The word you are still typing (the caret at its end) is never touched. Answers vary a little from run to run: report what you see, with the `check-reply` event.
+
 ### T1. Spell checking (untick **Auto-correct**)
 
 | # | Do | Expected |
 |---|---|---|
-| T1.1 | Type `I will recieve it␣` | Only "recieve" gets a red wavy underline. A `flag` event appears. |
-| T1.2 | Click "recieve" | A small menu opens next to it with suggestions ("receive" first) and **Ignore**. |
+| T1.1 | Type `I will recieve it␣` and wait a second | Only "recieve" gets a red wavy underline. A `flag` event appears. |
+| T1.2 | Click "recieve" | A small menu opens next to it with fixes ("receive" first) and **Ignore**. |
 | T1.3 | Choose "receive", then press Ctrl+Z (Cmd+Z on Mac) once | The word becomes "receive"; the undo brings back "recieve". |
 | T1.4 | Put the caret inside "recieve" and press **Ctrl+.**, then use the arrow keys, Enter, and Escape | The menu opens from the keyboard; Enter picks; Escape closes without changes. |
-| T1.5 | Type `اذا كان الطلب␣` | Only "اذا" is underlined. Its menu reads right to left and offers "إذا". |
-| T1.6 | Type `رقم الطلب في نظام GOSSI هو␣` | Only "GOSSI" is underlined (each word is checked in its own language). |
-| T1.7 | Type `مَرْحَبًا مرحـــبا␣` | Nothing is underlined (vowel marks and stretched letters are fine). |
-| T1.8 | Type `see https://example.org or mail info@example.org, case CS-104233, Dear $(user.firstName)␣` | Nothing in the link, email, reference number or placeholder is underlined. |
-| T1.9 | Click an underlined word and choose **Ignore** | That word stops being underlined everywhere, and isn't flagged again until a setting changes or the page reloads. |
-| T1.10 | Type `recie` and stop with the caret right after it | Not underlined while you're still typing it. |
-| T1.11 | Add `GOSI` to the Custom dictionary, then type `GOSI GOSSI␣` | "GOSI" is not underlined; "GOSSI" is, and its menu suggests "GOSI". |
+| T1.5 | Type `اذا كان الطلب␣` | "اذا" is underlined. Its menu reads right to left and offers "إذا". |
+| T1.6 | Type `رقم الطلب في نظام GOSSI هو␣` | Mixed Arabic and English work in one draft; the Arabic words aren't underlined. |
+| T1.7 | Type `see https://example.org or mail info@example.org, case CS-104233, Dear $(user.firstName)␣` | Nothing in the link, email, reference number or placeholder is underlined. |
+| T1.8 | Click an underlined word and choose **Ignore** | That word stops being underlined, and isn't flagged again until a setting changes or the page reloads. |
+| T1.9 | Type `recie` and stop with the caret right after it | Not underlined while the caret is still at its end. |
+| T1.10 | Add `GOSSI` to the Custom dictionary, then type `GOSSI is down␣` | "GOSSI" is not underlined (custom words are sent to the model as "never report", and also never underlined by the page). |
 
 ### T2. Auto-correct (defaults)
 
-A fix happens **when you type the space or punctuation right after the word**. The corrected word flashes briefly. After `.` `@` `:` or `/` the fix waits until your next space or line break, so nothing inside an email address or link is ever changed.
+The corrected word flashes briefly. Each correction is its own Ctrl/Cmd+Z step.
 
 | # | Type | Expected |
 |---|---|---|
-| T2.1 | `please seperate␣` | becomes "please separate" |
-| T2.2 | `paymnet␣` · `freind␣` · `goverment␣` | "payment" · "friend" · "government" |
-| T2.3 | `Seperate␣` at the start | "Separate" (capital kept) |
-| T2.4 | `teh␣` · `Teh␣` | "the" · "The" (a known common misspelling, fixed even though it's short) |
-| T2.5 | `اذا كان` (the space after "اذا" triggers it) · `سنرسل الرد الى بريدك␣` | "إذا كان" · "الى" becomes "إلى" (known misspellings) |
-| T2.6 | `المستخذم␣` · `حتىى␣` | "المستخدم" · "حتى" |
-| T2.7 | `oNly␣` · `thiS␣` | "only" · "this" (only the stray capital is fixed, never "oily" or "thin") |
-| T2.8 | `please seperate.␣` | Still "seperate." right after the full stop; "separate." once you type the space |
-
-**Must not change (only underlined):**
-
-| # | Type | Why |
-|---|---|---|
-| T2.9 | `afte␣` | Ambiguous: after, aft, ate, fate and ante are all one typo away |
-| T2.10 | `tge␣` | Too short to auto-correct safely, and not a known misspelling |
-| T2.11 | `GOSSI␣` · `TEH␣` | All capitals (codes and names are left alone) |
-| T2.12 | `ان␣` | Ambiguous in Arabic: both "أن" and "إن" are words |
-| T2.13 | `النضام␣` | Ambiguous in Arabic: several Arabic words are one typo away. Its menu offers "النظام". |
-| T2.14 | `email info@gosi.gov.sa␣` · `visit https://www.gosi.gov.sa/en␣` | Nothing in the address changes at any moment while you type it (watch "gosi" and "https") |
-| T2.15 | `Dear Ms. Fatimah,␣` · `Dear Mr. Al-Harbi,␣` | Names in mid-sentence (a capital letter not at the start of a sentence) are never changed. They may be underlined. |
-| T2.16 | Add the line `Customer: Hello, this is Noura` to Conversation. Then type `Noura, thank you␣` | "Noura" is not changed, even at the start of a sentence, because the customer wrote it. Without that line it would become "Nora". |
-
-**When it must not fire:**
-
-| # | Do | Expected |
-|---|---|---|
-| T2.17 | Type `please seperate` and press **Enter** immediately | The message goes to Conversation exactly as typed ("seperate"). Nothing is changed as it's sent. |
-| T2.18 | Type `please seperate`, then press **Shift+Enter** | Corrected to "separate" (a new line counts as finishing the word). |
-| T2.19 | Paste `please seperate them` from elsewhere | Not corrected; "seperate" is only underlined. |
-
-**Auto-correct when:**
-
-| # | Do | Expected |
-|---|---|---|
-| T2.20 | Choose **It's on the list of common typos (teh → the)**. Type `teh paymnet␣` | "the paymnet": only the known misspelling is fixed, and "paymnet" is underlined. The choice survives a reload. |
-| T2.21 | Untick **Auto-correct**, type `teh␣` and click it | Not changed; its menu offers "the" first. |
+| T2.1 | `please seperate them␣` | becomes "please separate them" |
+| T2.2 | `the paymnet from your freind␣` | "payment" · "friend" |
+| T2.3 | `Seperate them␣` at the start | "Separate" (capital kept) |
+| T2.4 | `teh request␣` | "the request" |
+| T2.5 | `اذا كان الطلب␣` · `سنرسل الرد الى بريدك␣` | "إذا كان" · "إلى", when the model is sure; otherwise only underlined |
+| T2.6 | `please afte that␣` | Not changed (after? aft?): only underlined, with the choices in the menu |
+| T2.7 | `email info@gosi.gov.sa␣` · `visit https://www.gosi.gov.sa/en␣` | Nothing in the address changes |
+| T2.8 | `Dear Ms. Fatimah,␣` | Names aren't changed |
+| T2.9 | Add the line `Customer: Hello, this is Nura` to Conversation. Then type `Nura, thank you␣` | "Nura" is not changed, because the customer wrote it. |
+| T2.10 | Untick **Auto-correct**, type `teh request␣` and click "teh" | Not changed; its menu offers "the" first. |
 
 ### T3. Reverting an auto-correction (defaults)
 
 | # | Do | Expected |
 |---|---|---|
-| T3.1 | Type `please seperate␣`, then press Ctrl+Z (Cmd+Z) until "seperate" comes back | "seperate" comes back, and a `revert` event appears. Typing `seperate␣` again isn't corrected. |
-| T3.2 | Type `رقم المستخذم␣`, then click the corrected "المستخدم" | The menu offers only **Revert to المستخذم** (right to left). Choosing it restores the word, and it isn't corrected or underlined again. |
-| T3.3 | Type `please seperate␣` (it becomes "separate"), then press **Backspace** | A normal Backspace: the space is deleted, "separate" stays. Only Ctrl/Cmd+Z and the menu revert. |
+| T3.1 | Type `please seperate them␣`, then press Ctrl+Z (Cmd+Z) until "seperate" comes back | "seperate" comes back, and a `revert` event appears. It isn't corrected or underlined again. |
+| T3.2 | Type `رقم المستخذم في النظام␣`, then click the corrected "المستخدم" | The menu offers only **Revert to المستخذم** (right to left). Choosing it restores the word, and it isn't corrected or underlined again. |
+| T3.3 | After a correction, press **Backspace** | A normal Backspace. Only Ctrl/Cmd+Z and the menu revert. |
 
 ### T4. Inline completion (defaults)
 
@@ -156,20 +132,16 @@ Suggestions vary from run to run, but should always be a single sentence in the 
 
 | # | Do | Expected |
 |---|---|---|
-| T7.1 | Untick **Inline completion** | No grey suggestions, no `complete-request` events; Canned responses and Knowledge base become read-only. Conversation still protects the customer's words (T2.16). |
-| T7.2 | Untick **Spell check** | No underlines and no auto-correct; Auto-correct and its "when" choices are greyed out. |
-| T7.3 | Untick **Arabic** | Arabic words are no longer underlined or corrected; the dictionaries line shows only English. |
-| T7.4 | Change some settings, reload the page, then press **Reset** | The changes survive the reload; Reset brings back the defaults. |
+| T7.1 | Untick **Inline completion** | No grey suggestions, and `check-request` events say `"completion":false`; Canned responses and Knowledge base become read-only. Conversation still protects the customer's words (T2.9). |
+| T7.2 | Untick **Spell check** | No underlines and no auto-correct; Auto-correct is greyed out. With completion also off, nothing is sent to the model. |
+| T7.3 | Change some settings, reload the page, then press **Reset** | The changes survive the reload; Reset brings back the defaults. |
 
 ## 4. Known limitations (not bugs)
 
-- **Short or ambiguous typos aren't auto-corrected** (T2.9–T2.13). Auto-correct only fixes a word when it's a known common misspelling, when exactly one dictionary word is one typo away, or when only a capital letter is wrong. This avoids wrong changes. The other typos are still underlined with suggestions.
-- **Many Arabic typos are only underlined, not auto-corrected** (T2.12, T2.13). Arabic words often have several dictionary words one typo away, because of prefixes and suffixes. Common slips such as "اذا" → "إذا" are fixed through the curated list. For the others, pick the fix from the menu.
-- **British spellings are corrected to American ones** in auto mode ("labour" → "labor", "cancelled" → "canceled"), because the English dictionary is en-US. Whether to use en-GB is an open question.
-- **The misspellings lists are drafts** awaiting human review (known issue KI-5). If you see a word changed that shouldn't have been, please report it with the exact word.
+- **The model decides what is a mistake and what is sure.** Answers can differ between runs, and a word can be underlined in one answer and not in the next. Report wrong auto-corrections with the exact text and the `check-reply` event.
+- **Underlines and corrections come up to a second after you type,** plus the model's answer time.
 - **Ignored words are forgotten** when a setting changes or the page reloads; use the Custom dictionary to keep a word.
 - **Suggestions aren't filtered for personal details:** they may contain names, emails, links, figures and dates from the conversation and the approved answers (T4.12–T4.14). Use made-up data only.
-- **Completion and polish take about half a second to a second** with the live model.
 - **All data is synthetic:** customer messages, canned responses and knowledge-base articles were written for this demo. They are **not** real policies or figures.
 - **Desktop browsers only;** mobile isn't supported.
 
@@ -178,7 +150,7 @@ Suggestions vary from run to run, but should always be a single sentence in the 
 Use [`docs/TEST-REPORT-TEMPLATE.md`](TEST-REPORT-TEMPLATE.md), one problem per report, and send it to the person who shared the prototype with you (or open a GitHub issue with the "Test report" template if you have access). Please always include:
 - the **version**: the output of `git rev-parse --short HEAD`;
 - your **browser and version**;
-- the **scenario number** (for example T2.11);
+- the **scenario number** (for example T2.6);
 - the **exact text** you typed, plus expected vs. actual result, and the relevant lines from **Events**.
 
 A screenshot helps; make sure it shows no real data.

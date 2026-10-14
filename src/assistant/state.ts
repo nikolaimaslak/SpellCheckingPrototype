@@ -1,6 +1,6 @@
 import type { HighlightEnv } from './highlights';
 import type { Segment } from './polish-diff';
-import type { Lang } from '../spell/protocol';
+import type { Lang } from '../tokenizer';
 
 /** A box in viewport coordinates. */
 export interface Rect {
@@ -77,8 +77,8 @@ export type PolishEvent =
 
 /** What the server was asked and what it answered, for the page's event console. */
 export type ServerEvent =
-  | { type: 'complete-request'; prefix: string; turns: number; canned: number; kb: number }
-  | { type: 'complete-reply' | 'polish-reply'; reply: unknown; aborted?: boolean }
+  | { type: 'check-request'; text: string; completion: boolean; turns: number; canned: number; kb: number }
+  | { type: 'check-reply' | 'polish-reply'; reply: unknown; aborted?: boolean }
   | { type: 'polish-request'; text: string };
 
 export type AssistEvent = SpellingEvent | CompletionEvent | PolishEvent | ServerEvent;

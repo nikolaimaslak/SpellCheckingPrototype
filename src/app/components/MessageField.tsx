@@ -6,8 +6,8 @@ import { PolishBar } from './PolishBar';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
-  /** Undefined until the spell checker is ready. Re-attaches when it changes; pass a stable object. */
-  options: AssistantOptions | undefined;
+  /** Re-attaches when it changes; pass a stable object. */
+  options: AssistantOptions;
   /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
   onSend: (text: string) => void;
 }

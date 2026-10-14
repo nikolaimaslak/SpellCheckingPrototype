@@ -1,6 +1,4 @@
-import type { AutoReplaceConfidence } from '../autocorrect/confidence';
-import type { SpellChecker } from '../spell/checker';
-import type { Lang } from '../spell/protocol';
+import { createCheck } from './check';
 import { createCompletion } from './completion';
 import { detectMac } from './completion-rules';
 import { browserHighlights } from './highlights';
@@ -12,14 +10,11 @@ import { INITIAL_STATE, type AssistantEnv, type AssistantState, type AssistEvent
 export type { AssistantState, AssistEvent } from './state';
 
 export interface AssistantOptions {
-  checker: SpellChecker;
   /** off; suggest: underline and offer fixes; auto: also auto-correct. */
   spelling: 'off' | 'suggest' | 'auto';
-  autoReplace: AutoReplaceConfidence;
-  languages: Lang[];
   customWords: string[];
   completion: boolean;
-  /** Canned responses and KB articles ("Title: body") sent with completion requests. */
+  /** Canned responses and KB articles ("Title: body") sent with every check. */
   canned: string[];
   kb: string[];
   /** The conversation, read on every use. */
@@ -29,7 +24,7 @@ export interface AssistantOptions {
   /** Tests replace the browser parts. */
   env?: Partial<AssistantEnv>;
   spellingDebounceMs?: number;
-  completionDebounceMs?: number;
+  checkThrottleMs?: number;
 }
 
 export type Assistant = ReturnType<typeof createAssistant>;
@@ -59,23 +54,25 @@ export function createAssistant(el: HTMLElement, options: AssistantOptions) {
     options.spelling === 'off'
       ? undefined
       : createSpelling(shared, {
-          checker: options.checker,
           mode: options.spelling,
-          autoReplace: options.autoReplace,
-          languages: options.languages,
           customWords: options.customWords,
           conversation: options.conversation,
           debounceMs: options.spellingDebounceMs,
         });
-  const completion = options.completion
-    ? createCompletion(shared, {
-        server,
-        conversation: options.conversation,
-        canned: options.canned,
-        kb: options.kb,
-        debounceMs: options.completionDebounceMs,
-      })
-    : undefined;
+  const completion = options.completion ? createCompletion(shared) : undefined;
+  const check =
+    spelling || completion
+      ? createCheck(shared, {
+          server,
+          spelling,
+          completion,
+          conversation: options.conversation,
+          canned: options.canned,
+          kb: options.kb,
+          customWords: options.customWords,
+          throttleMs: options.checkThrottleMs,
+        })
+      : undefined;
   const polish = createPolish(shared, {
     server,
     onStart() {
@@ -100,10 +97,13 @@ export function createAssistant(el: HTMLElement, options: AssistantOptions) {
     acceptPolish: () => polish.accept(),
     dismissPolish: () => polish.dismiss(),
     revertPolish: () => polish.revert(),
+    /** Sends the spelling and completion request now instead of waiting for the throttle. */
+    checkNow: async () => check?.checkNow(),
     /** The features themselves, for tests. */
     spelling,
     completion,
     detach() {
+      check?.detach();
       spelling?.detach();
       completion?.detach();
       polish.detach();

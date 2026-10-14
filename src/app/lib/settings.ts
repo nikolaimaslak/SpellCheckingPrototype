@@ -1,8 +1,5 @@
 import type { AssistantOptions, AssistEvent } from '../../assistant';
 import { openAiServer, type Turn } from '../../assistant/server';
-import type { AutoReplaceConfidence } from '../../autocorrect/confidence';
-import type { SpellChecker } from '../../spell/checker';
-import type { Lang } from '../../spell/protocol';
 import { SCENARIOS } from './conversation';
 import { DEFAULT_CANNED, DEFAULT_KB } from './default-sources';
 
@@ -11,14 +8,12 @@ export interface AppSettings {
   spellCheck: boolean;
   /** Only with spellCheck on. */
   autoCorrect: boolean;
-  autoReplace: AutoReplaceConfidence;
-  languages: Lang[];
   /** One word per line: never flagged, never auto-corrected. */
   customDictionary: string;
   completion: boolean;
-  /** OpenAI key for completion and polish; empty = both are off. */
+  /** OpenAI key for spelling, completion and polish; empty = all three are off. */
   apiKey: string;
-  /** `Customer:` / `Agent:` lines: auto-correct protection, canned/KB search and LLM context. */
+  /** `Customer:` / `Agent:` lines: auto-correct protection and LLM context. */
   conversation: string;
   /** One canned response per line; empty = no canned responses. */
   canned: string;
@@ -29,8 +24,6 @@ export interface AppSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   spellCheck: true,
   autoCorrect: true,
-  autoReplace: 'list-and-rule',
-  languages: ['en', 'ar'],
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   completion: true,
   apiKey: '',
@@ -40,7 +33,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
 };
 
 const KEY = 'bp-spell-react-demo-settings';
-const LANGS: Lang[] = ['en', 'ar'];
 
 export const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
@@ -51,15 +43,11 @@ export const spellMode = (settings: Pick<AppSettings, 'spellCheck' | 'autoCorrec
 /** The assistant's options from the settings. The conversation is read live, so it isn't part of them. */
 export function assistantOptions(
   settings: Omit<AppSettings, 'conversation'>,
-  checker: SpellChecker,
   conversation: () => Turn[],
   log: (event: AssistEvent) => void,
 ): AssistantOptions {
   return {
-    checker,
     spelling: spellMode(settings),
-    autoReplace: settings.autoReplace,
-    languages: settings.languages,
     customWords: lines(settings.customDictionary),
     completion: settings.completion,
     server: openAiServer(settings.apiKey),
@@ -79,8 +67,6 @@ export function parseSettings(input: unknown): AppSettings {
   return {
     spellCheck: booleanField('spellCheck'),
     autoCorrect: booleanField('autoCorrect'),
-    autoReplace: stored.autoReplace === 'list' || stored.autoReplace === 'list-and-rule' ? stored.autoReplace : DEFAULT_SETTINGS.autoReplace,
-    languages: Array.isArray(stored.languages) ? LANGS.filter((lang) => (stored.languages as unknown[]).includes(lang)) : [...DEFAULT_SETTINGS.languages],
     customDictionary: textField('customDictionary'),
     completion: booleanField('completion'),
     apiKey: textField('apiKey'),

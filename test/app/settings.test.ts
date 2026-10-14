@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appendTurn, parseConversation, SCENARIOS } from '../../src/app/lib/conversation';
 import { assistantOptions, DEFAULT_SETTINGS, lines, loadSettings, parseSettings, saveSettings, spellMode } from '../../src/app/lib/settings';
-import type { SpellChecker } from '../../src/spell/checker';
 
 const memory = (): Storage => {
   const data = new Map<string, string>();
@@ -20,10 +19,9 @@ const memory = (): Storage => {
 describe('React demo settings', () => {
   it('falls back to the defaults field by field', () => {
     expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS);
-    const s = parseSettings({ autoCorrect: false, autoReplace: 'bogus', languages: ['ar', 'fr'], kb: 42 });
+    const s = parseSettings({ autoCorrect: false, completion: 'yes', kb: 42 });
     expect(s.autoCorrect).toBe(false);
-    expect(s.autoReplace).toBe(DEFAULT_SETTINGS.autoReplace);
-    expect(s.languages).toEqual(['ar']);
+    expect(s.completion).toBe(DEFAULT_SETTINGS.completion);
     expect(s.kb).toBe(DEFAULT_SETTINGS.kb);
   });
 
@@ -48,13 +46,12 @@ describe('React demo settings', () => {
 
 describe('assistant options', () => {
   it('maps the checkboxes to a spelling mode and splits text fields into lines', () => {
-    const checker = {} as SpellChecker;
     const conversation = () => [];
     const log = () => {};
     const { conversation: _c, ...settings } = { ...DEFAULT_SETTINGS, autoCorrect: false, customDictionary: 'GOSI\n\n Absher ', canned: 'a\nb', kb: '' };
-    const options = assistantOptions(settings, checker, conversation, log);
-    expect(options).toMatchObject({ checker, spelling: 'suggest', customWords: ['GOSI', 'Absher'], canned: ['a', 'b'], kb: [], completion: true, conversation, log });
-    expect(assistantOptions({ ...settings, spellCheck: false }, checker, conversation, log).spelling).toBe('off');
+    const options = assistantOptions(settings, conversation, log);
+    expect(options).toMatchObject({ spelling: 'suggest', customWords: ['GOSI', 'Absher'], canned: ['a', 'b'], kb: [], completion: true, conversation, log });
+    expect(assistantOptions({ ...settings, spellCheck: false }, conversation, log).spelling).toBe('off');
   });
 });
 

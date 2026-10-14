@@ -1,18 +1,13 @@
 import { buildTextMap, caretOffset } from '../tokenizer';
 import { ghostKeyAction, ghostLayout, nextWord, shouldRequest } from './completion-rules';
-import type { Server, Turn } from './server';
 import type { Shared } from './state';
 
-export interface CompletionOptions {
-  server: Server;
-  conversation: () => Turn[];
-  /** Sent with every request; empty = that source is off. */
-  canned: string[];
-  kb: string[];
-  debounceMs?: number;
+/** The field as it was when a completion was asked for. */
+export interface CompletionAsk {
+  prefix: string;
+  caret: number;
+  text: string;
 }
-
-const MAX_PREFIX = 600;
 
 const langOf = (text: string): 'en' | 'ar' => {
   const last = text.match(/[\p{L}\p{M}]+/gu)?.at(-1) ?? '';
@@ -21,19 +16,17 @@ const langOf = (text: string): 'en' | 'ar' => {
 const dirOf = (lang: 'en' | 'ar') => (lang === 'ar' ? 'rtl' : 'ltr');
 
 /**
- * Gmail-style inline completion: after a typing pause at the end of a line,
- * asks the server and shows the answer as ghost text. Tab accepts it, typing
- * the same characters keeps it, anything else dismisses it.
+ * Gmail-style inline completion: says when a completion is wanted (the caret
+ * at the end of a line, nothing open), and shows the answer as ghost text.
+ * Tab accepts it, typing the same characters keeps it, anything else
+ * dismisses it. The request itself goes out with the spelling check
+ * (`check.ts`).
  */
-export function createCompletion(shared: Shared, options: CompletionOptions) {
+export function createCompletion(shared: Shared) {
   const { el, env, log } = shared;
-  const { server, canned, kb, debounceMs = 400 } = options;
   const doc = el.ownerDocument;
   const win = doc.defaultView!;
 
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  let inFlight: AbortController | undefined;
-  let generation = 0;
   let composing = false;
   /**
    * The suggestion on screen. `rest`: what is still to accept; `anchor`: the
@@ -75,45 +68,24 @@ export function createCompletion(shared: Shared, options: CompletionOptions) {
     }
   }
 
-  function cancelPending() {
-    clearTimeout(timer);
-    inFlight?.abort();
-    inFlight = undefined;
-    generation++;
-  }
-
-  const schedule = () => {
-    if (detached) return;
-    cancelPending();
-    timer = setTimeout(() => void requestNow(), debounceMs);
-  };
-
-  async function requestNow(): Promise<void> {
-    clearTimeout(timer);
-    if (detached || shown) return;
+  /** What to ask a completion for, or null when none is wanted now. */
+  function wanted(): CompletionAsk | null {
+    if (detached || shown) return null;
     const { map, caret } = caretState();
-    if (caret === undefined) return;
+    if (caret === undefined) return null;
     const before = map.text.slice(0, caret);
     const after = map.text.slice(caret).split('\n')[0];
-    if (!shouldRequest({ before, after, composing, overlayOpen: overlayOpen() })) return;
+    if (!shouldRequest({ before, after, composing, overlayOpen: overlayOpen() })) return null;
+    return { prefix: before, caret, text: map.text };
+  }
 
-    const mine = ++generation;
-    const ac = new AbortController();
-    inFlight = ac;
-    const started = performance.now();
-    const prefix = before.slice(-MAX_PREFIX);
-    const transcript = options.conversation();
-    log({ type: 'complete-request', prefix, turns: transcript.length, canned: canned.length, kb: kb.length });
-    const reply = await server.complete({ prefix, transcript, canned, kb }, ac.signal);
-    log({ type: 'complete-reply', reply, aborted: ac.signal.aborted });
-    if (mine !== generation || detached || !reply?.completion) return;
-    // Only show if nothing moved while waiting.
+  /** Shows the answer as ghost text, if nothing moved since it was asked for. */
+  function show(completion: string, asked: CompletionAsk, latencyMs: number) {
+    if (detached || shown || !completion) return;
     const now = caretState();
-    if (now.caret !== caret || now.map.text !== map.text || overlayOpen()) return;
-
-    const lang = langOf(prefix);
-    const latencyMs = Math.round(performance.now() - started);
-    shown = { rest: reply.completion, anchor: caret, lang, latencyMs, length: reply.completion.length, consumed: 0, wordAccepted: false };
+    if (now.caret !== asked.caret || now.map.text !== asked.text || overlayOpen()) return;
+    const lang = langOf(asked.prefix);
+    shown = { rest: completion, anchor: asked.caret, lang, latencyMs, length: completion.length, consumed: 0, wordAccepted: false };
     render();
     log({ type: 'completion-shown', lang, latencyMs, shownLength: shown.length });
   }
@@ -166,13 +138,11 @@ export function createCompletion(shared: Shared, options: CompletionOptions) {
           shown = undefined;
           render();
           log({ type: 'completion-accepted', lang: s.lang, latencyMs: s.latencyMs, shownLength: s.length, acceptedLength: s.length });
-          schedule(); // used up: the next pause may bring a new suggestion
         }
         return;
       }
     }
     dismiss();
-    schedule();
   };
 
   const onKeyDown = (e: KeyboardEvent) => {
@@ -196,15 +166,9 @@ export function createCompletion(shared: Shared, options: CompletionOptions) {
   };
   const onComposition = (e: Event) => {
     composing = e.type === 'compositionstart';
-    if (composing) {
-      cancelPending();
-      dismiss();
-    }
+    if (composing) dismiss();
   };
-  const onBlur = () => {
-    cancelPending();
-    dismiss();
-  };
+  const onBlur = dismiss;
 
   // Writes without input events, e.g. the page clearing the field on send.
   const observer = new MutationObserver(() => {
@@ -224,17 +188,13 @@ export function createCompletion(shared: Shared, options: CompletionOptions) {
   doc.addEventListener('selectionchange', onSelectionChange);
 
   return {
-    /** Runs the pause check now (tests). */
-    requestNow,
-    /** Hides any ghost text and cancels a pending request (e.g. when Polish opens). */
-    dismiss() {
-      cancelPending();
-      dismiss();
-    },
+    wanted,
+    show,
+    /** Hides any ghost text (e.g. when Polish opens). */
+    dismiss,
     detach() {
       if (detached) return;
       detached = true;
-      cancelPending();
       observer.disconnect();
       el.removeEventListener('input', onInput);
       el.removeEventListener('compositionstart', onComposition);

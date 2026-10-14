@@ -18,32 +18,6 @@ export function Checkbox(props: { label: string; checked: boolean; disabled?: bo
   );
 }
 
-export function RadioGroup<T extends string>(props: {
-  name: string;
-  value: T;
-  options: { value: T; label: string }[];
-  disabled?: boolean;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div className="space-y-1">
-      {props.options.map((o) => (
-        <label key={o.value} className={`flex items-center gap-2 text-sm ${props.disabled ? 'text-slate-400' : ''}`}>
-          <input
-            type="radio"
-            name={props.name}
-            value={o.value}
-            checked={props.value === o.value}
-            disabled={props.disabled}
-            onChange={() => props.onChange(o.value)}
-          />
-          {o.label}
-        </label>
-      ))}
-    </div>
-  );
-}
-
 export function TextArea(props: { label: string; hint?: string; value: string; rows?: number; disabled?: boolean; onChange: (value: string) => void }) {
   return (
     <label className="block text-sm">

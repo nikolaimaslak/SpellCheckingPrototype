@@ -1,20 +1,12 @@
-import { caseFolded, decide, needsEvidence, withLeadingCapital, type AutoReplaceConfidence } from '../autocorrect/confidence';
-import { conversationWords, startsSentence } from '../autocorrect/context';
-import { knownFix } from '../autocorrect/misspellings';
-import { boundaryKind, completedWord, releasable } from '../autocorrect/trigger';
-import type { SpellChecker } from '../spell/checker';
-import type { Lang } from '../spell/protocol';
-import { buildTextMap, caretOffset, flatOffsetOf, pointAt, rangeFor, tokenize, type Token } from '../tokenizer';
+import { buildTextMap, caretOffset, flatOffsetOf, pointAt, rangeFor, tokenize, type Lang, type Token } from '../tokenizer';
 import { AUTOCORRECTED, createHighlight, SPELLING_ERROR } from './highlights';
+import type { Mistake } from './server';
 import type { Shared } from './state';
 
 export interface SpellingOptions {
-  checker: SpellChecker;
-  /** suggest: underline and offer fixes; auto: also replace clear slips when a word is finished. */
+  /** suggest: underline and offer fixes; auto: also replace the mistakes the model is sure about. */
   mode: 'suggest' | 'auto';
-  autoReplace: AutoReplaceConfidence;
-  languages: Lang[];
-  /** Never auto-corrected (the checker also never flags them). */
+  /** Never underlined or auto-corrected. */
   customWords: string[];
   /** The conversation; words in the customer's turns are never auto-corrected (names). */
   conversation: () => readonly { role: string; text: string }[];
@@ -49,15 +41,22 @@ function containsCaret(range: Range, sel: Selection | null): boolean {
   }
 }
 
+/** Lowercased words of the customer's turns. */
+function customerWords(turns: readonly { role: string; text: string }[]): Set<string> {
+  const text = turns.filter((t) => t.role === 'customer').map((t) => t.text).join(' ');
+  return new Set((text.match(/[\p{L}\p{M}]+/gu) ?? []).map((w) => w.toLowerCase()));
+}
+
 /**
- * Spell checking for the message field: underlines misspelled finished words
- * and offers fixes (click or Ctrl+.); in `auto` mode it also replaces clear
- * slips when the agent types a space or punctuation after them. Every
- * automatic change is flashed and undoes with Ctrl/Cmd+Z.
+ * Spell checking for the message field, from the model's mistakes
+ * (`applyMistakes`, fed by `check.ts`): underlines misspelled finished words
+ * and offers fixes (click or Ctrl+.); in `auto` mode it also replaces the
+ * mistakes the model is sure about. Every automatic change is flashed and
+ * undoes with Ctrl/Cmd+Z.
  */
 export function createSpelling(shared: Shared, options: SpellingOptions) {
   const { el, env, log } = shared;
-  const { checker, mode, autoReplace, languages, debounceMs = 150, flashMs = 2000 } = options;
+  const { mode, debounceMs = 150, flashMs = 2000 } = options;
   const doc = el.ownerDocument;
   const customWords = new Set(options.customWords);
   const underline = createHighlight(env.highlights, SPELLING_ERROR);
@@ -67,13 +66,11 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
   const ignored = new Set<string>();
   /** Words already logged as `flag` in this message (lang:text). */
   const reported = new Set<string>();
+  /** The last answer's mistakes, by word. */
+  let mistakes = new Map<string, Mistake>();
   let corrections: Correction[] = [];
-  /** Words finished by . @ : / whose decision waits for whitespace (KI-2). */
-  let held: Token[] = [];
   let flagged: Token[] = [];
-  let generation = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let inFlight: Promise<void> = Promise.resolve();
   let popover: { target: PopoverTarget; selection?: Range } | undefined;
   let detached = false;
 
@@ -81,32 +78,24 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
   const originalSpellcheck = el.getAttribute('spellcheck');
   el.setAttribute('spellcheck', 'false');
 
-  const checkable = (t: Token) => languages.includes(t.lang) && checker.isReady(t.lang) && !ignored.has(keyOf(t));
+  const isMistake = (t: Token) => mistakes.has(t.text) && !ignored.has(keyOf(t)) && !customWords.has(t.text);
 
-  async function recheck(): Promise<void> {
+  /** Underlines the words of the last answer that are still in the field. */
+  function recheck() {
     clearTimeout(timer);
     if (detached) return;
-    const mine = ++generation;
     const map = buildTextMap(el);
     if (!map.text.trim()) {
-      // Sent or cleared: the next message logs its own flags.
-      flagged = [];
-      held = [];
+      // Sent or cleared: the next message starts fresh.
+      mistakes = new Map();
       reported.clear();
     }
-    const tokens = tokenize(map, caretOffset(map, doc.getSelection())).filter(checkable);
-
-    const unknown: Partial<Record<Lang, string[]>> = {};
-    for (const t of tokens) {
-      if (!t.pending && checker.misspelled(t.lang, t.text) === undefined) (unknown[t.lang] ??= []).push(t.text);
-    }
-    if (Object.keys(unknown).length) await checker.check(unknown);
-    if (mine !== generation || detached) return; // a newer check superseded this one
-
     // A word still being typed keeps an underline it already had (same text,
     // same place), so clicking into a flagged word doesn't hide it.
     const previously = new Set(flagged.map((t) => `${t.start}:${keyOf(t)}`));
-    flagged = tokens.filter((t) => checker.misspelled(t.lang, t.text) === true && (!t.pending || previously.has(`${t.start}:${keyOf(t)}`)));
+    flagged = tokenize(map, caretOffset(map, doc.getSelection())).filter(
+      (t) => isMistake(t) && (!t.pending || previously.has(`${t.start}:${keyOf(t)}`)),
+    );
     underline.setRanges(flagged.map((t) => t.range));
     for (const t of flagged) {
       if (!reported.has(keyOf(t))) {
@@ -121,8 +110,28 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
   const schedule = () => {
     if (detached) return;
     clearTimeout(timer);
-    timer = setTimeout(() => void recheck(), debounceMs);
+    timer = setTimeout(recheck, debounceMs);
   };
+
+  /** Takes the model's mistakes for the current draft: auto-corrects the sure ones, underlines the rest. */
+  function applyMistakes(list: Mistake[]) {
+    if (detached) return;
+    mistakes = new Map(list.map((m) => [m.word, m]));
+    if (mode === 'auto') autoCorrectSure();
+    recheck();
+  }
+
+  function autoCorrectSure() {
+    const fromCustomer = customerWords(options.conversation());
+    const map = buildTextMap(el);
+    // Finished words only: never the one the agent is typing.
+    const tokens = tokenize(map, caretOffset(map, doc.getSelection())).filter(
+      (t) => !t.pending && isMistake(t) && mistakes.get(t.text)!.sure && !fromCustomer.has(t.text.toLowerCase()),
+    );
+    for (const token of tokens) {
+      if (token.range.toString() === token.text) applyFix(token, mistakes.get(token.text)!.fixes[0]);
+    }
+  }
 
   function flashRange(range: Range) {
     flashing.add(range);
@@ -135,62 +144,14 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     flashTimers.add(t);
   }
 
-  /**
-   * The words a typed space or punctuation makes ready for a decision,
-   * captured at the input event. A word finished by . @ : / is held until
-   * whitespace, then decided only if it isn't part of an address.
-   */
-  function wordsToDecide(e: InputEvent): Token[] {
-    const kind = boundaryKind(e);
-    if (kind === 'none') return [];
-    const map = buildTextMap(el);
-    const caret = caretOffset(map, doc.getSelection());
-    const tokens = tokenize(map, caret).filter(checkable);
-    const done = completedWord(e, map, caret, tokens);
-    const word = done && !customWords.has(done.text) ? done : undefined;
-    if (kind === 'decide') return word ? [word] : [];
-    if (kind === 'hold') {
-      if (word && !held.some((h) => h.start === word.start && h.text === word.text)) held.push(word);
-      return [];
-    }
-    const waiting = held.map((h) => ({ start: flatOffsetOf(map, h.range.startContainer, h.range.startOffset), text: h.text }));
-    held = [];
-    const ready = caret === undefined ? [] : releasable(waiting, map.text, caret, tokens);
-    if (word && !ready.some((t) => t.start === word.start)) ready.push(word);
-    return ready.sort((a, b) => a.start - b.start);
-  }
-
-  /** Replaces the finished word if it is a clear slip (the rules are in autocorrect/confidence.ts). */
-  async function autoCorrect(token: Token) {
+  /** Replaces the word in one undo step and keeps the caret where the agent was typing. */
+  function applyFix(token: Token, fix: string) {
     const { text: word, lang } = token;
-    await checker.check({ [lang]: [word] });
-    if (checker.misspelled(lang, word) !== true) return;
-    // A known misspelling, or list-only confidence, needs no engine evidence.
-    let caseFix: string | null = null;
-    let neighbors: string[] = [];
-    if (needsEvidence(word, lang, autoReplace)) {
-      const folded = caseFolded(word, lang);
-      if (folded) await checker.check({ [lang]: [folded] });
-      caseFix = folded && checker.misspelled(lang, folded) === false ? folded : null;
-      if (!caseFix) neighbors = await checker.neighbors(lang, word);
-    }
-    const now = buildTextMap(el);
-    const fix = decide(word, lang, { neighbors, caseFix }, {
-      ignored,
-      customWords,
-      confidence: autoReplace,
-      startsSentence: startsSentence(now.text, flatOffsetOf(now, token.range.startContainer, token.range.startOffset)),
-      conversation: conversationWords(options.conversation()),
-    })?.fix;
-    // Re-validate: the agent may have edited the word, or sent the message, meanwhile.
-    if (!fix || detached || !el.isConnected || token.range.toString() !== word) return;
-
     const before = buildTextMap(el);
     const start = flatOffsetOf(before, token.range.startContainer, token.range.startOffset);
     const caretBefore = caretOffset(before, doc.getSelection());
     env.replace(token.range, fix);
 
-    // Put the caret back where the agent was typing.
     const after = buildTextMap(el);
     if (caretBefore !== undefined) {
       const delta = fix.length - word.length;
@@ -202,7 +163,6 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     corrections.push({ range, original: word, replacement: fix, lang, flatStart: start });
     flashRange(range);
     log({ type: 'autocorrect', lang, original: word, replacement: fix });
-    schedule();
   }
 
   /** An Undo that brought back an auto-corrected word counts as a revert: never correct it again. */
@@ -224,7 +184,7 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     ignored.add(keyOf({ lang: c.lang, text: c.original }));
     env.replace(c.range, c.original);
     log({ type: 'revert', lang: c.lang, original: c.original, replacement: c.replacement });
-    void recheck();
+    recheck();
   }
 
   // --- Popover -------------------------------------------------------------
@@ -257,17 +217,7 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     }
   }
 
-  async function showSuggestions(token: Token) {
-    const engine = await checker.suggest(token.lang, token.text);
-    if (detached || token.range.toString() !== token.text) return;
-    // A known misspelling's fix leads, then the engine's suggestions.
-    const listed = knownFix(token.text, token.lang);
-    const known = listed && withLeadingCapital(token.text, listed);
-    const suggestions = (known ? [known, ...engine.filter((s) => s !== known)] : engine).slice(0, 5);
-    openPopover(token.range, token.lang, { token, suggestions });
-  }
-
-  /** Opens the popover for the word at the caret: revert for an auto-correction, suggestions for a flagged word. */
+  /** Opens the popover for the word at the caret: revert for an auto-correction, fixes for a flagged word. */
   function openForCaret(): boolean {
     if (shared.getState().polish.preview) return false; // never two panels at once
     const sel = doc.getSelection();
@@ -277,11 +227,10 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
       return true;
     }
     const token = sel?.anchorNode && el.contains(sel.anchorNode) ? flagged.find((t) => containsCaret(t.range, sel)) : undefined;
-    if (token) {
-      void showSuggestions(token);
-      return true;
-    }
-    return false;
+    const mistake = token && mistakes.get(token.text);
+    if (!token || !mistake) return false;
+    openPopover(token.range, token.lang, { token, suggestions: mistake.fixes.slice(0, 5) });
+    return true;
   }
 
   function pick(suggestion: string) {
@@ -292,7 +241,7 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     if (token.range.toString() !== token.text) return; // the word changed since the popover opened
     env.replace(token.range, suggestion);
     log({ type: 'accept', lang: token.lang, original: token.text, replacement: suggestion, rank: suggestions.indexOf(suggestion) + 1, offered: suggestions.length });
-    void recheck();
+    recheck();
   }
 
   function ignore() {
@@ -301,7 +250,7 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
     if (!target || !('token' in target)) return;
     ignored.add(keyOf(target.token));
     log({ type: 'ignore', lang: target.token.lang, original: target.token.text });
-    void recheck();
+    recheck();
   }
 
   function revert() {
@@ -314,12 +263,7 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
 
   const onInput = (e: Event) => {
     schedule();
-    const ie = e as InputEvent;
-    if (ie.inputType === 'historyUndo') detectUndoRevert();
-    if (mode !== 'auto') return;
-    // Capture the words now: by the time earlier corrections finish, the caret
-    // may already be several words further on.
-    for (const token of wordsToDecide(ie)) inFlight = inFlight.then(() => autoCorrect(token)).catch(() => {});
+    if ((e as InputEvent).inputType === 'historyUndo') detectUndoRevert();
   };
   // Let the click settle the caret first.
   const onMouseUp = () => setTimeout(openForCaret, 0);
@@ -338,14 +282,11 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
   el.addEventListener('mouseup', onMouseUp);
   el.addEventListener('keydown', onKeyDown);
   doc.addEventListener('selectionchange', onSelectionChange);
-  const unsubscribe = checker.onStatus(schedule);
-  schedule();
 
   return {
-    /** Runs a check now instead of waiting for the debounce (tests). */
+    applyMistakes,
+    /** Redraws the underlines now instead of waiting for the debounce (tests). */
     recheck,
-    /** Resolves when any in-flight auto-correction has finished (tests). */
-    settled: () => inFlight,
     pick,
     ignore,
     revert,
@@ -360,7 +301,6 @@ export function createSpelling(shared: Shared, options: SpellingOptions) {
       el.removeEventListener('mouseup', onMouseUp);
       el.removeEventListener('keydown', onKeyDown);
       doc.removeEventListener('selectionchange', onSelectionChange);
-      unsubscribe();
       closePopover();
       underline.release();
       flash.release();

@@ -9,12 +9,12 @@ const initialState = () => INITIAL_STATE;
  * Attaches the assistant to the message field and returns it with its state
  * (what to draw). Re-attaches when `options` change; pass a stable object.
  */
-export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: AssistantOptions | undefined) {
+export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: AssistantOptions) {
   const [assistant, setAssistant] = useState<Assistant>();
 
   useEffect(() => {
     const field = fieldRef.current;
-    if (!field || !options) return;
+    if (!field) return;
     const created = createAssistant(field, options);
     setAssistant(created);
     return () => {
