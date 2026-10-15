@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { EventLog } from './components/EventLog';
 import { MessageField } from './components/MessageField';
 import { ModelLine } from './components/ModelLine';
@@ -7,7 +7,7 @@ import { useDebounced } from './hooks/useDebounced';
 import { useEventLog } from './hooks/useEventLog';
 import { useSettings } from './hooks/useSettings';
 import { appendTurn, parseConversation } from './lib/conversation';
-import { assistantOptions } from './lib/settings';
+import { lines } from './lib/settings';
 
 export function App() {
   const { settings, updateSettings, resetSettings } = useSettings();
@@ -24,11 +24,9 @@ export function App() {
     [updateSettings],
   );
 
-  const { conversation: _conversation, ...attachedSettings } = appliedSettings;
-  const attachedKey = JSON.stringify(attachedSettings);
-  const options = useMemo(
-    () => assistantOptions(JSON.parse(attachedKey), readConversation, logEvent),
-    [attachedKey, readConversation, logEvent],
+  const addToDictionary = useCallback(
+    (word: string) => updateSettings((current) => ({ customDictionary: [...lines(current.customDictionary), word].join('\n') })),
+    [updateSettings],
   );
 
   return (
@@ -37,7 +35,7 @@ export function App() {
       <main className="space-y-4">
         <h1 className="text-xl font-semibold">Composer assistance</h1>
         <ModelLine apiKey={appliedSettings.apiKey} />
-        <MessageField options={options} onSend={addAgentMessage} />
+        <MessageField settings={appliedSettings} readConversation={readConversation} onLog={logEvent} onSend={addAgentMessage} onAddToDictionary={addToDictionary} />
         <EventLog entries={logEntries} onClear={clearLog} />
       </main>
     </div>

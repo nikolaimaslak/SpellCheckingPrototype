@@ -15,7 +15,7 @@ interface ChatCompletion {
   choices?: { message?: { content?: string | null } }[];
 }
 
-export async function askOpenAi(question: Question): Promise<string | null> {
+export async function askLLM(question: Question): Promise<string | null> {
   if (!question.apiKey) {
     trace('openai', 'no API key: request skipped');
     return null;

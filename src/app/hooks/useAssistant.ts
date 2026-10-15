@@ -14,7 +14,9 @@ export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: A
 
   useEffect(() => {
     const field = fieldRef.current;
-    if (!field) return;
+    if (!field) {
+      return;
+    }
     const created = createAssistant(field, options);
     setAssistant(created);
     return () => {

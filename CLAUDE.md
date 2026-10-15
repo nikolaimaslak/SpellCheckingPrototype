@@ -35,4 +35,5 @@ Demo of the Bright Pattern Agent Desktop **composer assistance layer**, in Engli
 ## Conventions
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties).
+- No one-line `if (...) return;`, `continue;`, `break;` or `throw`: always put the body in braces on its own line.
 - The page is React + Tailwind (`src/app/`). `src/assistant/` is plain TypeScript with no React.

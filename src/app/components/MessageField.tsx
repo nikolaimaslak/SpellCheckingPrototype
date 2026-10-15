@@ -1,15 +1,22 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
-import type { AssistantOptions } from '../../assistant';
+import { useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
+import type { AssistEvent } from '../../assistant';
+import type { Turn } from '../../assistant/types';
 import { useAssistant } from '../hooks/useAssistant';
+import { assistantOptions, type AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
 import { PolishBar } from './PolishBar';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
-  /** Re-attaches when it changes; pass a stable object. */
-  options: AssistantOptions;
+  /** Changing any of them except the conversation re-attaches the assistant. */
+  settings: AppSettings;
+  /** Read on every request, so editing the conversation never re-attaches (which would forget ignored words). */
+  readConversation: () => Turn[];
+  onLog: (event: AssistEvent) => void;
   /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
   onSend: (text: string) => void;
+  /** "Add to dictionary" in the popover: the word goes into the Custom dictionary setting. */
+  onAddToDictionary: (word: string) => void;
 }
 
 /**
@@ -17,12 +24,21 @@ interface Props {
  * field's content is owned by the browser and the assistant, never rendered
  * by React: it has no children here. The field's events go to the assistant.
  */
-export function MessageField({ options, onSend }: Props) {
+export function MessageField({ settings, readConversation, onLog, onSend, onAddToDictionary }: Props) {
+  const { conversation: _conversation, ...attachedSettings } = settings;
+  const attachedKey = JSON.stringify(attachedSettings);
+  const options = useMemo(
+    () => assistantOptions(JSON.parse(attachedKey), readConversation, onLog),
+    [attachedKey, readConversation, onLog],
+  );
+
   const fieldRef = useRef<HTMLDivElement>(null);
   const { assistant, state } = useAssistant(fieldRef, options);
 
   useEffect(() => {
-    if (!assistant) return;
+    if (!assistant) {
+      return;
+    }
     document.addEventListener('selectionchange', assistant.handleSelectionChange);
     window.addEventListener('resize', assistant.handleLayoutChange);
     window.addEventListener('scroll', assistant.handleLayoutChange, true);
@@ -38,7 +54,9 @@ export function MessageField({ options, onSend }: Props) {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !e.nativeEvent.defaultPrevented) {
       e.preventDefault();
       const text = e.currentTarget.innerText.trim();
-      if (!text) return;
+      if (!text) {
+        return;
+      }
       onSend(text);
       e.currentTarget.replaceChildren();
       assistant?.handleCleared();
@@ -90,6 +108,10 @@ export function MessageField({ options, onSend }: Props) {
               popover={state.popover}
               onPick={assistant.pickSuggestion}
               onIgnore={assistant.ignoreWord}
+              onAddToDictionary={(word) => {
+                assistant.ignoreWord();
+                onAddToDictionary(word);
+              }}
               onClose={assistant.closePopover}
             />
           )}

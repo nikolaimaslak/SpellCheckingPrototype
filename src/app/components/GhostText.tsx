@@ -7,7 +7,9 @@ import type { GhostState } from '../../assistant/types';
  */
 export function GhostText({ ghost }: { ghost: GhostState }) {
   const { layout } = ghost;
-  if (!layout) return null;
+  if (!layout) {
+    return null;
+  }
   return (
     <div
       aria-hidden="true"

@@ -1,5 +1,6 @@
 import type { Mistake } from '../openai/check-request';
 import { findWordPlaces, type WordPlace } from './words';
+import { trace } from '../trace';
 
 export interface PlacedMistake extends WordPlace {
   mistake: Mistake;
@@ -12,8 +13,12 @@ export function placeMistakes(fieldText: string, mistakes: Mistake[]): PlacedMis
   const placesByStart = new Map<number, PlacedMistake>();
   for (const mistake of mistakes) {
     const context = withPlainSpaces(mistake.context);
-    const wordInContext = findWordPlaces(context, [mistake.word])[0];
-    if (!wordInContext) continue;
+    const wordsInContext = findWordPlaces(context, [mistake.word]);
+    if (wordsInContext.length !== 1) {
+      trace('spelling', `mistake dropped: "${mistake.word}" is in its context ${wordsInContext.length} times, so its place is unclear`, mistake);
+      continue;
+    }
+    const wordInContext = wordsInContext[0];
     for (let contextStart = text.indexOf(context); contextStart !== -1; contextStart = text.indexOf(context, contextStart + 1)) {
       const start = contextStart + wordInContext.start;
       placesByStart.set(start, { word: mistake.word, start, end: start + mistake.word.length, mistake });

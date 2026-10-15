@@ -10,13 +10,21 @@ export function ghostKeyAction(event: KeyboardEvent, direction: TextDirection, i
   const noModifiers = !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
   const wordJumpModifier = isMac ? event.altKey && !event.ctrlKey : event.ctrlKey && !event.altKey;
 
-  if (event.key === 'Tab') return noModifiers ? 'accept-all' : 'none';
-  if (event.key === 'Escape') return 'escape';
+  if (event.key === 'Tab') {
+    return noModifiers ? 'accept-all' : 'none';
+  }
+  if (event.key === 'Escape') {
+    return 'escape';
+  }
   if (event.key === forwardArrow) {
-    if (noModifiers) return 'accept-all';
+    if (noModifiers) {
+      return 'accept-all';
+    }
     return wordJumpModifier && !event.shiftKey && !event.metaKey ? 'accept-word' : 'dismiss';
   }
-  if (event.key === backwardArrow || KEYS_THAT_DISMISS.has(event.key)) return 'dismiss';
+  if (event.key === backwardArrow || KEYS_THAT_DISMISS.has(event.key)) {
+    return 'dismiss';
+  }
   return 'none';
 }
 
@@ -33,7 +41,9 @@ export interface FieldStyle {
 
 export function ghostLayout(caret: Rect | null, content: Rect, fieldStyle: FieldStyle, direction: TextDirection): GhostLayout | null {
   const caretIsVisible = caret && caret.top >= content.top - 1 && caret.bottom <= content.bottom + 1;
-  if (!caretIsVisible) return null;
+  if (!caretIsVisible) {
+    return null;
+  }
   const startOnNextLine = direction === 'rtl' && fieldStyle.direction === 'ltr';
   const indentToCaret = direction === 'rtl' ? content.right - caret.left : caret.right - content.left;
   return {

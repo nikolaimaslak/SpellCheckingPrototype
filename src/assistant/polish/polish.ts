@@ -35,9 +35,13 @@ export function createPolish(context: AssistantContext, settings: PolishSettings
   }
 
   async function polishNow() {
-    if (isReleased || runningRequest || context.getState().popover) return;
+    if (isReleased || runningRequest || context.getState().popover) {
+      return;
+    }
     const draft = readFieldText(field).text;
-    if (countWords(draft) < MIN_WORDS) return;
+    if (countWords(draft) < MIN_WORDS) {
+      return;
+    }
 
     trace('polish', 'Polish pressed: asking for every mistake, sure or not');
     settings.beforeRequest();
@@ -60,7 +64,9 @@ export function createPolish(context: AssistantContext, settings: PolishSettings
     );
     log({ type: 'polish-reply', reply: answer });
     runningRequest = undefined;
-    if (isReleased || request.signal.aborted) return;
+    if (isReleased || request.signal.aborted) {
+      return;
+    }
     updateState({ busy: false });
 
     if (!answer) {
@@ -80,7 +86,9 @@ export function createPolish(context: AssistantContext, settings: PolishSettings
   }
 
   function accept() {
-    if (!openPreview) return;
+    if (!openPreview) {
+      return;
+    }
     const { sentDraft, replacements } = openPreview;
     openPreview = undefined;
     if (readFieldText(field).text !== sentDraft) {

@@ -35,7 +35,9 @@ export function rectOfRange(range: Range): Rect {
 export function caretRect(field: HTMLElement): Rect | null {
   const selection = document.getSelection();
   const node = selection?.anchorNode;
-  if (!selection || !node || !field.contains(node)) return null;
+  if (!selection || !node || !field.contains(node)) {
+    return null;
+  }
   const range = document.createRange();
   if (node.nodeType === Node.TEXT_NODE && selection.anchorOffset > 0) {
     range.setStart(node, selection.anchorOffset - 1);

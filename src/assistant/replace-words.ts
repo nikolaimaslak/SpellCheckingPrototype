@@ -37,7 +37,9 @@ export function replaceWords(field: HTMLElement, replacements: WordReplacement[]
     replacedSpans.push({ start: place.start, length: replacement.replacement.length });
     applied.push(replacement);
   }
-  if (!applied.length) return applied;
+  if (!applied.length) {
+    return applied;
+  }
 
   const textAfter = readFieldText(field);
   if (caretBefore !== undefined) {

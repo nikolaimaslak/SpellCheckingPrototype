@@ -15,6 +15,7 @@ export interface Turn {
 }
 
 export interface PopoverState {
+  word: string;
   wordRect: Rect;
   dir: TextDirection;
   font: string;
@@ -54,8 +55,8 @@ export interface AssistantState {
 export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false }, isChecking: false };
 
 export type AssistEvent =
-  | { type: 'check-request'; text: string; completion: boolean }
-  | { type: 'check-reply' | 'polish-reply'; reply: unknown }
+  | { type: 'send-to-llm'; text: string; completion: boolean }
+  | { type: 'llm-answer' | 'polish-reply'; reply: unknown }
   | { type: 'polish-request'; text: string }
   | { type: 'autocorrect' | 'polish' | 'revert' | 'pick'; original: string; replacement: string }
   | { type: 'ignore'; word: string }

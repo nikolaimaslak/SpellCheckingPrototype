@@ -23,14 +23,17 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   let requestTimer: ReturnType<typeof setTimeout> | undefined;
   let runningRequest: AbortController | undefined;
   let changedDuringRequest = false;
+  let lastSentText = '';
   let isComposing = false;
   let isReleased = false;
 
   const isPanelOpen = () => !!spelling?.isPopoverOpen() || !!context.getState().polish.preview;
 
   function updateIsChecking() {
-    const isChecking = !!requestTimer || !!runningRequest || changedDuringRequest;
-    if (context.getState().isChecking === isChecking) return;
+    const isChecking = !!runningRequest;
+    if (context.getState().isChecking === isChecking) {
+      return;
+    }
     trace('typing', `loader ${isChecking ? 'on' : 'off'}`);
     context.setState({ isChecking });
   }
@@ -40,7 +43,9 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       changedDuringRequest = true;
       trace('typing', 'text changed while a request is running: will send again after its answer');
     }
-    if (isReleased || runningRequest) return;
+    if (isReleased || runningRequest) {
+      return;
+    }
     trace('typing', requestTimer ? `typing continues: pause timer restarted (${PAUSE_BEFORE_REQUEST_MS} ms)` : `pause timer started: request in ${PAUSE_BEFORE_REQUEST_MS} ms unless typing continues`);
     clearTimeout(requestTimer);
     requestTimer = setTimeout(() => void sendRequestNow(), PAUSE_BEFORE_REQUEST_MS);
@@ -52,6 +57,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     requestTimer = undefined;
     const sentText = readFieldText(field);
     const caret = caretOffset(sentText);
+    lastSentText = sentText.text;
     if (isReleased || !sentText.text.trim()) {
       trace('typing', 'pause over, but the field is empty: nothing to send');
       updateIsChecking();
@@ -67,7 +73,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     const request = new AbortController();
     runningRequest = request;
     updateIsChecking();
-    log({ type: 'check-request', text: sentText.text, completion: textBeforeCaret !== null });
+    log({ type: 'send-to-llm', text: sentText.text, completion: textBeforeCaret !== null });
     const answer = await requestCheck(
       options.apiKey,
       {
@@ -85,7 +91,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       return;
     }
     runningRequest = undefined;
-    log({ type: 'check-reply', reply: answer });
+    log({ type: 'llm-answer', reply: answer });
 
     if (!answer) trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
     if (answer) {
@@ -107,16 +113,30 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   }
 
   function whyNoCompletion(text: string, caret: number | undefined): string | null {
-    if (!ghostText) return 'inline completion is off';
-    if (ghostText.isShown()) return 'a completion is already shown';
-    if (caret === undefined) return 'the caret is not in the field (or text is selected)';
-    if (isComposing) return 'an input method (IME) is composing';
-    if (isPanelOpen()) return 'the popover or the polish preview is open';
+    if (!ghostText) {
+      return 'inline completion is off';
+    }
+    if (ghostText.isShown()) {
+      return 'a completion is already shown';
+    }
+    if (caret === undefined) {
+      return 'the caret is not in the field (or text is selected)';
+    }
+    if (isComposing) {
+      return 'an input method (IME) is composing';
+    }
+    if (isPanelOpen()) {
+      return 'the popover or the polish preview is open';
+    }
     const restOfLine = text.slice(caret).split('\n')[0];
-    if (restOfLine.trim() !== '') return 'there is text after the caret on this line';
+    if (restOfLine.trim() !== '') {
+      return 'there is text after the caret on this line';
+    }
     const currentSentence = text.slice(0, caret).split(SENTENCE_END).at(-1) ?? '';
     const wordsInSentence = currentSentence.match(/[\p{L}\p{N}]+/gu) ?? [];
-    if (wordsInSentence.length < MIN_WORDS_IN_SENTENCE) return `the current sentence has ${wordsInSentence.length} word(s), fewer than ${MIN_WORDS_IN_SENTENCE}`;
+    if (wordsInSentence.length < MIN_WORDS_IN_SENTENCE) {
+      return `the current sentence has ${wordsInSentence.length} word(s), fewer than ${MIN_WORDS_IN_SENTENCE}`;
+    }
     return null;
   }
 
@@ -136,6 +156,10 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     if (event.inputType === 'historyUndo') spelling?.noticeUndo();
     if (!ghostText?.continueTyping(event)) ghostText?.hide();
     spelling?.redrawUnderlines();
+    if (event.inputType.startsWith('delete') && readFieldText(field).text.trimEnd() === lastSentText.trimEnd()) {
+      trace('typing', 'only trailing spaces were removed since the last request: no new request');
+      return;
+    }
     scheduleRequest();
   }
 
@@ -153,7 +177,9 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
 
   function handleSelectionChange() {
     const anchor = document.getSelection()?.anchorNode;
-    if (!anchor || !field.contains(anchor)) return;
+    if (!anchor || !field.contains(anchor)) {
+      return;
+    }
     ghostText?.hideIfCaretMoved();
     spelling?.redrawUnderlines();
   }

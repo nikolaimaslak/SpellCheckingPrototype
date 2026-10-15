@@ -18,9 +18,13 @@ export function PolishBar({ polish, onPolish, onAccept, onDismiss }: Props) {
 
   // Escape closes the preview; the field never sees it.
   useEffect(() => {
-    if (!preview) return;
+    if (!preview) {
+      return;
+    }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape') {
+        return;
+      }
       e.preventDefault();
       e.stopImmediatePropagation();
       onDismiss();

@@ -33,7 +33,9 @@ export function createGhostText(context: AssistantContext) {
   }
 
   function hide() {
-    if (!shown) return;
+    if (!shown) {
+      return;
+    }
     trace('ghost', 'hidden');
     shown = undefined;
     redraw();
@@ -45,7 +47,9 @@ export function createGhostText(context: AssistantContext) {
 
   function acceptAll() {
     const caret = caretRange();
-    if (!shown || !caret) return;
+    if (!shown || !caret) {
+      return;
+    }
     const acceptedText = shown.remainingText;
     trace('ghost', `accepted ${JSON.stringify(acceptedText)} (one undo step)`);
     hide();
@@ -55,16 +59,24 @@ export function createGhostText(context: AssistantContext) {
 
   function acceptNextWord() {
     const caret = caretRange();
-    if (!shown || !caret) return;
+    if (!shown || !caret) {
+      return;
+    }
     trace('ghost', `accepting the next word ${JSON.stringify(nextWord(shown.remainingText))}`);
     replaceText(field, caret, nextWord(shown.remainingText));
   }
 
   function continueTyping(event: InputEvent): boolean {
-    if (!shown || event.inputType !== 'insertText' || !event.data) return false;
-    if (!shown.remainingText.startsWith(event.data)) return false;
+    if (!shown || event.inputType !== 'insertText' || !event.data) {
+      return false;
+    }
+    if (!shown.remainingText.startsWith(event.data)) {
+      return false;
+    }
     const caretAfterTyping = currentCaretOffset();
-    if (caretAfterTyping !== shown.caretOffset + event.data.length) return false;
+    if (caretAfterTyping !== shown.caretOffset + event.data.length) {
+      return false;
+    }
     shown.remainingText = shown.remainingText.slice(event.data.length);
     shown.caretOffset = caretAfterTyping;
     trace('ghost', `typed what the ghost text said: ${JSON.stringify(shown.remainingText)} left`);
@@ -75,9 +87,13 @@ export function createGhostText(context: AssistantContext) {
 
   function handleKey(event: KeyboardEvent) {
     const focused = document.activeElement;
-    if (!shown || !focused || !field.contains(focused)) return;
+    if (!shown || !focused || !field.contains(focused)) {
+      return;
+    }
     const action = ghostKeyAction(event, shown.direction, isMac);
-    if (action === 'none') return;
+    if (action === 'none') {
+      return;
+    }
     trace('ghost', `key ${event.key}: ${action}`);
     if (action === 'dismiss') {
       hide();

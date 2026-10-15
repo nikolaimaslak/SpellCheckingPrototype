@@ -38,7 +38,9 @@ export function directionOfLastWord(text: string): TextDirection {
 export function scriptOf(text: string): 'arabic' | 'latin' | 'none' {
   const arabicLetters = text.match(/\p{Script=Arabic}/gu)?.length ?? 0;
   const latinLetters = text.match(/\p{Script=Latin}/gu)?.length ?? 0;
-  if (arabicLetters > latinLetters) return 'arabic';
+  if (arabicLetters > latinLetters) {
+    return 'arabic';
+  }
   return latinLetters ? 'latin' : 'none';
 }
 

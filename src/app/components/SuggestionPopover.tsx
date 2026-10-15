@@ -5,6 +5,7 @@ interface Props {
   popover: PopoverState;
   onPick: (suggestion: string) => void;
   onIgnore: () => void;
+  onAddToDictionary: (word: string) => void;
   /** `restoreFocus`: put the caret back in the field (Escape). */
   onClose: (restoreFocus: boolean) => void;
 }
@@ -17,10 +18,11 @@ const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
  * level, so Enter picks a suggestion instead of sending the message; any
  * other key, a click outside or scrolling closes it.
  */
-export function SuggestionPopover({ popover, onPick, onIgnore, onClose }: Props) {
+export function SuggestionPopover({ popover, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
   const items = [
     ...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })),
     { label: 'Ignore', run: onIgnore, strong: false },
+    { label: 'Add to dictionary', run: () => onAddToDictionary(popover.word), strong: false },
   ];
   const [focused, setFocused] = useState(0);
   const box = useRef<HTMLDivElement>(null);

@@ -29,7 +29,9 @@ export function readFieldText(field: HTMLElement): FieldText {
       }
       return;
     }
-    if (node.nodeType !== Node.ELEMENT_NODE) return;
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return;
+    }
     const tag = (node as Element).tagName;
     if (tag === 'BR') {
       text += '\n';
@@ -51,13 +53,17 @@ export function readFieldText(field: HTMLElement): FieldText {
 
 export function caretOffset(fieldText: FieldText): number | undefined {
   const selection = document.getSelection();
-  if (!selection?.isCollapsed || !selection.anchorNode || !fieldText.field.contains(selection.anchorNode)) return undefined;
+  if (!selection?.isCollapsed || !selection.anchorNode || !fieldText.field.contains(selection.anchorNode)) {
+    return undefined;
+  }
   return offsetOfDomPoint(fieldText, selection.anchorNode, selection.anchorOffset);
 }
 
 function offsetOfDomPoint(fieldText: FieldText, node: Node, offsetInNode: number): number {
   const piece = fieldText.pieces.find((candidate) => candidate.node === node);
-  if (piece) return piece.start + Math.min(offsetInNode, piece.length);
+  if (piece) {
+    return piece.start + Math.min(offsetInNode, piece.length);
+  }
 
   const point = document.createRange();
   point.setStart(node, offsetInNode);
@@ -68,7 +74,9 @@ function offsetOfDomPoint(fieldText: FieldText, node: Node, offsetInNode: number
 export function rangeOf(fieldText: FieldText, start: number, end: number): Range {
   const startPiece = fieldText.pieces.find((piece) => start >= piece.start && start < piece.start + piece.length);
   const endPiece = fieldText.pieces.find((piece) => end > piece.start && end <= piece.start + piece.length);
-  if (!startPiece || !endPiece) throw new Error(`no text at ${start}-${end}`);
+  if (!startPiece || !endPiece) {
+    throw new Error(`no text at ${start}-${end}`);
+  }
   const range = document.createRange();
   range.setStart(startPiece.node, start - startPiece.start);
   range.setEnd(endPiece.node, end - endPiece.start);

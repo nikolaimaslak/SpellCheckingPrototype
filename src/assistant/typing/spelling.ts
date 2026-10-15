@@ -85,7 +85,9 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   function noticeUndo() {
     const wordsInField = new Set(lowercaseWordsIn(readFieldText(field).text));
     for (const [original, replacement] of replacementByOriginal) {
-      if (!wordsInField.has(original.toLowerCase())) continue;
+      if (!wordsInField.has(original.toLowerCase())) {
+        continue;
+      }
       trace('spelling', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
       replacementByOriginal.delete(original);
       ignoredWords.add(original);
@@ -94,17 +96,24 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   }
 
   function openPopoverAtCaret(): boolean {
-    if (context.getState().polish.preview) return false;
+    if (context.getState().polish.preview) {
+      return false;
+    }
     const fieldText = readFieldText(field);
     const caret = caretOffset(fieldText);
-    if (caret === undefined) return false;
+    if (caret === undefined) {
+      return false;
+    }
     const place = mistakePlaces(fieldText.text).find((candidate) => candidate.start <= caret && caret <= candidate.end);
-    if (!place) return false;
+    if (!place) {
+      return false;
+    }
 
     trace('spelling', `popover opened for "${place.word}"`, place.mistake.fixes);
     openPopover = { place, selectionBefore: selectedRange() };
     context.setState({
       popover: {
+        word: place.word,
         wordRect: rectOfRange(rangeOf(fieldText, place.start, place.end)),
         dir: directionOfLastWord(place.word),
         font: getComputedStyle(field).font,
@@ -116,7 +125,9 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
 
   function closePopover(returnCaret = false) {
     const closing = openPopover;
-    if (!closing) return;
+    if (!closing) {
+      return;
+    }
     openPopover = undefined;
     context.setState({ popover: undefined });
     if (returnCaret && closing.selectionBefore) restoreSelection(field, closing.selectionBefore);
@@ -139,7 +150,9 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   function ignoreWord() {
     const place = openPopover?.place;
     closePopover(true);
-    if (!place) return;
+    if (!place) {
+      return;
+    }
     ignoredWords.add(place.word);
     trace('spelling', `"${place.word}" ignored until the page reloads or a setting changes`);
     log({ type: 'ignore', word: place.word });
