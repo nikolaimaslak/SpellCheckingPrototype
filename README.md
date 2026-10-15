@@ -16,3 +16,7 @@ npm run dev
 ```
 
 Open http://localhost:5173/. `CLAUDE.md` describes the code layout.
+
+## License
+
+Proprietary, all rights reserved. See `LICENSE`.

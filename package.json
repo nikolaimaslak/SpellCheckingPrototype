@@ -1,6 +1,7 @@
 {
   "name": "spell-checking-prototype",
   "private": true,
+  "license": "UNLICENSED",
   "version": "0.1.0",
   "description": "Demo of LLM spell checking, auto-correct, inline completion and polish for an agent message field",
   "type": "module",
