@@ -10,18 +10,9 @@ import { trace } from '../trace';
 const SPELLING_ERROR_HIGHLIGHT = 'bp-spelling-error';
 const MAX_SUGGESTIONS = 5;
 
-export function startSpelling(context: AssistantContext) {
-  context.spelling.spellcheckAttributeBefore = context.field.getAttribute('spellcheck');
-  context.field.setAttribute('spellcheck', 'false');
-}
-
 export function stopSpelling(context: AssistantContext) {
   closePopover(context);
   removeHighlight(SPELLING_ERROR_HIGHLIGHT);
-  const { field } = context;
-  const { spellcheckAttributeBefore } = context.spelling;
-  if (spellcheckAttributeBefore === null) field.removeAttribute('spellcheck');
-  else field.setAttribute('spellcheck', spellcheckAttributeBefore);
 }
 
 function mistakePlaces(context: AssistantContext, text: string): PlacedMistake[] {

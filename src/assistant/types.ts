@@ -74,7 +74,6 @@ export interface SpellingData {
   replacementByOriginal: Map<string, string>;
   openPopover?: { place: PlacedMistake; selectionBefore?: Range };
   lastUnderlinedWords: string;
-  spellcheckAttributeBefore: string | null;
 }
 
 export interface TypingData {

@@ -24,13 +24,12 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     isReplacingWords: false,
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
-    spelling: { mistakes: [], replacementByOriginal: new Map(), lastUnderlinedWords: '', spellcheckAttributeBefore: null },
+    spelling: { mistakes: [], replacementByOriginal: new Map(), lastUnderlinedWords: '' },
     typing: { changedDuringRequest: false, pauseStartedAt: 0, lastSentText: '', isComposing: false },
     polish: {},
   };
 
   trace('assistant', 'attached to the field', { spelling: options.spelling, completion: options.completion, hasApiKey: !!options.apiKey });
-  if (options.spelling !== 'off') spelling.startSpelling(context);
   updatePolishButton(context);
 
   return {
@@ -64,7 +63,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       trace('assistant', 'released (settings changed or the page is closing)');
       context.isReleased = true;
       checkWhileTyping.stopCheckWhileTyping(context);
-      if (options.spelling !== 'off') spelling.stopSpelling(context);
+      spelling.stopSpelling(context);
       stopPolish(context);
       listeners.clear();
     },

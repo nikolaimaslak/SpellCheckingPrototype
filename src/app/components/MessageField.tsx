@@ -57,6 +57,7 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
         <div
           ref={fieldRef}
           contentEditable
+          spellCheck={!settings.spellCheck}
           dir="auto"
           role="textbox"
           aria-multiline="true"
