@@ -5,9 +5,3 @@ coverage/
 .DS_Store
 *.log
 .vite/
-
-# Old local telemetry log
-/telemetry/
-
-# Obsidian vault settings (per-user editor state)
-/.obsidian/
