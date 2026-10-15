@@ -49,10 +49,10 @@ export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
   polish: PolishState;
-  isChecking: boolean;
+  loader?: { kind: 'pause'; startedAt: number; durationMs: number } | { kind: 'request' };
 }
 
-export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false }, isChecking: false };
+export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false } };
 
 export type AssistEvent =
   | { type: 'send-to-llm'; text: string; completion: boolean }

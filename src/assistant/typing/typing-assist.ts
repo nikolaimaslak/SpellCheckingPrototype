@@ -1,11 +1,11 @@
 import { requestCheck } from '../openai/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
-import type { AssistantContext, AssistantOptions } from '../types';
+import type { AssistantContext, AssistantOptions, AssistantState } from '../types';
 import { createGhostText } from './ghost-text';
 import { createSpelling } from './spelling';
 import { trace } from '../trace';
 
-const PAUSE_BEFORE_REQUEST_MS = 700;
+const PAUSE_BEFORE_REQUEST_MS = 1000;
 const MIN_WORDS_IN_SENTENCE = 3;
 const SENTENCE_END = /[.!?؟\n]/u;
 
@@ -23,19 +23,24 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   let requestTimer: ReturnType<typeof setTimeout> | undefined;
   let runningRequest: AbortController | undefined;
   let changedDuringRequest = false;
+  let pauseStartedAt = 0;
   let lastSentText = '';
   let isComposing = false;
   let isReleased = false;
 
   const isPanelOpen = () => !!spelling?.isPopoverOpen() || !!context.getState().polish.preview;
 
-  function updateIsChecking() {
-    const isChecking = !!runningRequest;
-    if (context.getState().isChecking === isChecking) {
+  function updateLoader() {
+    const loader: AssistantState['loader'] = runningRequest
+      ? { kind: 'request' }
+      : requestTimer
+        ? { kind: 'pause', startedAt: pauseStartedAt, durationMs: PAUSE_BEFORE_REQUEST_MS }
+        : undefined;
+    if (JSON.stringify(context.getState().loader) === JSON.stringify(loader)) {
       return;
     }
-    trace('typing', `loader ${isChecking ? 'on' : 'off'}`);
-    context.setState({ isChecking });
+    trace('typing', `loader ${loader?.kind ?? 'off'}`);
+    context.setState({ loader });
   }
 
   function scheduleRequest() {
@@ -49,7 +54,8 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     trace('typing', requestTimer ? `typing continues: pause timer restarted (${PAUSE_BEFORE_REQUEST_MS} ms)` : `pause timer started: request in ${PAUSE_BEFORE_REQUEST_MS} ms unless typing continues`);
     clearTimeout(requestTimer);
     requestTimer = setTimeout(() => void sendRequestNow(), PAUSE_BEFORE_REQUEST_MS);
-    updateIsChecking();
+    pauseStartedAt = Date.now();
+    updateLoader();
   }
 
   async function sendRequestNow() {
@@ -60,7 +66,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     lastSentText = sentText.text;
     if (isReleased || !sentText.text.trim()) {
       trace('typing', 'pause over, but the field is empty: nothing to send');
-      updateIsChecking();
+      updateLoader();
       return;
     }
     const noCompletionReason = whyNoCompletion(sentText.text, caret);
@@ -72,7 +78,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
 
     const request = new AbortController();
     runningRequest = request;
-    updateIsChecking();
+    updateLoader();
     log({ type: 'send-to-llm', text: sentText.text, completion: textBeforeCaret !== null });
     const answer = await requestCheck(
       options.apiKey,
@@ -109,7 +115,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       trace('typing', 'the text changed while waiting: scheduling the next request');
       scheduleRequest();
     }
-    updateIsChecking();
+    updateLoader();
   }
 
   function whyNoCompletion(text: string, caret: number | undefined): string | null {
@@ -205,7 +211,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     trace('typing', 'field cleared by the page (message sent): pending request cancelled');
     clearTimeout(requestTimer);
     requestTimer = undefined;
-    updateIsChecking();
+    updateLoader();
     ghostText?.hide();
     spelling?.redrawUnderlines();
   }

@@ -5,6 +5,7 @@ import { useAssistant } from '../hooks/useAssistant';
 import { assistantOptions, type AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
 import { PolishBar } from './PolishBar';
+import { PauseRing } from './PauseRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
@@ -82,7 +83,8 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
           onBlur={() => assistant?.handleBlur()}
           onScroll={() => assistant?.handleLayoutChange()}
         />
-        {(state.isChecking || state.polish.busy) && (
+        {state.loader?.kind === 'pause' && <PauseRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
+        {(state.loader?.kind === 'request' || state.polish.busy) && (
           <span
             aria-hidden="true"
             className="pointer-events-none absolute top-2 right-2 size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"

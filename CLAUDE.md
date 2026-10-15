@@ -36,4 +36,5 @@ Demo of the Bright Pattern Agent Desktop **composer assistance layer**, in Engli
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties).
 - No one-line `if (...) return;`, `continue;`, `break;` or `throw`: always put the body in braces on its own line.
+- One React component per file in `src/app/components/`, named after the component. No second component in a file, not even a small helper one.
 - The page is React + Tailwind (`src/app/`). `src/assistant/` is plain TypeScript with no React.

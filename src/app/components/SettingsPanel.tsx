@@ -1,6 +1,8 @@
 import { appendTurn } from '../lib/conversation';
 import type { AppSettings } from '../lib/settings';
-import { Checkbox, Section, TextArea } from './fields';
+import { Checkbox } from './Checkbox';
+import { Section } from './Section';
+import { TextArea } from './TextArea';
 import { ScenarioControls } from './ScenarioControls';
 
 interface Props {
