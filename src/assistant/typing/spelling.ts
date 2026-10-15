@@ -13,6 +13,7 @@ const MAX_SUGGESTIONS = 5;
 interface SpellingSettings {
   autoCorrect: boolean;
   customWords: string[];
+  onIgnoredWordsChange: (words: string[]) => void;
 }
 
 export function createSpelling(context: AssistantContext, settings: SpellingSettings) {
@@ -21,7 +22,6 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   const underline = createHighlight(SPELLING_ERROR_HIGHLIGHT);
 
   let mistakes: Mistake[] = [];
-  const ignoredWords = new Set<string>();
   const replacementByOriginal = new Map<string, string>();
   let openPopover: { place: PlacedMistake; selectionBefore?: Range } | undefined;
   let lastUnderlinedWords = '';
@@ -29,7 +29,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   const spellcheckAttributeBefore = field.getAttribute('spellcheck');
   field.setAttribute('spellcheck', 'false');
 
-  const isOpenMistake = (place: PlacedMistake) => !ignoredWords.has(place.word) && !customWords.has(place.word);
+  const isOpenMistake = (place: PlacedMistake) => !customWords.has(place.word);
   const mistakePlaces = (text: string) => placeMistakes(text, mistakes).filter(isOpenMistake);
   const finishedMistakePlaces = (fieldText: FieldText) => {
     const caret = caretOffset(fieldText);
@@ -52,7 +52,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   function redrawUnderlines() {
     const fieldText = readFieldText(field);
     if (!fieldText.text.trim()) mistakes = [];
-    const underlined = finishedMistakePlaces(fieldText);
+    const underlined = mistakePlaces(fieldText.text);
     const underlinedWords = underlined.map((place) => `${place.word}@${place.start}`).join(', ');
     if (underlinedWords !== lastUnderlinedWords) trace('spelling', `underlined: ${underlinedWords || 'nothing'}`);
     lastUnderlinedWords = underlinedWords;
@@ -83,7 +83,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
       }
       trace('spelling', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
       replacementByOriginal.delete(original);
-      ignoredWords.add(original);
+      addIgnoredWord(original);
       log({ type: 'revert', original, replacement });
     }
   }
@@ -140,16 +140,27 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     redrawUnderlines();
   }
 
+  function addIgnoredWord(word: string) {
+    context.ignoredWords = [...new Set([...context.ignoredWords, word])];
+    settings.onIgnoredWordsChange(context.ignoredWords);
+  }
+
+  function addToDictionary(word: string) {
+    customWords.add(word);
+    trace('spelling', `"${word}" added to the custom dictionary`);
+    closePopover(true);
+    redrawUnderlines();
+  }
+
   function ignoreWord() {
     const place = openPopover?.place;
     closePopover(true);
     if (!place) {
       return;
     }
-    ignoredWords.add(place.word);
-    trace('spelling', `"${place.word}" ignored until the page reloads or a setting changes`);
+    addIgnoredWord(place.word);
+    trace('spelling', `"${place.word}" added to the ignored words: never auto-corrected`);
     log({ type: 'ignore', word: place.word });
-    redrawUnderlines();
   }
 
   function release() {
@@ -167,6 +178,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     closePopover,
     pickSuggestion,
     ignoreWord,
+    addToDictionary,
     isPopoverOpen: () => !!openPopover,
     release,
   };

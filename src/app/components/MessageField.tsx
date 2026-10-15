@@ -11,6 +11,7 @@ interface Props {
   settings: AppSettings;
   onLog: (event: AssistEvent) => void;
   onAddToDictionary: (word: string) => void;
+  onIgnoredWordsChange: (text: string) => void;
 }
 
 /**
@@ -18,11 +19,13 @@ interface Props {
  * field's content is owned by the browser and the assistant, never rendered
  * by React: it has no children here. The field's events go to the assistant.
  */
-export function MessageField({ settings, onLog, onAddToDictionary }: Props) {
+export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
       spelling: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto' : 'suggest',
       customWords: lines(settings.customDictionary),
+      ignoredWords: lines(settings.ignoredWords),
+      onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
       completion: settings.completion,
       debounceMs: settings.debounceMs,
       apiKey: settings.apiKey,
@@ -32,7 +35,7 @@ export function MessageField({ settings, onLog, onAddToDictionary }: Props) {
       log: onLog,
     };
     return assistantOptions;
-  }, [settings, onLog]);
+  }, [settings, onLog, onIgnoredWordsChange]);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const { assistant, state } = useAssistant(fieldRef, options);
@@ -97,7 +100,7 @@ export function MessageField({ settings, onLog, onAddToDictionary }: Props) {
               onPick={assistant.pickSuggestion}
               onIgnore={assistant.ignoreWord}
               onAddToDictionary={(word) => {
-                assistant.ignoreWord();
+                assistant.addToDictionary(word);
                 onAddToDictionary(word);
               }}
               onClose={assistant.closePopover}

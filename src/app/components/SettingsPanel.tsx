@@ -9,16 +9,28 @@ interface Props {
   settings: AppSettings;
   onUpdate: (patch: Partial<AppSettings>) => void;
   onReset: () => void;
+  canApply: boolean;
+  onApply: () => void;
 }
 
-export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
+export function SettingsPanel({ settings, onUpdate, onReset, canApply, onApply }: Props) {
   return (
     <aside className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Settings</h2>
-        <button type="button" className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-100" onClick={onReset}>
-          Reset
-        </button>
+        <div className="flex gap-2">
+          <button type="button" className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-100" onClick={onReset}>
+            Reset
+          </button>
+          <button
+            type="button"
+            className="rounded border border-blue-600 bg-blue-600 px-2 py-1 text-sm text-white hover:bg-blue-700 disabled:border-slate-300 disabled:bg-white disabled:text-slate-400"
+            disabled={!canApply}
+            onClick={onApply}
+          >
+            Apply
+          </button>
+        </div>
       </div>
 
       <Section title="LLM">
@@ -68,6 +80,13 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
           rows={5}
           value={settings.customDictionary}
           onChange={(customDictionary) => onUpdate({ customDictionary })}
+        />
+        <TextArea
+          label="Ignored words"
+          hint="One word per line. Still underlined when wrong, never auto-corrected. Ignore and Ctrl/Cmd+Z on an auto-correction add here."
+          rows={5}
+          value={settings.ignoredWords}
+          onChange={(ignoredWords) => onUpdate({ ignoredWords })}
         />
       </Section>
 

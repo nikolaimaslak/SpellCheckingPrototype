@@ -59,6 +59,7 @@ export function createPolish(context: AssistantContext, settings: PolishSettings
         cannedResponses: settings.canned,
         articles: settings.kb,
         customWords: settings.customWords,
+        ignoredWords: context.ignoredWords,
       },
       request.signal,
     );

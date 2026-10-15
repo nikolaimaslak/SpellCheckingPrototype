@@ -1,18 +1,18 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { EventLog } from "./components/EventLog";
 import { MessageField } from "./components/MessageField";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { useDebounced } from "./hooks/useDebounced";
 import { useEventLog } from "./hooks/useEventLog";
 import { useSettings } from "./hooks/useSettings";
-import { lines } from "./lib/settings";
+import { DEFAULT_SETTINGS, lines } from "./lib/settings";
 
 export function App() {
   const { settings, updateSettings, resetSettings } = useSettings();
-  // Typing in a text field shouldn't re-attach on every key.
-  const appliedSettings = useDebounced(settings, 400);
+  const [appliedSettings, setAppliedSettings] = useState(settings);
+  const [hasUnappliedEdits, setHasUnappliedEdits] = useState(false);
   const { logEntries, logEvent, clearLog } = useEventLog();
 
+  const changeIgnoredWords = useCallback((ignoredWords: string) => updateSettings({ ignoredWords }), [updateSettings]);
 
   const addToDictionary = useCallback(
     (word: string) =>
@@ -30,14 +30,27 @@ export function App() {
       <div className="grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <SettingsPanel
           settings={settings}
-          onUpdate={updateSettings}
-          onReset={resetSettings}
+          onUpdate={(patch) => {
+            updateSettings(patch);
+            setHasUnappliedEdits(true);
+          }}
+          onReset={() => {
+            resetSettings();
+            setAppliedSettings(DEFAULT_SETTINGS);
+            setHasUnappliedEdits(false);
+          }}
+          canApply={hasUnappliedEdits}
+          onApply={() => {
+            setAppliedSettings(settings);
+            setHasUnappliedEdits(false);
+          }}
         />
         <main className="space-y-4">
           <MessageField
             settings={appliedSettings}
             onLog={logEvent}
             onAddToDictionary={addToDictionary}
+            onIgnoredWordsChange={changeIgnoredWords}
           />
           <EventLog entries={logEntries} onClear={clearLog} />
         </main>

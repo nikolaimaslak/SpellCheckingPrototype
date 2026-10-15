@@ -9,6 +9,7 @@ export interface CheckRequest {
   cannedResponses: string[];
   articles: string[];
   customWords: string[];
+  ignoredWords: string[];
 }
 
 export interface Mistake {
@@ -28,13 +29,14 @@ Answer with JSON only: {"mistakes": [{"word": "...", "context": "...", "fixes": 
 
 mistakes: every wrong word in the draft: typos, and real words that are wrong in their place ("you" that should be "your").
 Judge a real word only by the words already written around it: never report a word because the sentence is not finished yet.
-Only words that are wrong: never suggest a different style, tone or wording for a correct word ("Dear" is never wrong, so never "Hello" or "Hi").
+Only words that are wrong: never suggest a different style, tone or wording for a correct word (greetings like "Hi", "Hello" or "Dear" are never wrong, so never replace one with another).
+A fix is the word the agent meant to type: the same word spelled right, or its right form. Never a different word with another meaning ("sasa" → "there" is not a fix). An unknown word that no spelling fix explains is most likely a name: leave it.
 One entry per place: the same word in two places is two entries, each with its own context.
 "word": exactly as written in the draft. "context": the word with one or two words around it, copied exactly from the draft, so the place can be found. The word must appear in the context only once: if the same word is nearby, take fewer words or words from the other side.
 "fixes": up to 3 replacements for that one word, best first; each fix is one word. Never add words or punctuation, except this one case:
 a correct word that must be followed by a punctuation sign that is missing (a comma after the name in "Hello John we"): report it with one fix, the same word with that sign ("John,"), and "sure": true. Names count here too. Only when the word itself has no mistake, and only when the sign is really absent in the draft: in "Hi John, I made" the comma is already there, so "John" is not reported.
 Check each fix by putting it in place of the word in its context: the result must read correctly. A word that should be removed, not replaced, is not a mistake.
-"sure": when true, the first fix replaces the word at once, without asking the agent. So true only when the word is clearly wrong there and there is only one right fix; with two or more fixes, or when the word could be a name, always false (the missing punctuation case is always true).
+"sure": when true, the first fix replaces the word at once, without asking the agent. The ignored words are still reported when wrong, but always with "sure": false. So true only when the word is clearly wrong there and there is only one right fix; with two or more fixes, or when the word could be a name, always false (the missing punctuation case is always true).
 Never report names, words the customer wrote, codes, links, emails, numbers, words with digits, words in ALL CAPS, or the custom words as wrong; the missing punctuation case above is the only exception.
 Keep the agent's language: a fix is in the same language as the word it replaces; never translate.
 
@@ -66,6 +68,7 @@ function buildMessage(request: CheckRequest): string {
     bulletList('Canned responses', request.cannedResponses),
     bulletList('Articles', request.articles),
     bulletList('Custom words', request.customWords),
+    bulletList('Ignored words', request.ignoredWords),
     `Conversation:\n${request.conversation}`,
     `Agent's draft:\n${request.draft}`,
     request.textBeforeCaret === null ? '' : `Continue after:\n${request.textBeforeCaret}\n\n${caretNote(request.textBeforeCaret)}`,

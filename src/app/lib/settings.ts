@@ -7,6 +7,7 @@ export interface AppSettings {
   autoCorrect: boolean;
   /** One word per line: never flagged, never auto-corrected. */
   customDictionary: string;
+  ignoredWords: string;
   completion: boolean;
   debounceMs: number;
   /** OpenAI key for spelling, completion and polish; empty = all three are off. */
@@ -23,6 +24,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   spellCheck: true,
   autoCorrect: true,
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
+  ignoredWords: '',
   completion: true,
   debounceMs: 1000,
   apiKey: '',
@@ -43,6 +45,7 @@ export function parseSettings(input: unknown): AppSettings {
     spellCheck: booleanField('spellCheck'),
     autoCorrect: booleanField('autoCorrect'),
     customDictionary: textField('customDictionary'),
+    ignoredWords: textField('ignoredWords'),
     completion: booleanField('completion'),
     debounceMs: typeof stored.debounceMs === 'number' && stored.debounceMs >= 0 ? stored.debounceMs : DEFAULT_SETTINGS.debounceMs,
     apiKey: '',

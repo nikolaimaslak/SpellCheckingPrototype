@@ -12,6 +12,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
 
   const context: AssistantContext = {
     field,
+    ignoredWords: options.ignoredWords,
     log: (event) => options.log?.(event),
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
@@ -45,6 +46,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
 
     pickSuggestion: (suggestion: string) => typingAssist?.pickSuggestion(suggestion),
     ignoreWord: () => typingAssist?.ignoreWord(),
+    addToDictionary: (word: string) => typingAssist?.addToDictionary(word),
     closePopover: (returnCaret: boolean) => typingAssist?.closePopover(returnCaret),
     polishNow: () => polish.polishNow(),
     acceptPolish: () => polish.accept(),

@@ -12,7 +12,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 
 ## Layout
 
-- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the event log, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
+- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, used by the field only after Apply, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the event log, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
 - `src/assistant/`: `createAssistant(field, options)` in `index.ts`, the one entry point; it keeps the state the page draws (`popover`, `ghost`, `polish`).
   - `types.ts`: options, state and event types.
   - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.

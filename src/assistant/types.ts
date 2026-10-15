@@ -51,6 +51,8 @@ export interface AssistantOptions {
   completion: boolean;
   debounceMs: number;
   customWords: string[];
+  ignoredWords: string[];
+  onIgnoredWordsChange: (words: string[]) => void;
   canned: string[];
   kb: string[];
   conversation: string;
@@ -59,6 +61,7 @@ export interface AssistantOptions {
 
 export interface AssistantContext {
   field: HTMLElement;
+  ignoredWords: string[];
   log(event: AssistEvent): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;

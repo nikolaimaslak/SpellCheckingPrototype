@@ -15,7 +15,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   const spelling =
     options.spelling === 'off'
       ? undefined
-      : createSpelling(context, { autoCorrect: options.spelling === 'auto', customWords: options.customWords });
+      : createSpelling(context, { autoCorrect: options.spelling === 'auto', customWords: options.customWords, onIgnoredWordsChange: options.onIgnoredWordsChange });
   const ghostText = options.completion ? createGhostText(context) : undefined;
 
   let requestTimer: ReturnType<typeof setTimeout> | undefined;
@@ -87,6 +87,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
         cannedResponses: options.canned,
         articles: options.kb,
         customWords: options.customWords,
+        ignoredWords: context.ignoredWords,
       },
       request.signal,
     );
@@ -225,6 +226,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     closePopover: (returnCaret: boolean) => spelling?.closePopover(returnCaret),
     pickSuggestion: (suggestion: string) => spelling?.pickSuggestion(suggestion),
     ignoreWord: () => spelling?.ignoreWord(),
+    addToDictionary: (word: string) => spelling?.addToDictionary(word),
     release,
   };
 }
