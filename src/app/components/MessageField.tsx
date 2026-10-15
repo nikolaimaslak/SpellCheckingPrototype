@@ -77,7 +77,7 @@ export function MessageField({ settings, onLog, onAddToDictionary }: Props) {
         )}
       </div>
       <p className="text-xs text-slate-500">
-        Click an underlined word (or Ctrl+.) for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
+        Click an underlined word for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
       </p>
       {assistant && (
         <>

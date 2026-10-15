@@ -10,9 +10,6 @@ const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '
 const MIN_WORDS_IN_SENTENCE = 3;
 const SENTENCE_END = /[.!?؟\n]/u;
 
-const isPopoverShortcut = (event: KeyboardEvent) =>
-  event.key === '.' && event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
-
 export function createTypingAssist(context: AssistantContext, options: AssistantOptions) {
   const { field, log } = context;
   const spelling =
@@ -172,10 +169,6 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   }
 
   function handleKeyDown(event: KeyboardEvent) {
-    if (isPopoverShortcut(event) && openPopover()) {
-      event.preventDefault();
-      return;
-    }
     ghostText?.handleKey(event);
   }
 
