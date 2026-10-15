@@ -95,10 +95,6 @@ export function createGhostText(context: AssistantContext) {
       return;
     }
     trace('ghost', `key ${event.key}: ${action}`);
-    if (action === 'dismiss') {
-      hide();
-      return;
-    }
     event.preventDefault();
     event.stopImmediatePropagation();
     if (action === 'accept-all') acceptAll();

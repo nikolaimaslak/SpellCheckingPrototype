@@ -1,12 +1,9 @@
 import type { GhostLayout, Rect, TextDirection } from '../types';
 
-const KEYS_THAT_DISMISS = new Set(['Enter', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
-
-export type GhostKeyAction = 'accept-all' | 'accept-word' | 'dismiss' | 'escape' | 'none';
+export type GhostKeyAction = 'accept-all' | 'accept-word' | 'escape' | 'none';
 
 export function ghostKeyAction(event: KeyboardEvent, direction: TextDirection, isMac: boolean): GhostKeyAction {
   const forwardArrow = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-  const backwardArrow = direction === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
   const noModifiers = !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
   const wordJumpModifier = isMac ? event.altKey && !event.ctrlKey : event.ctrlKey && !event.altKey;
 
@@ -20,10 +17,7 @@ export function ghostKeyAction(event: KeyboardEvent, direction: TextDirection, i
     if (noModifiers) {
       return 'accept-all';
     }
-    return wordJumpModifier && !event.shiftKey && !event.metaKey ? 'accept-word' : 'dismiss';
-  }
-  if (event.key === backwardArrow || KEYS_THAT_DISMISS.has(event.key)) {
-    return 'dismiss';
+    return wordJumpModifier && !event.shiftKey && !event.metaKey ? 'accept-word' : 'none';
   }
   return 'none';
 }
