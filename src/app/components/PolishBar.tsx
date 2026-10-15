@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { PolishState } from '../../assistant/state';
+import type { PolishState } from '../../assistant/types';
 
 interface Props {
   polish: PolishState;
@@ -12,7 +12,7 @@ const BUTTON = 'rounded border border-slate-300 bg-white px-2 py-1 text-sm hover
 // Keep the field's focus and caret when a button is pressed.
 const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
-/** The Polish button and the preview of its changes (Accept / Dismiss). */
+/** The Polish button and the preview of its fixes (every mistake the model finds, sure or not). */
 export function PolishBar({ polish, onPolish, onAccept, onDismiss }: Props) {
   const { preview } = polish;
 
@@ -36,20 +36,20 @@ export function PolishBar({ polish, onPolish, onAccept, onDismiss }: Props) {
       </button>
 
       {preview && (
-        <div role="dialog" aria-label="Grammar and spelling suggestions" className="space-y-2 rounded-md border border-slate-300 p-3 text-sm shadow">
+        <div role="dialog" aria-label="Spelling fixes" className="space-y-2 rounded-md border border-slate-300 p-3 text-sm shadow">
           {preview.segments.length > 0 && (
             <div dir={preview.dir} className="text-start leading-6 whitespace-pre-wrap">
-              {preview.segments.map((s, i) =>
-                s.type === 'ins' ? (
+              {preview.segments.map((segment, i) =>
+                segment.type === 'added' ? (
                   <ins key={i} className="rounded bg-green-100 text-green-900 no-underline">
-                    {s.text}
+                    {segment.text}
                   </ins>
-                ) : s.type === 'del' ? (
+                ) : segment.type === 'removed' ? (
                   <del key={i} className="text-red-700">
-                    {s.text}
+                    {segment.text}
                   </del>
                 ) : (
-                  <span key={i}>{s.text}</span>
+                  <span key={i}>{segment.text}</span>
                 ),
               )}
             </div>

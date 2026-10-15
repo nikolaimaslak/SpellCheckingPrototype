@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { PopoverState, Rect } from '../../assistant/state';
+import type { PopoverState, Rect } from '../../assistant/types';
 
 interface Props {
   popover: PopoverState;
@@ -27,7 +27,7 @@ export function SuggestionPopover({ popover, onPick, onIgnore, onClose }: Props)
   const [position, setPosition] = useState<{ top: number; left: number }>();
 
   useLayoutEffect(() => {
-    if (box.current) setPosition(place(popover.rect, box.current.getBoundingClientRect(), popover.dir));
+    if (box.current) setPosition(place(popover.wordRect, box.current.getBoundingClientRect(), popover.dir));
   }, [popover]);
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export function SuggestionPopover({ popover, onPick, onIgnore, onClose }: Props)
       aria-label="Spelling suggestions"
       dir={popover.dir}
       className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-slate-800 shadow-lg"
-      style={{ font: popover.font, ...(position ?? { top: popover.rect.bottom + GAP, left: popover.rect.left, visibility: 'hidden' }) }}
+      style={{ font: popover.font, ...(position ?? { top: popover.wordRect.bottom + GAP, left: popover.wordRect.left, visibility: 'hidden' }) }}
       // Keep the field's focus and selection while choosing.
       onMouseDown={(e) => e.preventDefault()}
     >

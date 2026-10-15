@@ -1,4 +1,4 @@
-import type { GhostState } from '../../assistant/state';
+import type { GhostState } from '../../assistant/types';
 
 /**
  * The completion suggestion in grey. An overlay outside the field, so it can

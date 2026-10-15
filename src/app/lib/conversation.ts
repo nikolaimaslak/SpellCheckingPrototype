@@ -1,4 +1,4 @@
-import type { Turn } from '../../assistant/server';
+import type { Turn } from '../../assistant/types';
 
 // Synthetic customer turns for the demo (not real GOSI conversations).
 export const SCENARIOS: Record<string, string[]> = {

@@ -1,4 +1,4 @@
-import { MODEL } from '../../assistant/server';
+import { MODEL } from '../../assistant/openai/client';
 
 /** One line saying which model answers completion and polish, and where typed text goes. */
 export function ModelLine({ apiKey }: { apiKey: string }) {

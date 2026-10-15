@@ -1,5 +1,5 @@
 import type { AssistantOptions, AssistEvent } from '../../assistant';
-import { openAiServer, type Turn } from '../../assistant/server';
+import type { Turn } from '../../assistant/types';
 import { SCENARIOS } from './conversation';
 import { DEFAULT_CANNED, DEFAULT_KB } from './default-sources';
 
@@ -50,7 +50,7 @@ export function assistantOptions(
     spelling: spellMode(settings),
     customWords: lines(settings.customDictionary),
     completion: settings.completion,
-    server: openAiServer(settings.apiKey),
+    apiKey: settings.apiKey,
     canned: lines(settings.canned),
     kb: lines(settings.kb),
     conversation,

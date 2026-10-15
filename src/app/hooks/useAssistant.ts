@@ -1,6 +1,6 @@
 import { useEffect, useState, useSyncExternalStore, type RefObject } from 'react';
 import { createAssistant, type Assistant, type AssistantOptions } from '../../assistant';
-import { INITIAL_STATE } from '../../assistant/state';
+import { INITIAL_STATE } from '../../assistant/types';
 
 const noSubscription = () => () => {};
 const initialState = () => INITIAL_STATE;
@@ -18,7 +18,7 @@ export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: A
     const created = createAssistant(field, options);
     setAssistant(created);
     return () => {
-      created.detach();
+      created.release();
       setAssistant(undefined);
     };
   }, [fieldRef, options]);

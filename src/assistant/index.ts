@@ -1,72 +1,26 @@
-import { createCheck } from './check';
-import { detectMac } from './completion-rules';
-import { browserHighlights } from './highlights';
-import { createPolish } from './polish';
-import type { Server, Turn } from './server';
-import { INITIAL_STATE, type AssistantEnv, type AssistantState, type AssistEvent, type Rect, type Shared } from './state';
+import { createPolish } from './polish/polish';
+import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
+import { createTypingAssist } from './typing/typing-assist';
 
-export type { AssistantState, AssistEvent } from './state';
-
-export interface AssistantOptions {
-  /** off; suggest: underline and offer fixes; auto: also auto-correct. */
-  spelling: 'off' | 'suggest' | 'auto';
-  customWords: string[];
-  completion: boolean;
-  /** Canned responses and KB articles ("Title: body") sent with every check. */
-  canned: string[];
-  kb: string[];
-  /** The conversation, read on every use. */
-  conversation: () => Turn[];
-  log?: (event: AssistEvent) => void;
-  server: Server;
-  /** Replaces browser parts (highlights, layout, editing). */
-  env?: Partial<AssistantEnv>;
-  checkThrottleMs?: number;
-}
-
+export type { AssistantOptions, AssistantState, AssistEvent } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
-/**
- * Spell check, auto-correct, inline completion and polish for one
- * contenteditable message field. It handles the field's events and keeps the
- * state of what to draw around it (popover, ghost text, polish preview); the
- * page subscribes and draws it.
- */
-export function createAssistant(el: HTMLElement, options: AssistantOptions) {
-  let state: AssistantState = INITIAL_STATE;
+export function createAssistant(field: HTMLElement, options: AssistantOptions) {
+  let state = INITIAL_STATE;
   const listeners = new Set<() => void>();
-  const { server } = options;
-  const shared: Shared = {
-    el,
-    env: browserEnv(el, options.env),
+
+  const context: AssistantContext = {
+    field,
     log: (event) => options.log?.(event),
     getState: () => state,
-    setState(patch) {
+    setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
-      listeners.forEach((l) => l());
+      listeners.forEach((listener) => listener());
     },
   };
 
-  const check =
-    options.spelling !== 'off' || options.completion
-      ? createCheck(shared, {
-          server,
-          spelling: options.spelling,
-          completion: options.completion,
-          customWords: options.customWords,
-          conversation: options.conversation,
-          canned: options.canned,
-          kb: options.kb,
-          throttleMs: options.checkThrottleMs,
-        })
-      : undefined;
-  const polish = createPolish(shared, {
-    server,
-    onStart() {
-      check?.dismissGhost();
-      check?.closePopover();
-    },
-  });
+  const typingAssist = options.spelling !== 'off' || options.completion ? createTypingAssist(context, options) : undefined;
+  const polish = createPolish(context, { ...options, beforeRequest: () => typingAssist?.closePanels() });
 
   return {
     getState: () => state,
@@ -74,76 +28,34 @@ export function createAssistant(el: HTMLElement, options: AssistantOptions) {
       listeners.add(listener);
       return () => void listeners.delete(listener);
     },
-    // Popover choices.
-    pickSuggestion: (suggestion: string) => check?.pick(suggestion),
-    ignoreWord: () => check?.ignore(),
-    closePopover: (restoreFocus: boolean) => check?.closePopover(restoreFocus),
-    // Polish.
+
+    handleInput(event: InputEvent) {
+      typingAssist?.handleInput(event);
+      polish.handleFieldChanged();
+    },
+    handleKeyDown: (event: KeyboardEvent) => typingAssist?.handleKeyDown(event),
+    handleClick: () => typingAssist?.handleClick(),
+    handleSelectionChange: () => typingAssist?.handleSelectionChange(),
+    handleCompositionStart: () => typingAssist?.handleCompositionStart(),
+    handleCompositionEnd: () => typingAssist?.handleCompositionEnd(),
+    handleBlur: () => typingAssist?.handleBlur(),
+    handleLayoutChange: () => typingAssist?.handleLayoutChange(),
+    handleCleared() {
+      typingAssist?.handleCleared();
+      polish.handleFieldChanged();
+    },
+
+    pickSuggestion: (suggestion: string) => typingAssist?.pickSuggestion(suggestion),
+    ignoreWord: () => typingAssist?.ignoreWord(),
+    closePopover: (returnCaret: boolean) => typingAssist?.closePopover(returnCaret),
     polishNow: () => polish.polishNow(),
     acceptPolish: () => polish.accept(),
     dismissPolish: () => polish.dismiss(),
-    /** Sends the spelling and completion request now instead of waiting for the throttle. */
-    checkNow: async () => check?.checkNow(),
-    /** Hides any ghost text. */
-    dismissGhost: () => check?.dismissGhost(),
-    detach() {
-      check?.detach();
-      polish.detach();
+
+    release() {
+      typingAssist?.release();
+      polish.release();
       listeners.clear();
     },
-  };
-}
-
-const toRect = (r: DOMRect): Rect => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom });
-
-function browserEnv(el: HTMLElement, overrides: Partial<AssistantEnv> = {}): AssistantEnv {
-  const doc = el.ownerDocument;
-  return {
-    replace:
-      overrides.replace ??
-      ((range, text) => {
-        el.focus();
-        const sel = doc.getSelection()!;
-        sel.removeAllRanges();
-        sel.addRange(range);
-        // execCommand is deprecated but still the only API that makes a native
-        // undo step and fires the input event a user's typing would.
-        doc.execCommand('insertText', false, text);
-      }),
-    highlights: overrides.highlights ?? browserHighlights(),
-    rectOf: overrides.rectOf ?? ((range) => toRect(range.getClientRects()[0] ?? range.getBoundingClientRect())),
-    caretRect:
-      overrides.caretRect ??
-      ((field) => {
-        const sel = doc.getSelection();
-        if (!sel?.anchorNode || !field.contains(sel.anchorNode)) return null;
-        const range = doc.createRange();
-        const node = sel.anchorNode;
-        if (node.nodeType === Node.TEXT_NODE && sel.anchorOffset > 0) {
-          // A collapsed range at a line end can report an empty rect; the
-          // previous character's box is reliable.
-          range.setStart(node, sel.anchorOffset - 1);
-          range.setEnd(node, sel.anchorOffset);
-          const rects = range.getClientRects();
-          return rects.length ? toRect(rects[rects.length - 1]) : null;
-        }
-        range.setStart(node, sel.anchorOffset);
-        const r = range.getBoundingClientRect();
-        return r.height ? toRect(r) : null;
-      }),
-    contentBox:
-      overrides.contentBox ??
-      ((field) => {
-        const r = field.getBoundingClientRect();
-        const cs = doc.defaultView!.getComputedStyle(field);
-        const px = (v: string) => parseFloat(v) || 0;
-        return {
-          left: r.left + px(cs.borderLeftWidth) + px(cs.paddingLeft),
-          right: r.right - px(cs.borderRightWidth) - px(cs.paddingRight),
-          top: r.top + px(cs.borderTopWidth),
-          bottom: r.bottom - px(cs.borderBottomWidth),
-        };
-      }),
-    isMac: overrides.isMac ?? detectMac(doc.defaultView?.navigator),
   };
 }

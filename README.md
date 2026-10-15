@@ -3,7 +3,7 @@
 A demo page for the algorithms behind writing help in Bright Pattern Agent Desktop's message composer, in **Arabic and English**:
 - **Spell checking and auto-correct** (PER #60254), by an LLM.
 - **Smart Compose-style inline completion**, grounded in the conversation, canned responses and a knowledge base (PER #60145).
-- An on-demand **grammar polish** button (PER #60254).
+- A **Polish** button that fixes every mistake the model finds, even the ones it isn't sure about (PER #60254).
 
 ## Quick start
 
@@ -49,7 +49,7 @@ All customer messages, canned responses and knowledge-base articles are **synthe
 **How it works:**
 - **The page:** React + Tailwind (`src/app/`) draws the state of `createAssistant` (`src/assistant/`), which handles the message field's events. Everything but drawing is plain TypeScript in `src/assistant/`.
 - **Spelling and completion:** while the agent types, `src/assistant/check.ts` sends the draft to the model at most once a second (and once after the last keystroke). The answer lists the misspelled words with fixes and whether the model is sure, plus the text that continues the sentence. Sure mistakes are auto-corrected (one Ctrl/Cmd+Z each), the others are underlined with their fixes in the popover, and the continuation is shown as grey text.
-- **Polish:** the button sends the whole draft and shows the fixed version as a preview.
+- **Polish:** the button sends the same request and shows a preview (struck-through and highlighted words) that replaces every reported mistake with its first fix, whether or not the model is sure and whether or not auto-correct is on. Accept applies them like auto-correct: each fix is one Ctrl/Cmd+Z.
 - **Drawing:** underlines use the CSS Custom Highlight API and the grey text is an overlay: nothing is written into the field's DOM. All model calls are in `src/assistant/server.ts`.
 
 `CLAUDE.md` describes the layout and constraints.

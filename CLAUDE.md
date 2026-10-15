@@ -1,6 +1,6 @@
 # SpellCheckingPrototype
 
-Demo of the Bright Pattern Agent Desktop **composer assistance layer**, in English and Arabic: LLM spell check and auto-correct (PER #60254), Smart Compose-style inline completion (PER #60145), and an on-demand grammar polish.
+Demo of the Bright Pattern Agent Desktop **composer assistance layer**, in English and Arabic: LLM spell check and auto-correct (PER #60254), Smart Compose-style inline completion (PER #60145), and a Polish button that fixes every mistake the model finds.
 
 ## Commands
 
@@ -12,21 +12,23 @@ Demo of the Bright Pattern Agent Desktop **composer assistance layer**, in Engli
 
 ## Layout
 
-- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, Reset), one message field, the popover, ghost text and polish preview drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings and their mapping to assistant options, the Conversation field, the event log, the default canned responses and KB from `data/`).
-- `src/assistant/`: `createAssistant(field, options)`, the one entry point; it keeps the state of what to draw (`popover`, `ghost`, `polish`) and the browser parts (`AssistantEnv`).
-  - `check.ts`: while the agent types, one throttled request to the model for both spelling and completion. Underlines the mistakes with their fixes in the popover, auto-corrects the ones the model is sure about (an Undo that brings a word back marks it ignored), and shows the completion as ghost text.
-  - `completion-rules.ts`: pure rules: when to ask for a completion, what a key does with ghost text, where to draw it.
-  - `polish.ts` + `polish-diff.ts`: the Polish button: the preview diff, and Accept as one replace of the whole draft.
-  - `server.ts`: the OpenAI calls with the key typed on the page, the prompts and answer parsing.
-  - `textmap.ts`: the field's text flattened to one string, mapped back to DOM ranges.
-  - `highlights.ts`, `state.ts`: the CSS highlights; state and event types.
+- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings and their mapping to assistant options, the Conversation field, the event log, the default canned responses and KB from `data/`).
+- `src/assistant/`: `createAssistant(field, options)` in `index.ts`, the one entry point; it keeps the state the page draws (`popover`, `ghost`, `polish`).
+  - `types.ts`: options, state and event types.
+  - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.
+  - `text/`: `field-text.ts` (the field's text as one string, mapped back to DOM ranges and the caret), `words.ts` (finding whole words, text direction).
+  - `openai/`: `client.ts` (the one fetch to OpenAI, `MODEL`), `check-request.ts` (the one prompt: mistakes with fixes and how sure, plus the completion; answer parsing).
+  - `typing/`: `typing-assist.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct, Undo as revert), `ghost-text.ts` + `ghost-text-rules.ts` (the completion shown after the caret, its keys and layout).
+  - `replace-words.ts`: replaces words in the field (one undo step each), keeps the caret, flashes the replaced words. Used by auto-correct and Polish.
+  - `polish/`: `polish.ts` (the Polish button: the same check request, a preview replacing every mistake with its first fix, sure or not; Accept applies it through `replace-words.ts`), `word-diff.ts` (the preview's diff).
+- Code has no comments: names say what things are.
 
 ## Hard constraints
 
 - **No browser extensions.** Everything is page code.
 - **The only network calls are to OpenAI**, with the key from the page's password field (kept in `localStorage`): the spelling and completion check, and Polish.
 - **Made-up text only with the OpenAI key.** Everything typed in the field, the conversation, canned responses and KB go to OpenAI. Events are shown on the page only.
-- **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through `env.replace` (`execCommand('insertText')`), so each one is one native undo step.
+- **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through `replaceText` in `browser.ts`, so each one is one native undo step.
 - **Licensing.** No GPL/LGPL terms. Any new dependency needs its license checked first.
 - **English first, Arabic first-class.** Every text-processing behavior must work in English, Arabic and mixed text. Use `dir="auto"` / `unicode-bidi: plaintext` for direction.
 
