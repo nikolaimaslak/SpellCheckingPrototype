@@ -1,4 +1,4 @@
-import { acceptPolish, dismissPolish, polishNow, stopPolish, updatePolishButton } from './polish/polish';
+import { acceptPolish, dismissPolish, polishNow, stopPolish } from './polish/polish';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
 import * as spelling from './typing/spelling';
@@ -14,7 +14,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
   const context: AssistantContext = {
     field,
     options,
-    log: (event) => options.log?.(event),
+    log: options.log,
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
@@ -30,7 +30,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
   };
 
   trace('assistant', 'attached to the field', { spelling: options.spelling, completion: options.completion, hasApiKey: !!options.apiKey });
-  updatePolishButton(context);
 
   return {
     getState: () => state,
@@ -39,10 +38,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       return () => void listeners.delete(listener);
     },
 
-    handleInput(event: InputEvent) {
-      checkWhileTyping.handleInput(context, event);
-      updatePolishButton(context);
-    },
+    handleInput: (event: InputEvent) => checkWhileTyping.handleInput(context, event),
     handleKeyDown: (event: KeyboardEvent) => checkWhileTyping.handleKeyDown(context, event),
     handleClick: () => checkWhileTyping.handleClick(context),
     handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { clearSettings, DEFAULT_SETTINGS, loadSettings, saveSettings, type AppSettings } from '../lib/settings';
 
-/** Settings from localStorage, saved on every change; reset goes back to the defaults. */
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(loadSettings);
   useEffect(() => saveSettings(settings), [settings]);

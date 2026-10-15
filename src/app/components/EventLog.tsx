@@ -1,12 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { formatEntry, type LogEntry } from '../lib/event-log';
 
-/** On-page console: every event as one JSON line, newest at the bottom. */
-export function EventLog({ entries, onClear }: { entries: LogEntry[]; onClear: () => void }) {
+export function EventLog({ lines, onClear }: { lines: string[]; onClear: () => void }) {
   const pre = useRef<HTMLPreElement>(null);
   useEffect(() => {
     if (pre.current) pre.current.scrollTop = pre.current.scrollHeight;
-  }, [entries]);
+  }, [lines]);
 
   return (
     <section className="space-y-1">
@@ -17,7 +15,7 @@ export function EventLog({ entries, onClear }: { entries: LogEntry[]; onClear: (
         </button>
       </div>
       <pre ref={pre} className="h-64 min-h-16 resize-y overflow-auto rounded bg-slate-900 p-2 text-xs leading-5 whitespace-pre-wrap break-all text-green-200">
-        {entries.map(formatEntry).join('\n')}
+        {lines.join('\n')}
       </pre>
     </section>
   );

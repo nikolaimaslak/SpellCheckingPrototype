@@ -3,13 +3,11 @@ import { replaceText } from '../browser';
 import type { WordReplacement } from '../replace-words';
 import { rangeOf, readFieldText } from '../text/field-text';
 import { placeMistakes } from '../text/mistake-places';
-import { countWords, directionOfText } from '../text/words';
+import { directionOfText } from '../text/words';
 import type { AssistantContext, PolishState } from '../types';
 import { closePanels } from '../typing/check-while-typing';
 import { wordDiff } from './word-diff';
 import { trace } from '../trace';
-
-const MIN_WORDS = 3;
 
 function applyToText(text: string, replacements: WordReplacement[]): string {
   return [...replacements]
@@ -21,19 +19,12 @@ const updateState = (context: AssistantContext, patch: Partial<PolishState>) => 
 const showMessage = (context: AssistantContext, message: string) =>
   updateState(context, { preview: { dir: directionOfText(readFieldText(context.field).text), segments: [], message } });
 
-export function updatePolishButton(context: AssistantContext) {
-  updateState(context, { canPolish: countWords(readFieldText(context.field).text) >= MIN_WORDS });
-}
-
 export async function polishNow(context: AssistantContext) {
   const { polish, options } = context;
   if (context.isReleased || polish.runningRequest || context.getState().popover) {
     return;
   }
   const draft = readFieldText(context.field).text;
-  if (countWords(draft) < MIN_WORDS) {
-    return;
-  }
 
   trace('polish', 'Polish pressed: asking for every mistake, sure or not');
   closePanels(context);

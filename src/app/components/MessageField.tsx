@@ -14,11 +14,6 @@ interface Props {
   onIgnoredWordsChange: (text: string) => void;
 }
 
-/**
- * The agent's message field and what the assistant draws around it. The
- * field's content is owned by the browser and the assistant, never rendered
- * by React: it has no children here. The field's events go to the assistant.
- */
 export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
@@ -49,7 +44,6 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
       document.removeEventListener('selectionchange', assistant.handleSelectionChange);
     };
   }, [assistant]);
-
 
   return (
     <section className="space-y-2">
@@ -94,7 +88,6 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           {state.ghost && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover
-              // A new word starts with the first item focused.
               key={`${state.popover.wordStartOffset}:${state.popover.wordEndOffset}`}
               popover={state.popover}
               fieldRef={fieldRef}

@@ -5,10 +5,6 @@ import { INITIAL_STATE } from '../../assistant/types';
 const noSubscription = () => () => {};
 const initialState = () => INITIAL_STATE;
 
-/**
- * Attaches the assistant to the message field and returns it with its state
- * (what to draw). Re-attaches when `options` change; pass a stable object.
- */
 export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: AssistantOptions) {
   const [assistant, setAssistant] = useState<Assistant>();
 

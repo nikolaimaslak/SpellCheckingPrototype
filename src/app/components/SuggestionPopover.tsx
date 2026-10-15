@@ -9,18 +9,12 @@ interface Props {
   onPick: (suggestion: string) => void;
   onIgnore: () => void;
   onAddToDictionary: (word: string) => void;
-  /** `restoreFocus`: put the caret back in the field (Escape). */
   onClose: (restoreFocus: boolean) => void;
 }
 
 const GAP = 4;
 const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
 
-/**
- * The fixes for an underlined word, next to it. Arrow keys, Enter and Escape are taken at window
- * level, so Enter picks a suggestion instead of sending the message; any
- * other key, a click outside or scrolling closes it.
- */
 export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
   const items = [
     ...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })),
@@ -75,7 +69,6 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
       dir={popover.dir}
       className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-sm text-slate-800 shadow"
       style={position ?? { top: 0, left: 0, visibility: 'hidden' }}
-      // Keep the field's focus and selection while choosing.
       onMouseDown={(e) => e.preventDefault()}
     >
       {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500">No suggestions</div>}
@@ -95,7 +88,6 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
   );
 }
 
-/** Below the word (above it near the viewport bottom), start-aligned to it, kept inside the viewport. */
 function place(anchor: Rect, size: { width: number; height: number }, dir: 'ltr' | 'rtl') {
   let top = anchor.bottom + GAP;
   if (top + size.height > window.innerHeight && anchor.top - GAP - size.height >= 0) top = anchor.top - GAP - size.height;

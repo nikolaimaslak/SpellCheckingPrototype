@@ -18,14 +18,6 @@ export function findWordPlaces(text: string, words: Iterable<string>): WordPlace
   return places.sort((first, second) => first.start - second.start);
 }
 
-export function lowercaseWordsIn(text: string): string[] {
-  return (text.match(LETTERS) ?? []).map((word) => word.toLowerCase());
-}
-
-export function countWords(text: string): number {
-  return (text.match(/[\p{L}\p{N}]+/gu) ?? []).length;
-}
-
 export function directionOfLastWord(text: string): TextDirection {
   const lastWord = text.match(LETTERS)?.at(-1) ?? '';
   return /\p{Script=Arabic}/u.test(lastWord) ? 'rtl' : 'ltr';

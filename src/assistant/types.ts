@@ -32,7 +32,6 @@ export interface ShownGhost {
 }
 
 export interface PolishState {
-  canPolish: boolean;
   busy: boolean;
   preview?: { dir: TextDirection; segments: DiffSegment[]; message?: string };
 }
@@ -44,7 +43,7 @@ export interface AssistantState {
   loader?: { kind: 'pause'; startedAt: number; durationMs: number } | { kind: 'request' };
 }
 
-export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false } };
+export const INITIAL_STATE: AssistantState = { polish: { busy: false } };
 
 export type AssistEvent =
   | { type: 'send-to-llm'; text: string; completion: boolean }
@@ -66,7 +65,7 @@ export interface AssistantOptions {
   canned: string[];
   kb: string[];
   conversation: string;
-  log?: (event: AssistEvent) => void;
+  log: (event: AssistEvent) => void;
 }
 
 export interface SpellingData {

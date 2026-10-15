@@ -12,13 +12,13 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 
 ## Layout
 
-- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, used by the field only after Apply, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the event log, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
+- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (saved in `localStorage`, used by the field only after Apply, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
 - `src/assistant/`: `createAssistant(field, options)` in `index.ts`, the one entry point; it keeps the state the page draws (`popover`, `ghost`, `polish`) and makes the one `AssistantContext` that holds all the assistant's data. The other modules are plain functions that take that context; none keeps its own variables.
   - `types.ts`: options, state and event types.
   - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.
   - `text/`: `field-text.ts` (the field's text as one string, mapped back to DOM ranges and the caret), `words.ts` (finding whole words, text direction).
   - `llm/`: `client.ts` (the one fetch to the LLM, `MODEL`), `check-request.ts` (the one prompt: mistakes with fixes and how sure, plus the completion; answer parsing).
-  - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct, Undo as revert), `ghost-text.ts` + `ghost-text-rules.ts` (the completion shown after the caret and its keys; React draws it).
+  - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct, Undo as revert), `ghost-text.ts` (the completion shown after the caret and its keys; React draws it).
   - `replace-words.ts`: replaces words in the field (one undo step each), keeps the caret, flashes the replaced words. Used by auto-correct.
   - `polish/`: `polish.ts` (the Polish button: the same check request, a preview replacing every mistake with its first fix, sure or not; Accept replaces the whole text as one undo step), `word-diff.ts` (the preview's diff).
 - Code has no comments: names say what things are.

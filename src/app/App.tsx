@@ -10,7 +10,7 @@ export function App() {
   const { settings, updateSettings, resetSettings } = useSettings();
   const [appliedSettings, setAppliedSettings] = useState(settings);
   const [hasUnappliedEdits, setHasUnappliedEdits] = useState(false);
-  const { logEntries, logEvent, clearLog } = useEventLog();
+  const { logLines, logEvent, clearLog } = useEventLog();
 
   const changeIgnoredWords = useCallback((ignoredWords: string) => updateSettings({ ignoredWords }), [updateSettings]);
 
@@ -52,7 +52,7 @@ export function App() {
             onAddToDictionary={addToDictionary}
             onIgnoredWordsChange={changeIgnoredWords}
           />
-          <EventLog entries={logEntries} onClear={clearLog} />
+          <EventLog lines={logLines} onClear={clearLog} />
         </main>
       </div>
     </div>

@@ -9,14 +9,11 @@ interface Props {
 }
 
 const BUTTON = 'rounded border border-slate-300 bg-white px-2 py-1 text-sm hover:bg-slate-100 disabled:opacity-50';
-// Keep the field's focus and caret when a button is pressed.
 const keepFocus = (e: React.MouseEvent) => e.preventDefault();
 
-/** The Polish button and the preview of its fixes (every mistake the model finds, sure or not). */
 export function PolishBar({ polish, onPolish, onAccept, onDismiss }: Props) {
   const { preview } = polish;
 
-  // Escape closes the preview; the field never sees it.
   useEffect(() => {
     if (!preview) {
       return;
@@ -35,7 +32,7 @@ export function PolishBar({ polish, onPolish, onAccept, onDismiss }: Props) {
 
   return (
     <div className="space-y-2">
-      <button type="button" className={BUTTON} disabled={!polish.canPolish || polish.busy} onMouseDown={keepFocus} onClick={onPolish}>
+      <button type="button" className={BUTTON} disabled={polish.busy} onMouseDown={keepFocus} onClick={onPolish}>
         {polish.busy ? 'Polishing…' : 'Polish'}
       </button>
 

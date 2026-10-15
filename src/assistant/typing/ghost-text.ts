@@ -1,9 +1,34 @@
 import { caretRange, isMac, replaceText } from '../browser';
 import { caretOffset, readFieldText } from '../text/field-text';
 import { directionOfLastWord } from '../text/words';
-import type { AssistantContext, ShownGhost } from '../types';
-import { ghostKeyAction, nextWord } from './ghost-text-rules';
+import type { AssistantContext, ShownGhost, TextDirection } from '../types';
 import { trace } from '../trace';
+
+type GhostKeyAction = 'accept-all' | 'accept-word' | 'escape' | 'none';
+
+function ghostKeyAction(event: KeyboardEvent, direction: TextDirection): GhostKeyAction {
+  const forwardArrow = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+  const noModifiers = !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
+  const wordJumpModifier = isMac ? event.altKey && !event.ctrlKey : event.ctrlKey && !event.altKey;
+
+  if (event.key === 'Tab') {
+    return noModifiers ? 'accept-all' : 'none';
+  }
+  if (event.key === 'Escape') {
+    return 'escape';
+  }
+  if (event.key === forwardArrow) {
+    if (noModifiers) {
+      return 'accept-all';
+    }
+    return wordJumpModifier && !event.shiftKey && !event.metaKey ? 'accept-word' : 'none';
+  }
+  return 'none';
+}
+
+function nextWord(text: string): string {
+  return /^\s*\S+/u.exec(text)?.[0] ?? text;
+}
 
 export function showGhost(context: AssistantContext, completion: string, atCaretOffset: number, textBeforeCaret: string) {
   if (!completion) {
@@ -114,7 +139,7 @@ export function handleGhostKey(context: AssistantContext, event: KeyboardEvent) 
   if (!ghost || !focused || !field.contains(focused)) {
     return;
   }
-  const action = ghostKeyAction(event, ghost.direction, isMac);
+  const action = ghostKeyAction(event, ghost.direction);
   if (action === 'none') {
     return;
   }

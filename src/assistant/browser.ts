@@ -1,10 +1,7 @@
 import type { Rect } from './types';
 
 export function replaceText(field: HTMLElement, range: Range, text: string) {
-  field.focus();
-  const selection = document.getSelection()!;
-  selection.removeAllRanges();
-  selection.addRange(range);
+  restoreSelection(field, range);
   document.execCommand('insertText', false, text);
 }
 
