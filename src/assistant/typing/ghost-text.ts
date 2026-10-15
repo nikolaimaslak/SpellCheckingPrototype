@@ -128,6 +128,5 @@ export function createGhostText(context: AssistantContext) {
     hideIfCaretMoved,
     continueTyping,
     handleKey,
-    isShown: () => !!shown,
   };
 }

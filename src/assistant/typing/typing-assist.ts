@@ -123,9 +123,6 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     if (!ghostText) {
       return 'inline completion is off';
     }
-    if (ghostText.isShown()) {
-      return 'a completion is already shown';
-    }
     if (caret === undefined) {
       return 'the caret is not in the field (or text is selected)';
     }

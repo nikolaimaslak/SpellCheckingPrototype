@@ -35,7 +35,7 @@ One entry per place: the same word in two places is two entries, each with its o
 a correct word that must be followed by a punctuation sign that is missing (a comma after the name in "Hello Sahsa we"): report it with one fix, the same word with that sign ("Sahsa,"), and "sure": true. Names count here too. Only when the word itself has no mistake.
 Check each fix by putting it in place of the word in its context: the result must read correctly. A word that should be removed, not replaced, is not a mistake.
 "sure": when true, the first fix replaces the word at once, without asking the agent. So true only when the word is clearly wrong there and there is only one right fix; with two or more fixes, or when the word could be a name, always false (the missing punctuation case is always true).
-Never report names, words the customer wrote, codes, links, emails, numbers, or the custom words as wrong; the missing punctuation case above is the only exception.
+Never report names, words the customer wrote, codes, links, emails, numbers, words with digits, words in ALL CAPS, or the custom words as wrong; the missing punctuation case above is the only exception.
 Keep the agent's language: a fix is in the same language as the word it replaces; never translate.
 
 completion: only when "Continue after" is given. The text that goes right after it, nothing that is already there.
@@ -44,6 +44,7 @@ Continue the draft as written, even if it has typos: never repeat or rewrite wor
 If punctuation is missing before your words (a comma after a greeting, a period after a finished sentence) and no mistake already adds it, start the completion with that punctuation sign.
 After a comma (typed or yours), continue the same sentence: no capital letter, no new sentence.
 At most one short sentence, in the language the agent is typing right before it, never another language. Use the canned responses and articles when they fit.
+Never put in the completion: personal data (names, phone numbers, emails, addresses, ID or account numbers), order or case numbers, amounts of money, dates or how long something takes. Leave a general wording instead ("will be processed soon", not "within 3 working days").
 Empty when not asked or when you are not sure what comes next.`;
 
 export async function requestCheck(apiKey: string, request: CheckRequest, signal: AbortSignal): Promise<CheckAnswer | null> {
