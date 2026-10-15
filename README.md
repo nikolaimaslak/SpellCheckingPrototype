@@ -1,6 +1,6 @@
-# Composer assistance prototype
+# Auto-complete and auto-correct
 
-A demo page for the algorithms behind writing help in Bright Pattern Agent Desktop's message composer, in **Arabic and English**:
+A demo page for the algorithms behind auto-complete and auto-correct in Bright Pattern Agent Desktop, in **Arabic and English**:
 - **Spell checking and auto-correct** (PER #60254), by an LLM.
 - **Smart Compose-style inline completion**, grounded in the conversation, canned responses and a knowledge base (PER #60145).
 - A **Polish** button that fixes every mistake the model finds, even the ones it isn't sure about (PER #60254).
@@ -16,7 +16,7 @@ npm run dev
 
 Then open **http://localhost:5173/**. Stop it with **Ctrl+C**.
 
-Everything needs an **OpenAI API key**: type it in the settings panel (it is saved in this browser). The page then calls OpenAI (`gpt-4.1-mini`) directly, and the line under the title says so. Text you type in the message field, the conversation, canned responses and KB are sent to OpenAI, so **use made-up text only**. Without a key the field is a plain text box.
+Everything needs an **OpenAI API key**: type it in the settings panel (it is saved in this browser). The page then calls OpenAI (`gpt-4.1-mini`) directly, and the line under the title says so. Without a key the field is a plain text box.
 
 
 ### Troubleshooting
@@ -33,7 +33,7 @@ Everything needs an **OpenAI API key**: type it in the settings panel (it is sav
 ## What the demo contains
 
 - **One message field:** Enter adds the message to the Conversation as the agent, Shift+Enter breaks the line. Spelling underlines, the suggestions popover (click a word or Ctrl+.), auto-correct, the grey completion (Tab accepts) and the **Polish** button all work on it. Ctrl/Cmd+Z undoes any automatic change.
-- **Settings:** the OpenAI API key, spell check, auto-correct, custom dictionary, completion on or off, and the sources as plain text: **Conversation** (`Customer:` / `Agent:` lines, with a scenario button that adds the next customer message), **Canned responses** and **Knowledge base**. Saved in the browser; **Reset** goes back to the defaults.
+- **Settings:** the OpenAI API key, spell check, auto-correct, custom dictionary, completion on or off, and the sources as plain text: **Conversation** (`Customer:` / `Agent:` lines, with English and Arabic presets), **Canned responses** and **Knowledge base**. Saved in the browser; **Reset** goes back to the defaults.
 - **Events:** every event (the request to the model and its answer, underlined word, auto-correction, completion, polish) as one JSON line, at the bottom of the page.
 
 All customer messages, canned responses and knowledge-base articles are **synthetic demo data**.

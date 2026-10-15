@@ -1,6 +1,6 @@
 import type { AssistantOptions, AssistEvent } from '../../assistant';
 import type { Turn } from '../../assistant/types';
-import { SCENARIOS } from './conversation';
+import { CONVERSATION_PRESETS } from './conversation';
 import { DEFAULT_CANNED, DEFAULT_KB } from './default-sources';
 
 /** Everything the React demo lets you change. Text fields keep the raw text; `lines()` splits it. */
@@ -11,6 +11,7 @@ export interface AppSettings {
   /** One word per line: never flagged, never auto-corrected. */
   customDictionary: string;
   completion: boolean;
+  debounceMs: number;
   /** OpenAI key for spelling, completion and polish; empty = all three are off. */
   apiKey: string;
   /** `Customer:` / `Agent:` lines: auto-correct protection and LLM context. */
@@ -26,8 +27,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   autoCorrect: true,
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   completion: true,
+  debounceMs: 1000,
   apiKey: '',
-  conversation: `Customer: ${SCENARIOS['en-pension'][0]}`,
+  conversation: CONVERSATION_PRESETS.English,
   canned: DEFAULT_CANNED,
   kb: DEFAULT_KB,
 };
@@ -36,7 +38,7 @@ const KEY = 'bp-spell-react-demo-settings';
 
 export const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);
 
-/** The composer library's mode from the two checkboxes. */
+/** The assistant's mode from the two checkboxes. */
 export const spellMode = (settings: Pick<AppSettings, 'spellCheck' | 'autoCorrect'>): 'off' | 'suggest' | 'auto' =>
   !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto' : 'suggest';
 
@@ -50,6 +52,7 @@ export function assistantOptions(
     spelling: spellMode(settings),
     customWords: lines(settings.customDictionary),
     completion: settings.completion,
+    debounceMs: settings.debounceMs,
     apiKey: settings.apiKey,
     canned: lines(settings.canned),
     kb: lines(settings.kb),
@@ -69,6 +72,7 @@ export function parseSettings(input: unknown): AppSettings {
     autoCorrect: booleanField('autoCorrect'),
     customDictionary: textField('customDictionary'),
     completion: booleanField('completion'),
+    debounceMs: typeof stored.debounceMs === 'number' && stored.debounceMs >= 0 ? stored.debounceMs : DEFAULT_SETTINGS.debounceMs,
     apiKey: textField('apiKey'),
     conversation: textField('conversation'),
     canned: textField('canned'),

@@ -1,11 +1,12 @@
-import { requestCheck } from '../openai/check-request';
+import { requestCheck } from '../llm/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantOptions, AssistantState } from '../types';
 import { createGhostText } from './ghost-text';
 import { createSpelling } from './spelling';
 import { trace } from '../trace';
+import { isReplacingWords } from '../replace-words';
 
-const PAUSE_BEFORE_REQUEST_MS = 1000;
+const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 const MIN_WORDS_IN_SENTENCE = 3;
 const SENTENCE_END = /[.!?؟\n]/u;
 
@@ -34,7 +35,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     const loader: AssistantState['loader'] = runningRequest
       ? { kind: 'request' }
       : requestTimer
-        ? { kind: 'pause', startedAt: pauseStartedAt, durationMs: PAUSE_BEFORE_REQUEST_MS }
+        ? { kind: 'pause', startedAt: pauseStartedAt, durationMs: options.debounceMs }
         : undefined;
     if (JSON.stringify(context.getState().loader) === JSON.stringify(loader)) {
       return;
@@ -51,9 +52,9 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     if (isReleased || runningRequest) {
       return;
     }
-    trace('typing', requestTimer ? `typing continues: pause timer restarted (${PAUSE_BEFORE_REQUEST_MS} ms)` : `pause timer started: request in ${PAUSE_BEFORE_REQUEST_MS} ms unless typing continues`);
+    trace('typing', requestTimer ? `typing continues: pause timer restarted (${options.debounceMs} ms)` : `pause timer started: request in ${options.debounceMs} ms unless typing continues`);
     clearTimeout(requestTimer);
-    requestTimer = setTimeout(() => void sendRequestNow(), PAUSE_BEFORE_REQUEST_MS);
+    requestTimer = setTimeout(() => void sendRequestNow(), options.debounceMs);
     pauseStartedAt = Date.now();
     updateLoader();
   }
@@ -162,6 +163,10 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     if (event.inputType === 'historyUndo') spelling?.noticeUndo();
     if (!ghostText?.continueTyping(event)) ghostText?.hide();
     spelling?.redrawUnderlines();
+    if (isReplacingWords()) {
+      trace('typing', 'our own replacement (auto-correct, pick or Polish): no new request');
+      return;
+    }
     if (event.inputType.startsWith('delete') && readFieldText(field).text.trimEnd() === lastSentText.trimEnd()) {
       trace('typing', 'only trailing spaces were removed since the last request: no new request');
       return;
@@ -175,6 +180,12 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       return;
     }
     ghostText?.handleKey(event);
+  }
+
+  function handleKeyUp(event: KeyboardEvent) {
+    if (CARET_KEYS.has(event.key) && !event.shiftKey && !spelling?.isPopoverOpen()) {
+      openPopover();
+    }
   }
 
   function handleClick() {
@@ -199,11 +210,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     isComposing = false;
   }
 
-  function handleBlur() {
-    ghostText?.hide();
-  }
-
-  function handleLayoutChange() {
+  function handleFocusChange() {
     ghostText?.redraw();
   }
 
@@ -231,8 +238,8 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     handleSelectionChange,
     handleCompositionStart,
     handleCompositionEnd,
-    handleBlur,
-    handleLayoutChange,
+    handleFocusChange,
+    handleKeyUp,
     handleCleared,
     closePanels,
     closePopover: (returnCaret: boolean) => spelling?.closePopover(returnCaret),

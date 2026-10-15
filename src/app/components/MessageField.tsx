@@ -16,7 +16,6 @@ interface Props {
   onLog: (event: AssistEvent) => void;
   /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
   onSend: (text: string) => void;
-  /** "Add to dictionary" in the popover: the word goes into the Custom dictionary setting. */
   onAddToDictionary: (word: string) => void;
 }
 
@@ -41,12 +40,8 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
       return;
     }
     document.addEventListener('selectionchange', assistant.handleSelectionChange);
-    window.addEventListener('resize', assistant.handleLayoutChange);
-    window.addEventListener('scroll', assistant.handleLayoutChange, true);
     return () => {
       document.removeEventListener('selectionchange', assistant.handleSelectionChange);
-      window.removeEventListener('resize', assistant.handleLayoutChange);
-      window.removeEventListener('scroll', assistant.handleLayoutChange, true);
     };
   }, [assistant]);
 
@@ -77,11 +72,12 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
           className="min-h-24 rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
           onInput={(e) => assistant?.handleInput(e.nativeEvent as InputEvent)}
           onKeyDown={onKeyDown}
+          onKeyUp={(e) => assistant?.handleKeyUp(e.nativeEvent)}
           onMouseUp={() => assistant?.handleClick()}
           onCompositionStart={() => assistant?.handleCompositionStart()}
           onCompositionEnd={() => assistant?.handleCompositionEnd()}
-          onBlur={() => assistant?.handleBlur()}
-          onScroll={() => assistant?.handleLayoutChange()}
+          onFocus={() => assistant?.handleFocusChange()}
+          onBlur={() => assistant?.handleFocusChange()}
         />
         {state.loader?.kind === 'pause' && <PauseRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
         {(state.loader?.kind === 'request' || state.polish.busy) && (
@@ -102,12 +98,13 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
             onAccept={assistant.acceptPolish}
             onDismiss={assistant.dismissPolish}
           />
-          {state.ghost && <GhostText ghost={state.ghost} />}
+          {state.ghost && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover
               // A new word starts with the first item focused.
-              key={`${state.popover.wordRect.left}:${state.popover.wordRect.top}`}
+              key={`${state.popover.wordStartOffset}:${state.popover.wordEndOffset}`}
               popover={state.popover}
+              fieldRef={fieldRef}
               onPick={assistant.pickSuggestion}
               onIgnore={assistant.ignoreWord}
               onAddToDictionary={(word) => {

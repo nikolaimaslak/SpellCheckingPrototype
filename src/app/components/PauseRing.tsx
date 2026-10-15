@@ -1,4 +1,3 @@
-/** The typing pause before a request, drawn as a ring filling up. Same size and place as the request spinner. */
 export function PauseRing({ durationMs }: { durationMs: number }) {
   const radius = 5;
   const circumference = 2 * Math.PI * radius;

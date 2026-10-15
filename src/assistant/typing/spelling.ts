@@ -1,6 +1,6 @@
-import { createHighlight, rectOfRange, replaceText, restoreSelection, selectedRange } from '../browser';
+import { createHighlight, replaceText, restoreSelection, selectedRange } from '../browser';
 import { replaceWords } from '../replace-words';
-import type { Mistake } from '../openai/check-request';
+import type { Mistake } from '../llm/check-request';
 import { caretOffset, rangeOf, readFieldText, type FieldText } from '../text/field-text';
 import { placeMistakes, type PlacedMistake } from '../text/mistake-places';
 import { capitalizedWordsIn, directionOfLastWord, lowercaseWordsIn } from '../text/words';
@@ -114,9 +114,9 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     context.setState({
       popover: {
         word: place.word,
-        wordRect: rectOfRange(rangeOf(fieldText, place.start, place.end)),
+        wordStartOffset: place.start,
+        wordEndOffset: place.end,
         dir: directionOfLastWord(place.word),
-        font: getComputedStyle(field).font,
         suggestions: place.mistake.fixes.slice(0, MAX_SUGGESTIONS),
       },
     });

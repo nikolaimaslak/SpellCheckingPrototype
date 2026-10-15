@@ -1,4 +1,4 @@
-import { requestCheck } from '../openai/check-request';
+import { requestCheck } from '../llm/check-request';
 import { replaceWords, type WordReplacement } from '../replace-words';
 import { readFieldText } from '../text/field-text';
 import { placeMistakes } from '../text/mistake-places';

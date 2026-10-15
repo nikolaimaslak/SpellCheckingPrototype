@@ -16,27 +16,15 @@ export interface Turn {
 
 export interface PopoverState {
   word: string;
-  wordRect: Rect;
+  wordStartOffset: number;
+  wordEndOffset: number;
   dir: TextDirection;
-  font: string;
   suggestions: string[];
-}
-
-export interface GhostLayout {
-  top: number;
-  left: number;
-  width: number;
-  textIndent: number;
-  textAlign: 'start' | 'left';
-  direction: TextDirection;
-  font: string;
-  lineHeight: string;
-  letterSpacing: string;
 }
 
 export interface GhostState {
   text: string;
-  layout: GhostLayout | null;
+  direction: TextDirection;
 }
 
 export interface PolishState {
@@ -66,6 +54,7 @@ export interface AssistantOptions {
   apiKey: string;
   spelling: 'off' | 'suggest' | 'auto';
   completion: boolean;
+  debounceMs: number;
   customWords: string[];
   canned: string[];
   kb: string[];

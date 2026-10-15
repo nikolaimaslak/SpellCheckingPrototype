@@ -42,6 +42,7 @@ completion: only when "Continue after" is given. The text that goes right after 
 If it stops in the middle of a word, start with the rest of that word; if it stops after a word, start with a space.
 Continue the draft as written, even if it has typos: never repeat or rewrite words that are already there. Mistakes are fixed through "mistakes", so a fix never goes into the completion: after a misspelled last word, the completion starts with what comes after that word.
 If punctuation is missing before your words (a comma after a greeting, a period after a finished sentence), start the completion with that punctuation sign.
+After a comma (typed or yours), continue the same sentence: no capital letter, no new sentence.
 At most one short sentence, in the language the agent is typing right before it, never another language. Use the canned responses and articles when they fit.
 Empty when not asked or when you are not sure what comes next.`;
 
@@ -79,7 +80,7 @@ function caretNote(textBeforeCaret: string): string {
   }
   const unfinishedWord = textBeforeCaret.match(/[\p{L}\p{M}]+$/u)?.[0];
   return unfinishedWord
-    ? `It ends with "${unfinishedWord}" and no space: if that word is cut short, the completion starts with the rest of it; if it is a whole word, start with a space.`
+    ? `It ends with "${unfinishedWord}" and no space. "${unfinishedWord}" is already typed: the completion never writes it again. If it is cut short, start with the rest of it (after "hel": "lo, ..."); if it is a whole word, start with a space and the word that comes next (after "I made": " a note ...").`
     : 'Start the completion with a space.';
 }
 

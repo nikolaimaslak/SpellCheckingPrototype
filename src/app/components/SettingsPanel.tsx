@@ -1,9 +1,9 @@
-import { appendTurn } from '../lib/conversation';
+import { MODEL } from '../../assistant/llm/client';
+import { CONVERSATION_PRESETS } from '../lib/conversation';
 import type { AppSettings } from '../lib/settings';
 import { Checkbox } from './Checkbox';
 import { Section } from './Section';
 import { TextArea } from './TextArea';
-import { ScenarioControls } from './ScenarioControls';
 
 interface Props {
   settings: AppSettings;
@@ -21,7 +21,13 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
         </button>
       </div>
 
-      <Section title="Model">
+      <Section title="LLM">
+        <label className="block text-sm">
+          Model
+          <select disabled className="mt-1 block w-full rounded border border-slate-300 bg-slate-50 p-2 text-xs text-slate-500">
+            <option>OpenAI {MODEL}</option>
+          </select>
+        </label>
         <label className="block text-sm">
           OpenAI API key
           <input
@@ -32,6 +38,18 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
             onChange={(e) => onUpdate({ apiKey: e.target.value.trim() })}
           />
           <span className="mt-1 block text-xs text-slate-500">Spelling, completion and Polish all ask OpenAI. Saved in this browser only. Reset clears it.</span>
+        </label>
+        <label className="block text-sm">
+          Debounce, ms
+          <input
+            type="number"
+            min={0}
+            step={100}
+            className="mt-1 block w-full rounded border border-slate-300 p-2 font-mono text-xs"
+            value={settings.debounceMs}
+            onChange={(e) => onUpdate({ debounceMs: Math.max(0, e.target.valueAsNumber || 0) })}
+          />
+          <span className="mt-1 block text-xs text-slate-500">Pause after the last keystroke before the text is sent to the model.</span>
         </label>
       </Section>
 
@@ -46,7 +64,7 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
         <TextArea
           label="Custom dictionary"
           hint="One word per line. Never underlined, never auto-corrected."
-          rows={3}
+          rows={5}
           value={settings.customDictionary}
           onChange={(customDictionary) => onUpdate({ customDictionary })}
         />
@@ -56,13 +74,10 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
         <Checkbox label="Inline completion (Tab accepts)" checked={settings.completion} onChange={(completion) => onUpdate({ completion })} />
       </Section>
 
-      <Section title="Sources">
-        <ScenarioControls
-          conversation={settings.conversation}
-          onCustomerMessage={(text) => onUpdate({ conversation: appendTurn(settings.conversation, { role: 'customer', text }) })}
-        />
+      <Section title="LLM context">
         <TextArea
           label="Conversation"
+          presets={CONVERSATION_PRESETS}
           hint="Customer: / Agent: per line. Customer words are never auto-corrected. All of it goes to the LLM."
           rows={5}
           value={settings.conversation}

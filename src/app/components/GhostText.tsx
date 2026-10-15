@@ -1,12 +1,24 @@
+import { useEffect, useReducer, type RefObject } from 'react';
 import type { GhostState } from '../../assistant/types';
+import { measureGhost } from '../lib/ghost-layout';
 
 /**
  * The completion suggestion in grey. An overlay outside the field, so it can
  * never reach the message or the undo history; its first line starts at the
  * caret and later lines wrap inside the field.
  */
-export function GhostText({ ghost }: { ghost: GhostState }) {
-  const { layout } = ghost;
+export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: RefObject<HTMLElement | null> }) {
+  const [, remeasure] = useReducer((count: number) => count + 1, 0);
+  useEffect(() => {
+    window.addEventListener('resize', remeasure);
+    window.addEventListener('scroll', remeasure, true);
+    return () => {
+      window.removeEventListener('resize', remeasure);
+      window.removeEventListener('scroll', remeasure, true);
+    };
+  }, []);
+
+  const layout = fieldRef.current && measureGhost(fieldRef.current, ghost.direction);
   if (!layout) {
     return null;
   }

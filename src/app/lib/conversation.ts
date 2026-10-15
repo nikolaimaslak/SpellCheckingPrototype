@@ -1,17 +1,17 @@
 import type { Turn } from '../../assistant/types';
 
 // Synthetic customer turns for the demo (not real GOSI conversations).
-export const SCENARIOS: Record<string, string[]> = {
-  'en-pension': [
-    'Hello, I submitted a request for my pension documents last week. When will it be processed?',
-    'Also, can you check the status of my contribution records?',
-    'I changed my bank account. How do I update my details?',
-  ],
-  'ar-pension': [
-    'السلام عليكم، قدمت طلباً للحصول على مستندات المعاش الأسبوع الماضي، متى سيتم معالجته؟',
-    'هل يمكنك أيضاً الاستعلام عن الاشتراكات الخاصة بي؟',
-    'غيرت حسابي البنكي، كيف أحدث بياناتي؟',
-  ],
+export const CONVERSATION_PRESETS: Record<string, string> = {
+  English: [
+    'Customer: Hello, I submitted a request for my pension documents last week. When will it be processed?',
+    'Customer: Also, can you check the status of my contribution records?',
+    'Customer: I changed my bank account. How do I update my details?',
+  ].join('\n'),
+  Arabic: [
+    'Customer: السلام عليكم، قدمت طلباً للحصول على مستندات المعاش الأسبوع الماضي، متى سيتم معالجته؟',
+    'Customer: هل يمكنك أيضاً الاستعلام عن الاشتراكات الخاصة بي؟',
+    'Customer: غيرت حسابي البنكي، كيف أحدث بياناتي؟',
+  ].join('\n'),
 };
 
 const LABEL = /^\s*(customer|agent|العميل|الموظف)\s*:\s*(.*)$/iu;

@@ -1,4 +1,4 @@
-import type { Mistake } from '../openai/check-request';
+import type { Mistake } from '../llm/check-request';
 import { findWordPlaces, type WordPlace } from './words';
 import { trace } from '../trace';
 

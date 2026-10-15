@@ -40,8 +40,8 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     handleSelectionChange: () => typingAssist?.handleSelectionChange(),
     handleCompositionStart: () => typingAssist?.handleCompositionStart(),
     handleCompositionEnd: () => typingAssist?.handleCompositionEnd(),
-    handleBlur: () => typingAssist?.handleBlur(),
-    handleLayoutChange: () => typingAssist?.handleLayoutChange(),
+    handleFocusChange: () => typingAssist?.handleFocusChange(),
+    handleKeyUp: (event: KeyboardEvent) => typingAssist?.handleKeyUp(event),
     handleCleared() {
       typingAssist?.handleCleared();
       polish.handleFieldChanged();

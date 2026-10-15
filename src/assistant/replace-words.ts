@@ -14,7 +14,19 @@ const REPLACED_FLASH_MS = 2000;
 let replacedFlash: ReturnType<typeof createHighlight> | undefined;
 let flashTimer: ReturnType<typeof setTimeout> | undefined;
 
+let replacing = false;
+export const isReplacingWords = () => replacing;
+
 export function replaceWords(field: HTMLElement, replacements: WordReplacement[]): WordReplacement[] {
+  replacing = true;
+  try {
+    return replaceWordsNow(field, replacements);
+  } finally {
+    replacing = false;
+  }
+}
+
+function replaceWordsNow(field: HTMLElement, replacements: WordReplacement[]): WordReplacement[] {
   const caretBefore = caretOffset(readFieldText(field));
   const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
   const applied: WordReplacement[] = [];

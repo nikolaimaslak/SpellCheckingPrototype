@@ -1,13 +1,13 @@
-import { caretRange, caretRect, contentRect, isMac, replaceText } from '../browser';
+import { caretRange, isMac, replaceText } from '../browser';
 import { caretOffset, readFieldText } from '../text/field-text';
 import { directionOfLastWord } from '../text/words';
 import type { AssistantContext, TextDirection } from '../types';
-import { ghostKeyAction, ghostLayout, nextWord } from './ghost-text-rules';
+import { ghostKeyAction, nextWord } from './ghost-text-rules';
 import { trace } from '../trace';
 
 export function createGhostText(context: AssistantContext) {
   const { field, log } = context;
-  let shown: { remainingText: string; caretOffset: number; direction: TextDirection } | undefined;
+  let shown: { remainingText: string; caretOffset: number; fieldText: string; direction: TextDirection } | undefined;
 
   const currentCaretOffset = () => caretOffset(readFieldText(field));
 
@@ -17,19 +17,16 @@ export function createGhostText(context: AssistantContext) {
       return;
     }
     trace('ghost', `showing ${JSON.stringify(completion)} after the caret`);
-    shown = { remainingText: completion, caretOffset: atCaretOffset, direction: directionOfLastWord(textBeforeCaret) };
+    shown = { remainingText: completion, caretOffset: atCaretOffset, fieldText: readFieldText(field).text, direction: directionOfLastWord(textBeforeCaret) };
     redraw();
   }
 
   function redraw() {
-    if (!shown) {
+    if (!shown || !field.contains(document.activeElement)) {
       if (context.getState().ghost) context.setState({ ghost: undefined });
       return;
     }
-    const style = getComputedStyle(field);
-    const fieldStyle = { font: style.font, lineHeight: style.lineHeight, letterSpacing: style.letterSpacing, direction: style.direction };
-    const layout = ghostLayout(caretRect(field), contentRect(field), fieldStyle, shown.direction);
-    context.setState({ ghost: { text: shown.remainingText, layout } });
+    context.setState({ ghost: { text: shown.remainingText, direction: shown.direction } });
   }
 
   function hide() {
@@ -66,7 +63,28 @@ export function createGhostText(context: AssistantContext) {
     replaceText(field, caret, nextWord(shown.remainingText));
   }
 
+  function followDeletedSpaces(): boolean {
+    const now = readFieldText(field);
+    const caret = caretOffset(now);
+    if (!shown || caret === undefined || caret >= shown.caretOffset) {
+      return false;
+    }
+    const before = shown.fieldText;
+    const deleted = before.slice(caret, shown.caretOffset);
+    if (before.slice(0, caret) + before.slice(shown.caretOffset) !== now.text || deleted.trim()) {
+      return false;
+    }
+    shown.caretOffset = caret;
+    shown.fieldText = now.text;
+    trace('ghost', 'backspace removed only spaces: the ghost text moves to the caret');
+    redraw();
+    return true;
+  }
+
   function continueTyping(event: InputEvent): boolean {
+    if (shown && event.inputType === 'deleteContentBackward') {
+      return followDeletedSpaces();
+    }
     if (!shown || event.inputType !== 'insertText' || !event.data) {
       return false;
     }
@@ -79,6 +97,7 @@ export function createGhostText(context: AssistantContext) {
     }
     shown.remainingText = shown.remainingText.slice(event.data.length);
     shown.caretOffset = caretAfterTyping;
+    shown.fieldText = readFieldText(field).text;
     trace('ghost', `typed what the ghost text said: ${JSON.stringify(shown.remainingText)} left`);
     if (shown.remainingText) redraw();
     else hide();

@@ -1,8 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
+import { rectOfRange } from '../../assistant/browser';
+import { rangeOf, readFieldText } from '../../assistant/text/field-text';
 import type { PopoverState, Rect } from '../../assistant/types';
 
 interface Props {
   popover: PopoverState;
+  fieldRef: RefObject<HTMLElement | null>;
   onPick: (suggestion: string) => void;
   onIgnore: () => void;
   onAddToDictionary: (word: string) => void;
@@ -18,7 +21,7 @@ const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
  * level, so Enter picks a suggestion instead of sending the message; any
  * other key, a click outside or scrolling closes it.
  */
-export function SuggestionPopover({ popover, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
+export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
   const items = [
     ...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })),
     { label: 'Ignore', run: onIgnore, strong: false },
@@ -29,8 +32,11 @@ export function SuggestionPopover({ popover, onPick, onIgnore, onAddToDictionary
   const [position, setPosition] = useState<{ top: number; left: number }>();
 
   useLayoutEffect(() => {
-    if (box.current) setPosition(place(popover.wordRect, box.current.getBoundingClientRect(), popover.dir));
-  }, [popover]);
+    const field = fieldRef.current;
+    if (box.current && field) {
+      setPosition(place(rectOfRange(rangeOf(readFieldText(field), popover.wordStartOffset, popover.wordEndOffset)), box.current.getBoundingClientRect(), popover.dir));
+    }
+  }, [popover, fieldRef]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,17 +73,17 @@ export function SuggestionPopover({ popover, onPick, onIgnore, onAddToDictionary
       role="listbox"
       aria-label="Spelling suggestions"
       dir={popover.dir}
-      className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-slate-800 shadow-lg"
-      style={{ font: popover.font, ...(position ?? { top: popover.wordRect.bottom + GAP, left: popover.wordRect.left, visibility: 'hidden' }) }}
+      className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-sm text-slate-800 shadow"
+      style={position ?? { top: 0, left: 0, visibility: 'hidden' }}
       // Keep the field's focus and selection while choosing.
       onMouseDown={(e) => e.preventDefault()}
     >
-      {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500 italic">No suggestions</div>}
+      {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500">No suggestions</div>}
       {items.map((item, i) => (
         <div key={item.label} role="option" aria-selected={i === focused}>
           {item.label === 'Ignore' && <div role="separator" className="my-1 border-t border-slate-200" />}
           <div
-            className={`cursor-pointer px-3 py-1 whitespace-nowrap ${i === focused ? 'bg-blue-50' : ''} ${item.strong ? 'font-semibold' : ''}`}
+            className={`cursor-pointer px-3 py-1 whitespace-nowrap ${i === focused ? 'bg-slate-100' : ''} ${item.strong ? 'font-semibold' : ''}`}
             onMouseEnter={() => setFocused(i)}
             onClick={item.run}
           >
