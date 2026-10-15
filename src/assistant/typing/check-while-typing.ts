@@ -88,9 +88,7 @@ async function sendRequestNow(context: AssistantContext) {
   typing.runningRequest = undefined;
   context.log({ type: 'llm-answer', reply: answer });
 
-  if (!answer) {
-    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
-  } else {
+  if (answer) {
     const currentText = readFieldText(field);
     const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
     trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
@@ -106,6 +104,8 @@ async function sendRequestNow(context: AssistantContext) {
     } else {
       showGhost(context, answer.completion, caret!, textBeforeCaret);
     }
+  } else {
+    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
   }
   if (typing.changedDuringRequest) {
     typing.changedDuringRequest = false;
