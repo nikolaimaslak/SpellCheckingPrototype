@@ -1,7 +1,7 @@
 import { caretRange, isMac, replaceText } from '../browser';
 import { caretOffset, readFieldText } from '../text/field-text';
 import { directionOfLastWord } from '../text/words';
-import type { AssistantContext, ShownGhost, TextDirection } from '../types';
+import type { AssistantContext, GhostState, TextDirection } from '../types';
 import { trace } from '../trace';
 
 type GhostKeyAction = 'accept-all' | 'accept-word' | 'escape' | 'none';
@@ -36,61 +36,51 @@ export function showGhost(context: AssistantContext, completion: string, atCaret
     return;
   }
   trace('ghost', `showing ${JSON.stringify(completion)} after the caret`);
-  const ghost: ShownGhost = {
-    remainingText: completion,
+  const ghost: GhostState = {
+    text: completion,
     caretOffset: atCaretOffset,
     fieldText: readFieldText(context.field).text,
     direction: directionOfLastWord(textBeforeCaret),
   };
-  context.ghost = ghost;
-  redrawGhost(context);
-}
-
-export function redrawGhost(context: AssistantContext) {
-  const { ghost, field } = context;
-  if (!ghost || !field.contains(document.activeElement)) {
-    if (context.getState().ghost) context.setState({ ghost: undefined });
-    return;
-  }
-  context.setState({ ghost: { text: ghost.remainingText, direction: ghost.direction } });
+  context.setState({ ghost });
 }
 
 export function hideGhost(context: AssistantContext) {
-  if (!context.ghost) {
+  if (!context.getState().ghost) {
     return;
   }
   trace('ghost', 'hidden');
-  context.ghost = undefined;
-  redrawGhost(context);
+  context.setState({ ghost: undefined });
 }
 
 export function hideGhostIfCaretMoved(context: AssistantContext) {
-  if (context.ghost && caretOffset(readFieldText(context.field)) !== context.ghost.caretOffset) {
+  const ghost = context.getState().ghost;
+  if (ghost && caretOffset(readFieldText(context.field)) !== ghost.caretOffset) {
     hideGhost(context);
   }
 }
 
-function acceptAll(context: AssistantContext, ghost: ShownGhost) {
+function acceptAll(context: AssistantContext, ghost: GhostState) {
   const caret = caretRange();
   if (!caret) {
     return;
   }
-  trace('ghost', `accepted ${JSON.stringify(ghost.remainingText)} (one undo step)`);
+  trace('ghost', `accepted ${JSON.stringify(ghost.text)} (one undo step)`);
   hideGhost(context);
-  replaceText(context.field, caret, ghost.remainingText);
-  context.log({ type: 'completion-accepted', text: ghost.remainingText });
+  replaceText(context.field, caret, ghost.text);
+  context.log({ type: 'completion-accepted', text: ghost.text });
 }
 
-function acceptNextWord(context: AssistantContext, ghost: ShownGhost) {
+function acceptNextWord(context: AssistantContext, ghost: GhostState) {
   const caret = caretRange();
   if (!caret) {
     return;
   }
-  trace('ghost', `accepting the next word ${JSON.stringify(nextWord(ghost.remainingText))}`);
-  replaceText(context.field, caret, nextWord(ghost.remainingText));
+  trace('ghost', `accepting the next word ${JSON.stringify(nextWord(ghost.text))}`);
+  replaceText(context.field, caret, nextWord(ghost.text));
 }
 
-function followDeletedSpaces(context: AssistantContext, ghost: ShownGhost): boolean {
+function followDeletedSpaces(context: AssistantContext, ghost: GhostState): boolean {
   const now = readFieldText(context.field);
   const caret = caretOffset(now);
   if (caret === undefined || caret >= ghost.caretOffset) {
@@ -101,22 +91,20 @@ function followDeletedSpaces(context: AssistantContext, ghost: ShownGhost): bool
   if (before.slice(0, caret) + before.slice(ghost.caretOffset) !== now.text || deleted.trim()) {
     return false;
   }
-  ghost.caretOffset = caret;
-  ghost.fieldText = now.text;
   trace('ghost', 'backspace removed only spaces: the ghost text moves to the caret');
-  redrawGhost(context);
+  context.setState({ ghost: { ...ghost, caretOffset: caret, fieldText: now.text } });
   return true;
 }
 
 export function ghostFollowsTyping(context: AssistantContext, event: InputEvent): boolean {
-  const { ghost } = context;
+  const ghost = context.getState().ghost;
   if (!ghost) {
     return false;
   }
   if (event.inputType === 'deleteContentBackward') {
     return followDeletedSpaces(context, ghost);
   }
-  if (event.inputType !== 'insertText' || !event.data || !ghost.remainingText.startsWith(event.data)) {
+  if (event.inputType !== 'insertText' || !event.data || !ghost.text.startsWith(event.data)) {
     return false;
   }
   const fieldText = readFieldText(context.field);
@@ -124,19 +112,19 @@ export function ghostFollowsTyping(context: AssistantContext, event: InputEvent)
   if (caretAfterTyping !== ghost.caretOffset + event.data.length) {
     return false;
   }
-  ghost.remainingText = ghost.remainingText.slice(event.data.length);
-  ghost.caretOffset = caretAfterTyping;
-  ghost.fieldText = fieldText.text;
-  trace('ghost', `typed what the ghost text said: ${JSON.stringify(ghost.remainingText)} left`);
-  if (ghost.remainingText) redrawGhost(context);
-  else hideGhost(context);
+  const remainingText = ghost.text.slice(event.data.length);
+  trace('ghost', `typed what the ghost text said: ${JSON.stringify(remainingText)} left`);
+  if (remainingText) {
+    context.setState({ ghost: { ...ghost, text: remainingText, caretOffset: caretAfterTyping, fieldText: fieldText.text } });
+  } else {
+    hideGhost(context);
+  }
   return true;
 }
 
 export function handleGhostKey(context: AssistantContext, event: KeyboardEvent) {
-  const { ghost, field } = context;
-  const focused = document.activeElement;
-  if (!ghost || !focused || !field.contains(focused)) {
+  const ghost = context.getState().ghost;
+  if (!ghost) {
     return;
   }
   const action = ghostKeyAction(event, ghost.direction);
@@ -146,7 +134,11 @@ export function handleGhostKey(context: AssistantContext, event: KeyboardEvent) 
   trace('ghost', `key ${event.key}: ${action}`);
   event.preventDefault();
   event.stopImmediatePropagation();
-  if (action === 'accept-all') acceptAll(context, ghost);
-  else if (action === 'accept-word') acceptNextWord(context, ghost);
-  else hideGhost(context);
+  if (action === 'accept-all') {
+    acceptAll(context, ghost);
+  } else if (action === 'accept-word') {
+    acceptNextWord(context, ghost);
+  } else {
+    hideGhost(context);
+  }
 }

@@ -2,13 +2,12 @@ import { removeHighlight, replaceText, restoreSelection, selectedRange, showHigh
 import { replaceWords } from '../replace-words';
 import type { Mistake } from '../llm/check-request';
 import { caretOffset, rangeOf, readFieldText, type FieldText } from '../text/field-text';
-import { placeMistakes, type PlacedMistake } from '../text/mistake-places';
+import { findMistakesInText, type PlacedMistake } from '../text/mistake-places';
 import { directionOfLastWord, findWordPlaces } from '../text/words';
 import type { AssistantContext } from '../types';
 import { trace } from '../trace';
 
 const SPELLING_ERROR_HIGHLIGHT = 'bp-spelling-error';
-const MAX_SUGGESTIONS = 5;
 
 export function stopSpelling(context: AssistantContext) {
   closePopover(context);
@@ -16,7 +15,7 @@ export function stopSpelling(context: AssistantContext) {
 }
 
 function mistakePlaces(context: AssistantContext, text: string): PlacedMistake[] {
-  return placeMistakes(text, context.spelling.mistakes).filter((place) => !context.customWords.has(place.word));
+  return findMistakesInText(text, context.spelling.mistakes).filter((place) => !context.customWords.has(place.word));
 }
 
 function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText): PlacedMistake[] {
@@ -28,37 +27,37 @@ function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText):
 export function applyMistakes(context: AssistantContext, newMistakes: Mistake[]) {
   context.spelling.mistakes = newMistakes;
   const fieldText = readFieldText(context.field);
-  const placed = placeMistakes(fieldText.text, newMistakes);
+  const placed = findMistakesInText(fieldText.text, newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
   trace('spelling', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.sure ? ' (sure)' : ''}`));
-  if (notFound.length) trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
-  if (context.options.spelling === 'auto') autoCorrectSureMistakes(context);
-  else trace('spelling', 'auto-correct is off: mistakes are only underlined');
+  if (notFound.length) {
+    trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
+  }
+  if (context.options.spelling === 'auto') {
+    autoCorrectSureMistakes(context);
+  } else {
+    trace('spelling', 'auto-correct is off: mistakes are only underlined');
+  }
   redrawUnderlines(context);
 }
 
 export function redrawUnderlines(context: AssistantContext) {
   const fieldText = readFieldText(context.field);
-  if (!fieldText.text.trim()) context.spelling.mistakes = [];
+  if (!fieldText.text.trim()) {
+    context.spelling.mistakes = [];
+  }
   const underlined = mistakePlaces(context, fieldText.text);
-  const underlinedWords = underlined.map((place) => `${place.word}@${place.start}`).join(', ');
-  if (underlinedWords !== context.spelling.lastUnderlinedWords) trace('spelling', `underlined: ${underlinedWords || 'nothing'}`);
-  context.spelling.lastUnderlinedWords = underlinedWords;
   showHighlight(SPELLING_ERROR_HIGHLIGHT, underlined.map((place) => rangeOf(fieldText, place.start, place.end)));
 }
 
 function autoCorrectSureMistakes(context: AssistantContext) {
-  const { replacementByOriginal } = context.spelling;
-  const wouldUndoAutoCorrection = (place: PlacedMistake) => replacementByOriginal.get(place.mistake.fixes[0]) === place.word;
-  const candidates = finishedMistakePlaces(context, readFieldText(context.field));
-  const whySkipped = (place: PlacedMistake) =>
-    !place.mistake.sure ? 'model not sure' : wouldUndoAutoCorrection(place) ? 'would undo an earlier auto-correction' : '';
-  candidates.filter(whySkipped).forEach((place) => trace('spelling', `not auto-corrected: ${place.word} (${whySkipped(place)})`));
-  const placesToFix = candidates.filter((place) => !whySkipped(place));
-  if (placesToFix.length) trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
+  const placesToFix = finishedMistakePlaces(context, readFieldText(context.field)).filter((place) => place.mistake.sure);
+  if (placesToFix.length) {
+    trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
+  }
   const replacements = placesToFix.map((place) => ({ place, replacement: place.mistake.fixes[0] }));
   for (const { place, replacement } of replaceWords(context, replacements)) {
-    replacementByOriginal.set(place.word, replacement);
+    context.spelling.replacementByOriginal.set(place.word, replacement);
     context.log({ type: 'autocorrect', original: place.word, replacement });
   }
 }
@@ -98,7 +97,7 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
       wordStartOffset: place.start,
       wordEndOffset: place.end,
       dir: directionOfLastWord(place.word),
-      suggestions: place.mistake.fixes.slice(0, MAX_SUGGESTIONS),
+      suggestions: place.mistake.fixes,
     },
   });
   return true;
@@ -111,7 +110,9 @@ export function closePopover(context: AssistantContext, returnCaret = false) {
   }
   context.spelling.openPopover = undefined;
   context.setState({ popover: undefined });
-  if (returnCaret && closing.selectionBefore) restoreSelection(context.field, closing.selectionBefore);
+  if (returnCaret && closing.selectionBefore) {
+    restoreSelection(context.field, closing.selectionBefore);
+  }
 }
 
 export function pickSuggestion(context: AssistantContext, suggestion: string) {

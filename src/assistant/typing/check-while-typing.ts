@@ -1,7 +1,7 @@
 import { requestCheck } from '../llm/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
-import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, redrawGhost, showGhost } from './ghost-text';
+import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
 import { applyMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
@@ -31,7 +31,7 @@ function scheduleRequest(context: AssistantContext) {
     typing.changedDuringRequest = true;
     trace('typing', 'text changed while a request is running: will send again after its answer');
   }
-  if (context.isReleased || typing.runningRequest) {
+  if (typing.runningRequest) {
     return;
   }
   if (options.spelling === 'off' && !options.completion) {
@@ -52,7 +52,7 @@ async function sendRequestNow(context: AssistantContext) {
   const sentText = readFieldText(field);
   const caret = caretOffset(sentText);
   typing.lastSentText = sentText.text;
-  if (context.isReleased || !sentText.text.trim()) {
+  if (!sentText.text.trim()) {
     trace('typing', 'pause over, but the field is empty: nothing to send');
     updateLoader(context);
     return;
@@ -81,23 +81,31 @@ async function sendRequestNow(context: AssistantContext) {
     },
     request.signal,
   );
-  if (context.isReleased || request.signal.aborted) {
+  if (request.signal.aborted) {
     trace('typing', 'answer dropped: the assistant was released meanwhile');
     return;
   }
   typing.runningRequest = undefined;
   context.log({ type: 'llm-answer', reply: answer });
 
-  if (!answer) trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
-  if (answer) {
+  if (!answer) {
+    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
+  } else {
     const currentText = readFieldText(field);
     const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
     trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
-    if (options.spelling !== 'off') applyMistakes(context, answer.mistakes);
-    if (textBeforeCaret === null) trace('typing', 'no completion was asked for');
-    else if (!nothingMoved) trace('typing', 'completion dropped: the text or the caret moved while waiting');
-    else if (isPanelOpen(context)) trace('typing', 'completion dropped: the popover or the polish preview is open');
-    else showGhost(context, answer.completion, caret!, textBeforeCaret);
+    if (options.spelling !== 'off') {
+      applyMistakes(context, answer.mistakes);
+    }
+    if (textBeforeCaret === null) {
+      trace('typing', 'no completion was asked for');
+    } else if (!nothingMoved) {
+      trace('typing', 'completion dropped: the text or the caret moved while waiting');
+    } else if (isPanelOpen(context)) {
+      trace('typing', 'completion dropped: the popover or the polish preview is open');
+    } else {
+      showGhost(context, answer.completion, caret!, textBeforeCaret);
+    }
   }
   if (typing.changedDuringRequest) {
     typing.changedDuringRequest = false;
@@ -145,8 +153,12 @@ export function closePanels(context: AssistantContext) {
 
 export function handleInput(context: AssistantContext, event: InputEvent) {
   trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
-  if (event.inputType === 'historyUndo') noticeUndo(context);
-  if (!ghostFollowsTyping(context, event)) hideGhost(context);
+  if (event.inputType === 'historyUndo') {
+    noticeUndo(context);
+  }
+  if (!ghostFollowsTyping(context, event)) {
+    hideGhost(context);
+  }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
     trace('typing', 'our own replacement (auto-correct, pick or Polish): no new request');
@@ -189,10 +201,6 @@ export function handleCompositionStart(context: AssistantContext) {
 
 export function handleCompositionEnd(context: AssistantContext) {
   context.typing.isComposing = false;
-}
-
-export function handleFocusChange(context: AssistantContext) {
-  redrawGhost(context);
 }
 
 export function stopCheckWhileTyping(context: AssistantContext) {

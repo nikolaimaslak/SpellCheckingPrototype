@@ -23,15 +23,8 @@ export function directionOfLastWord(text: string): TextDirection {
   return /\p{Script=Arabic}/u.test(lastWord) ? 'rtl' : 'ltr';
 }
 
-export function scriptOf(text: string): 'arabic' | 'latin' | 'none' {
+export function directionOfText(text: string): TextDirection {
   const arabicLetters = text.match(/\p{Script=Arabic}/gu)?.length ?? 0;
   const latinLetters = text.match(/\p{Script=Latin}/gu)?.length ?? 0;
-  if (arabicLetters > latinLetters) {
-    return 'arabic';
-  }
-  return latinLetters ? 'latin' : 'none';
-}
-
-export function directionOfText(text: string): TextDirection {
-  return scriptOf(text) === 'arabic' ? 'rtl' : 'ltr';
+  return arabicLetters > latinLetters ? 'rtl' : 'ltr';
 }

@@ -17,7 +17,9 @@ export function readFieldText(field: HTMLElement): FieldText {
   let text = '';
   const pieces: TextPiece[] = [];
   const startNewLine = () => {
-    if (text && !text.endsWith('\n')) text += '\n';
+    if (text && !text.endsWith('\n')) {
+      text += '\n';
+    }
   };
 
   const visit = (node: Node) => {
@@ -42,9 +44,13 @@ export function readFieldText(field: HTMLElement): FieldText {
       return;
     }
     const isBlock = BLOCK_TAGS.has(tag);
-    if (isBlock) startNewLine();
+    if (isBlock) {
+      startNewLine();
+    }
     node.childNodes.forEach(visit);
-    if (isBlock) startNewLine();
+    if (isBlock) {
+      startNewLine();
+    }
   };
 
   field.childNodes.forEach(visit);
@@ -87,6 +93,9 @@ export function placeCaret(fieldText: FieldText, offset: number) {
   const piece =
     fieldText.pieces.find((candidate) => offset >= candidate.start && offset <= candidate.start + candidate.length) ??
     fieldText.pieces.find((candidate) => candidate.start >= offset);
-  if (piece) document.getSelection()?.collapse(piece.node, Math.max(0, offset - piece.start));
-  else document.getSelection()?.collapse(fieldText.field, fieldText.field.childNodes.length);
+  if (piece) {
+    document.getSelection()?.collapse(piece.node, Math.max(0, offset - piece.start));
+  } else {
+    document.getSelection()?.collapse(fieldText.field, fieldText.field.childNodes.length);
+  }
 }

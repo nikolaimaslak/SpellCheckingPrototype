@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { AssistantOptions, AssistEvent } from '../../assistant';
 import { useAssistant } from '../hooks/useAssistant';
 import { lines, type AppSettings } from '../lib/settings';
@@ -33,6 +33,7 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
   }, [settings, onLog, onIgnoredWordsChange]);
 
   const fieldRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
   const { assistant, state } = useAssistant(fieldRef, options);
 
   useEffect(() => {
@@ -63,8 +64,8 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           onMouseUp={() => assistant?.handleClick()}
           onCompositionStart={() => assistant?.handleCompositionStart()}
           onCompositionEnd={() => assistant?.handleCompositionEnd()}
-          onFocus={() => assistant?.handleFocusChange()}
-          onBlur={() => assistant?.handleFocusChange()}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
         {state.loader?.kind === 'pause' && <PauseRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
         {(state.loader?.kind === 'request' || state.polish.busy) && (
@@ -85,7 +86,7 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
             onAccept={assistant.acceptPolish}
             onDismiss={assistant.dismissPolish}
           />
-          {state.ghost && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
+          {state.ghost && isFocused && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover
               key={`${state.popover.wordStartOffset}:${state.popover.wordEndOffset}`}

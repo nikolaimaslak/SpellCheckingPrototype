@@ -21,11 +21,6 @@ export interface PopoverState {
 
 export interface GhostState {
   text: string;
-  direction: TextDirection;
-}
-
-export interface ShownGhost {
-  remainingText: string;
   caretOffset: number;
   fieldText: string;
   direction: TextDirection;
@@ -72,7 +67,6 @@ export interface SpellingData {
   mistakes: Mistake[];
   replacementByOriginal: Map<string, string>;
   openPopover?: { place: PlacedMistake; selectionBefore?: Range };
-  lastUnderlinedWords: string;
 }
 
 export interface TypingData {
@@ -95,12 +89,10 @@ export interface AssistantContext {
   log(event: AssistEvent): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;
-  isReleased: boolean;
   isReplacingWords: boolean;
   replacedFlashTimer?: ReturnType<typeof setTimeout>;
   ignoredWords: string[];
   customWords: Set<string>;
-  ghost?: ShownGhost;
   spelling: SpellingData;
   typing: TypingData;
   polish: PolishData;

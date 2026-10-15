@@ -3,7 +3,9 @@ import { useEffect, useRef } from 'react';
 export function EventLog({ lines, onClear }: { lines: string[]; onClear: () => void }) {
   const pre = useRef<HTMLPreElement>(null);
   useEffect(() => {
-    if (pre.current) pre.current.scrollTop = pre.current.scrollHeight;
+    if (pre.current) {
+      pre.current.scrollTop = pre.current.scrollHeight;
+    }
   }, [lines]);
 
   return (

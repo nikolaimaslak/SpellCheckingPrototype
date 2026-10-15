@@ -40,7 +40,9 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
 
     replaceText(field, rangeOf(currentText, place.start, place.end), replacement.replacement);
     const lengthChange = replacement.replacement.length - place.word.length;
-    if (caretBefore !== undefined && place.end <= caretBefore) caretShift += lengthChange;
+    if (caretBefore !== undefined && place.end <= caretBefore) {
+      caretShift += lengthChange;
+    }
     replacedSpans.forEach((span) => (span.start += lengthChange));
     replacedSpans.push({ start: place.start, length: replacement.replacement.length });
     applied.push(replacement);

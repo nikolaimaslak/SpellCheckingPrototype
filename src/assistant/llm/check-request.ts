@@ -1,4 +1,3 @@
-import { scriptOf } from '../text/words';
 import { askLLM } from './client';
 import { trace } from '../trace';
 
@@ -54,13 +53,7 @@ export async function requestCheck(apiKey: string, request: CheckRequest, signal
   trace('llm', 'check: message sent to the model', message);
   const reply = await askLLM({ apiKey, instructions: INSTRUCTIONS, message, signal, timeoutMs: 5000, answerAsJson: true });
   trace('llm', 'check: raw reply', reply);
-  const answer = reply === null ? null : parseAnswer(reply);
-  if (!answer) {
-    return null;
-  }
-  const completion = cleanCompletion(answer.completion, request.textBeforeCaret);
-  if (completion !== answer.completion) trace('llm', `completion cleaned: ${JSON.stringify(answer.completion)} → ${JSON.stringify(completion)}`);
-  return { mistakes: answer.mistakes, completion };
+  return reply === null ? null : parseAnswer(reply);
 }
 
 function buildMessage(request: CheckRequest): string {
@@ -104,37 +97,10 @@ function parseAnswer(reply: string): CheckAnswer | null {
   }
 }
 
-const isOneWord = (text: string) => /^[\p{L}\p{M}'’-]+$/u.test(text);
-const isWordWithPunctuation = (fix: string, word: string) => fix.startsWith(word) && /^[,.!?;:،؛؟]$/u.test(fix.slice(word.length));
-
 function toMistake(raw: { word?: unknown; context?: unknown; fixes?: unknown; sure?: unknown } | null): Mistake[] {
   if (typeof raw?.word !== 'string' || typeof raw.context !== 'string' || !Array.isArray(raw.fixes)) {
     return [];
   }
-  const { word, context } = raw;
-  if (!isOneWord(word) || !context.includes(word)) {
-    trace('llm', `mistake dropped: "${word}" is not one word or is not in its context`, raw);
-    return [];
-  }
-  const sameLanguage = (fix: string) => scriptOf(fix) === scriptOf(word);
-  const fixes = raw.fixes.filter((fix): fix is string => typeof fix === 'string' && (isOneWord(fix) || isWordWithPunctuation(fix, word)) && fix !== word && sameLanguage(fix));
-  if (fixes.length < raw.fixes.length) trace('llm', `fixes dropped for "${word}" (not one word, same as the word, or another alphabet)`, raw.fixes);
-  return fixes.length
-    ? [
-      { word, context, fixes, sure: raw.sure === true }]
-    : [];
-}
-
-function cleanCompletion(completion: string, textBeforeCaret: string | null): string {
-  if (textBeforeCaret === null) {
-    return '';
-  }
-  const firstLine = completion.split('\n')[0];
-  const firstSentence = (firstLine.match(/^.*?[.!?؟;](?=\s|$)/u)?.[0] ?? firstLine).replace(/;$/, '');
-  const lastTypedWord = textBeforeCaret.match(/[\p{L}\p{M}]+/gu)?.at(-1) ?? '';
-  if (scriptOf(firstSentence) !== 'none' && scriptOf(firstSentence) !== scriptOf(lastTypedWord)) {
-    return '';
-  }
-  const endsWithSpace = /\s$/.test(textBeforeCaret);
-  return (endsWithSpace ? firstSentence.trimStart() : firstSentence).trimEnd();
+  const fixes = raw.fixes.filter((fix): fix is string => typeof fix === 'string');
+  return fixes.length ? [{ word: raw.word, context: raw.context, fixes, sure: raw.sure === true }] : [];
 }

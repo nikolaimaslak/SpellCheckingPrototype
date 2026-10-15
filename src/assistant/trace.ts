@@ -12,6 +12,9 @@ export type TraceArea = keyof typeof AREA_COLORS;
 
 export function trace(area: TraceArea, message: string, details?: unknown) {
   const label = [`%c[${area}]%c ${message}`, `color:${AREA_COLORS[area]};font-weight:bold`, 'color:inherit'];
-  if (details === undefined) console.log(...label);
-  else console.log(...label, details);
+  if (details === undefined) {
+    console.log(...label);
+  } else {
+    console.log(...label, details);
+  }
 }

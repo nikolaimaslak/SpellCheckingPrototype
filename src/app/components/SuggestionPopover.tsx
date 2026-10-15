@@ -35,18 +35,27 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
-        if (!MODIFIERS.includes(e.key)) onClose(false);
+        if (!MODIFIERS.includes(e.key)) {
+          onClose(false);
+        }
         return;
       }
       e.preventDefault();
       e.stopImmediatePropagation();
-      if (e.key === 'ArrowDown') setFocused((focused + 1) % items.length);
-      else if (e.key === 'ArrowUp') setFocused((focused - 1 + items.length) % items.length);
-      else if (e.key === 'Enter') items[focused].run();
-      else onClose(true);
+      if (e.key === 'ArrowDown') {
+        setFocused((focused + 1) % items.length);
+      } else if (e.key === 'ArrowUp') {
+        setFocused((focused - 1 + items.length) % items.length);
+      } else if (e.key === 'Enter') {
+        items[focused].run();
+      } else {
+        onClose(true);
+      }
     };
     const onOutside = (e: MouseEvent) => {
-      if (!box.current?.contains(e.target as Node)) onClose(false);
+      if (!box.current?.contains(e.target as Node)) {
+        onClose(false);
+      }
     };
     const onMove = () => onClose(false);
     window.addEventListener('keydown', onKey, true);
@@ -90,7 +99,9 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
 
 function place(anchor: Rect, size: { width: number; height: number }, dir: 'ltr' | 'rtl') {
   let top = anchor.bottom + GAP;
-  if (top + size.height > window.innerHeight && anchor.top - GAP - size.height >= 0) top = anchor.top - GAP - size.height;
+  if (top + size.height > window.innerHeight && anchor.top - GAP - size.height >= 0) {
+    top = anchor.top - GAP - size.height;
+  }
   const left = dir === 'rtl' ? anchor.right - size.width : anchor.left;
   return { top: Math.round(top), left: Math.round(Math.max(GAP, Math.min(left, window.innerWidth - size.width - GAP))) };
 }

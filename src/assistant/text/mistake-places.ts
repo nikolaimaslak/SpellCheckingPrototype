@@ -8,7 +8,7 @@ export interface PlacedMistake extends WordPlace {
 
 const withPlainSpaces = (text: string) => text.replace(/\u00A0/g, ' ');
 
-export function placeMistakes(fieldText: string, mistakes: Mistake[]): PlacedMistake[] {
+export function findMistakesInText(fieldText: string, mistakes: Mistake[]): PlacedMistake[] {
   const text = withPlainSpaces(fieldText);
   const placesByStart = new Map<number, PlacedMistake>();
   for (const mistake of mistakes) {

@@ -15,8 +15,11 @@ export function wordDiff(before: string, after: string): DiffSegment[] {
   const segments: DiffSegment[] = [];
   const append = (type: DiffSegment['type'], text: string) => {
     const lastSegment = segments.at(-1);
-    if (lastSegment?.type === type) lastSegment.text += text;
-    else segments.push({ type, text });
+    if (lastSegment?.type === type) {
+      lastSegment.text += text;
+    } else {
+      segments.push({ type, text });
+    }
   };
 
   let oldIndex = 0;

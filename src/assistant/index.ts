@@ -20,11 +20,10 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       state = { ...state, ...patch };
       listeners.forEach((listener) => listener());
     },
-    isReleased: false,
     isReplacingWords: false,
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
-    spelling: { mistakes: [], replacementByOriginal: new Map(), lastUnderlinedWords: '' },
+    spelling: { mistakes: [], replacementByOriginal: new Map() },
     typing: { changedDuringRequest: false, pauseStartedAt: 0, lastSentText: '', isComposing: false },
     polish: {},
   };
@@ -44,7 +43,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),
     handleCompositionStart: () => checkWhileTyping.handleCompositionStart(context),
     handleCompositionEnd: () => checkWhileTyping.handleCompositionEnd(context),
-    handleFocusChange: () => checkWhileTyping.handleFocusChange(context),
     handleKeyUp: (event: KeyboardEvent) => checkWhileTyping.handleKeyUp(context, event),
 
     pickSuggestion: (suggestion: string) => spelling.pickSuggestion(context, suggestion),
@@ -57,7 +55,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
 
     release() {
       trace('assistant', 'released (settings changed or the page is closing)');
-      context.isReleased = true;
       checkWhileTyping.stopCheckWhileTyping(context);
       spelling.stopSpelling(context);
       stopPolish(context);

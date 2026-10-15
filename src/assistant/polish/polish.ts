@@ -2,7 +2,7 @@ import { requestCheck } from '../llm/check-request';
 import { replaceText } from '../browser';
 import type { WordReplacement } from '../replace-words';
 import { rangeOf, readFieldText } from '../text/field-text';
-import { placeMistakes } from '../text/mistake-places';
+import { findMistakesInText } from '../text/mistake-places';
 import { directionOfText } from '../text/words';
 import type { AssistantContext, PolishState } from '../types';
 import { closePanels } from '../typing/check-while-typing';
@@ -21,7 +21,7 @@ const showMessage = (context: AssistantContext, message: string) =>
 
 export async function polishNow(context: AssistantContext) {
   const { polish, options } = context;
-  if (context.isReleased || polish.runningRequest || context.getState().popover) {
+  if (polish.runningRequest) {
     return;
   }
   const draft = readFieldText(context.field).text;
@@ -48,7 +48,7 @@ export async function polishNow(context: AssistantContext) {
   );
   context.log({ type: 'polish-reply', reply: answer });
   polish.runningRequest = undefined;
-  if (context.isReleased || request.signal.aborted) {
+  if (request.signal.aborted) {
     return;
   }
   updateState(context, { busy: false });
@@ -57,9 +57,7 @@ export async function polishNow(context: AssistantContext) {
     showMessage(context, 'Polishing is unavailable right now.');
     return;
   }
-  const replacements = placeMistakes(draft, answer.mistakes)
-    .filter((place) => !context.customWords.has(place.word))
-    .map((place) => ({ place, replacement: place.mistake.fixes[0] }));
+  const replacements = findMistakesInText(draft, answer.mistakes).map((place) => ({ place, replacement: place.mistake.fixes[0] }));
   if (!replacements.length) {
     showMessage(context, 'No changes suggested.');
     return;
