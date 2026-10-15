@@ -1,18 +1,15 @@
 import { requestCheck } from '../llm/check-request';
-import { replaceWords, type WordReplacement } from '../replace-words';
-import { readFieldText } from '../text/field-text';
+import { replaceText } from '../browser';
+import type { WordReplacement } from '../replace-words';
+import { rangeOf, readFieldText } from '../text/field-text';
 import { placeMistakes } from '../text/mistake-places';
 import { countWords, directionOfText } from '../text/words';
-import type { AssistantContext, AssistantOptions, PolishState } from '../types';
+import type { AssistantContext, PolishState } from '../types';
+import { closePanels } from '../typing/check-while-typing';
 import { wordDiff } from './word-diff';
 import { trace } from '../trace';
 
 const MIN_WORDS = 3;
-const DRAFT_CHANGED_MESSAGE = 'The draft changed after you pressed Polish. Polish again to get fresh suggestions.';
-
-interface PolishSettings extends Pick<AssistantOptions, 'apiKey' | 'customWords' | 'canned' | 'kb' | 'conversation'> {
-  beforeRequest(): void;
-}
 
 function applyToText(text: string, replacements: WordReplacement[]): string {
   return [...replacements]
@@ -20,105 +17,91 @@ function applyToText(text: string, replacements: WordReplacement[]): string {
     .reduce((result, { place, replacement }) => result.slice(0, place.start) + replacement + result.slice(place.end), text);
 }
 
-export function createPolish(context: AssistantContext, settings: PolishSettings) {
-  const { field, log } = context;
-  const customWords = new Set(settings.customWords);
-  let runningRequest: AbortController | undefined;
-  let openPreview: { sentDraft: string; replacements: WordReplacement[] } | undefined;
-  let isReleased = false;
+const updateState = (context: AssistantContext, patch: Partial<PolishState>) => context.setState({ polish: { ...context.getState().polish, ...patch } });
+const showMessage = (context: AssistantContext, message: string) =>
+  updateState(context, { preview: { dir: directionOfText(readFieldText(context.field).text), segments: [], message } });
 
-  const updateState = (patch: Partial<PolishState>) => context.setState({ polish: { ...context.getState().polish, ...patch } });
-  const showMessage = (message: string) => updateState({ preview: { dir: directionOfText(readFieldText(field).text), segments: [], message } });
+export function updatePolishButton(context: AssistantContext) {
+  updateState(context, { canPolish: countWords(readFieldText(context.field).text) >= MIN_WORDS });
+}
 
-  function handleFieldChanged() {
-    updateState({ canPolish: countWords(readFieldText(field).text) >= MIN_WORDS });
+export async function polishNow(context: AssistantContext) {
+  const { polish, options } = context;
+  if (context.isReleased || polish.runningRequest || context.getState().popover) {
+    return;
+  }
+  const draft = readFieldText(context.field).text;
+  if (countWords(draft) < MIN_WORDS) {
+    return;
   }
 
-  async function polishNow() {
-    if (isReleased || runningRequest || context.getState().popover) {
-      return;
-    }
-    const draft = readFieldText(field).text;
-    if (countWords(draft) < MIN_WORDS) {
-      return;
-    }
-
-    trace('polish', 'Polish pressed: asking for every mistake, sure or not');
-    settings.beforeRequest();
-    openPreview = undefined;
-    const request = new AbortController();
-    runningRequest = request;
-    updateState({ busy: true, preview: undefined });
-    log({ type: 'polish-request', text: draft });
-    const answer = await requestCheck(
-      settings.apiKey,
-      {
-        draft,
-        textBeforeCaret: null,
-        conversation: settings.conversation,
-        cannedResponses: settings.canned,
-        articles: settings.kb,
-        customWords: settings.customWords,
-        ignoredWords: context.ignoredWords,
-      },
-      request.signal,
-    );
-    log({ type: 'polish-reply', reply: answer });
-    runningRequest = undefined;
-    if (isReleased || request.signal.aborted) {
-      return;
-    }
-    updateState({ busy: false });
-
-    if (!answer) {
-      showMessage('Polishing is unavailable right now.');
-      return;
-    }
-    const replacements = placeMistakes(draft, answer.mistakes)
-      .filter((place) => !customWords.has(place.word))
-      .map((place) => ({ place, replacement: place.mistake.fixes[0] }));
-    if (!replacements.length) {
-      showMessage('No changes suggested.');
-      return;
-    }
-    trace('polish', `preview: ${replacements.length} fix(es)`, replacements.map(({ place, replacement }) => `${place.word} @${place.start} → ${replacement}`));
-    openPreview = { sentDraft: draft, replacements };
-    updateState({ preview: { dir: directionOfText(draft), segments: wordDiff(draft, applyToText(draft, replacements)) } });
-  }
-
-  function accept() {
-    if (!openPreview) {
-      return;
-    }
-    const { sentDraft, replacements } = openPreview;
-    openPreview = undefined;
-    if (readFieldText(field).text !== sentDraft) {
-      trace('polish', 'Accept refused: the draft changed after Polish was pressed');
-      showMessage(DRAFT_CHANGED_MESSAGE);
-      return;
-    }
-    trace('polish', 'Accept: applying the fixes like auto-correct');
-    updateState({ preview: undefined });
-    for (const { place, replacement } of replaceWords(field, replacements)) {
-      log({ type: 'polish', original: place.word, replacement });
-    }
-  }
-
-  function dismiss() {
-    openPreview = undefined;
-    updateState({ preview: undefined });
-  }
-
-  handleFieldChanged();
-
-  return {
-    polishNow,
-    accept,
-    dismiss,
-    handleFieldChanged,
-    release() {
-      isReleased = true;
-      runningRequest?.abort();
+  trace('polish', 'Polish pressed: asking for every mistake, sure or not');
+  closePanels(context);
+  polish.openPreview = undefined;
+  const request = new AbortController();
+  polish.runningRequest = request;
+  updateState(context, { busy: true, preview: undefined });
+  context.log({ type: 'polish-request', text: draft });
+  const answer = await requestCheck(
+    options.apiKey,
+    {
+      draft,
+      textBeforeCaret: null,
+      conversation: options.conversation,
+      cannedResponses: options.canned,
+      articles: options.kb,
+      customWords: [...context.customWords],
+      ignoredWords: context.ignoredWords,
     },
-  };
+    request.signal,
+  );
+  context.log({ type: 'polish-reply', reply: answer });
+  polish.runningRequest = undefined;
+  if (context.isReleased || request.signal.aborted) {
+    return;
+  }
+  updateState(context, { busy: false });
+
+  if (!answer) {
+    showMessage(context, 'Polishing is unavailable right now.');
+    return;
+  }
+  const replacements = placeMistakes(draft, answer.mistakes)
+    .filter((place) => !context.customWords.has(place.word))
+    .map((place) => ({ place, replacement: place.mistake.fixes[0] }));
+  if (!replacements.length) {
+    showMessage(context, 'No changes suggested.');
+    return;
+  }
+  trace('polish', `preview: ${replacements.length} fix(es)`, replacements.map(({ place, replacement }) => `${place.word} @${place.start} → ${replacement}`));
+  const polishedText = applyToText(draft, replacements);
+  polish.openPreview = { sentDraft: draft, polishedText };
+  updateState(context, { preview: { dir: directionOfText(draft), segments: wordDiff(draft, polishedText) } });
+}
+
+export function acceptPolish(context: AssistantContext) {
+  const { openPreview } = context.polish;
+  if (!openPreview) {
+    return;
+  }
+  dismissPolish(context);
+  const fieldText = readFieldText(context.field);
+  if (fieldText.text !== openPreview.sentDraft) {
+    trace('polish', 'Accept skipped: the draft changed after Polish was pressed');
+    return;
+  }
+  trace('polish', 'Accept: the whole text is replaced (one undo step)');
+  context.isReplacingWords = true;
+  replaceText(context.field, rangeOf(fieldText, 0, fieldText.text.length), openPreview.polishedText);
+  context.isReplacingWords = false;
+  context.log({ type: 'polish', text: openPreview.polishedText });
+}
+
+export function dismissPolish(context: AssistantContext) {
+  context.polish.openPreview = undefined;
+  updateState(context, { preview: undefined });
+}
+
+export function stopPolish(context: AssistantContext) {
+  context.polish.runningRequest?.abort();
 }

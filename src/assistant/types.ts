@@ -1,4 +1,6 @@
+import type { Mistake } from './llm/check-request';
 import type { DiffSegment } from './polish/word-diff';
+import type { PlacedMistake } from './text/mistake-places';
 
 export type TextDirection = 'ltr' | 'rtl';
 
@@ -22,6 +24,13 @@ export interface GhostState {
   direction: TextDirection;
 }
 
+export interface ShownGhost {
+  remainingText: string;
+  caretOffset: number;
+  fieldText: string;
+  direction: TextDirection;
+}
+
 export interface PolishState {
   canPolish: boolean;
   busy: boolean;
@@ -41,7 +50,8 @@ export type AssistEvent =
   | { type: 'send-to-llm'; text: string; completion: boolean }
   | { type: 'llm-answer' | 'polish-reply'; reply: unknown }
   | { type: 'polish-request'; text: string }
-  | { type: 'autocorrect' | 'polish' | 'revert' | 'pick'; original: string; replacement: string }
+  | { type: 'autocorrect' | 'revert' | 'pick'; original: string; replacement: string }
+  | { type: 'polish'; text: string }
   | { type: 'ignore'; word: string }
   | { type: 'completion-accepted'; text: string };
 
@@ -59,10 +69,41 @@ export interface AssistantOptions {
   log?: (event: AssistEvent) => void;
 }
 
+export interface SpellingData {
+  mistakes: Mistake[];
+  replacementByOriginal: Map<string, string>;
+  openPopover?: { place: PlacedMistake; selectionBefore?: Range };
+  lastUnderlinedWords: string;
+  spellcheckAttributeBefore: string | null;
+}
+
+export interface TypingData {
+  requestTimer?: ReturnType<typeof setTimeout>;
+  runningRequest?: AbortController;
+  changedDuringRequest: boolean;
+  pauseStartedAt: number;
+  lastSentText: string;
+  isComposing: boolean;
+}
+
+export interface PolishData {
+  runningRequest?: AbortController;
+  openPreview?: { sentDraft: string; polishedText: string };
+}
+
 export interface AssistantContext {
   field: HTMLElement;
-  ignoredWords: string[];
+  options: AssistantOptions;
   log(event: AssistEvent): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;
+  isReleased: boolean;
+  isReplacingWords: boolean;
+  replacedFlashTimer?: ReturnType<typeof setTimeout>;
+  ignoredWords: string[];
+  customWords: Set<string>;
+  ghost?: ShownGhost;
+  spelling: SpellingData;
+  typing: TypingData;
+  polish: PolishData;
 }

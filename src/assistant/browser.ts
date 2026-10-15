@@ -66,17 +66,10 @@ export const isMac = /mac/i.test(
   (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform ?? navigator.platform,
 );
 
-export function createHighlight(name: string) {
-  const highlight = new Highlight();
-  CSS.highlights.set(name, highlight);
-  return {
-    show(ranges: Range[]) {
-      highlight.clear();
-      ranges.forEach((range) => highlight.add(range));
-    },
-    remove() {
-      highlight.clear();
-      CSS.highlights.delete(name);
-    },
-  };
+export function showHighlight(name: string, ranges: Range[]) {
+  CSS.highlights.set(name, new Highlight(...ranges));
+}
+
+export function removeHighlight(name: string) {
+  CSS.highlights.delete(name);
 }

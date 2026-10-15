@@ -1,6 +1,7 @@
-import { createHighlight, replaceText } from './browser';
+import { replaceText, showHighlight } from './browser';
 import { caretOffset, placeCaret, rangeOf, readFieldText } from './text/field-text';
 import type { WordPlace } from './text/words';
+import type { AssistantContext } from './types';
 import { trace } from './trace';
 
 export interface WordReplacement {
@@ -11,22 +12,17 @@ export interface WordReplacement {
 const REPLACED_HIGHLIGHT = 'bp-autocorrected';
 const REPLACED_FLASH_MS = 2000;
 
-let replacedFlash: ReturnType<typeof createHighlight> | undefined;
-let flashTimer: ReturnType<typeof setTimeout> | undefined;
-
-let replacing = false;
-export const isReplacingWords = () => replacing;
-
-export function replaceWords(field: HTMLElement, replacements: WordReplacement[]): WordReplacement[] {
-  replacing = true;
+export function replaceWords(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
+  context.isReplacingWords = true;
   try {
-    return replaceWordsNow(field, replacements);
+    return replaceWordsNow(context, replacements);
   } finally {
-    replacing = false;
+    context.isReplacingWords = false;
   }
 }
 
-function replaceWordsNow(field: HTMLElement, replacements: WordReplacement[]): WordReplacement[] {
+function replaceWordsNow(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
+  const { field } = context;
   const caretBefore = caretOffset(readFieldText(field));
   const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
   const applied: WordReplacement[] = [];
@@ -58,13 +54,12 @@ function replaceWordsNow(field: HTMLElement, replacements: WordReplacement[]): W
     trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     placeCaret(textAfter, caretBefore + caretShift);
   }
-  flash(replacedSpans.map((span) => rangeOf(textAfter, span.start, span.start + span.length)));
+  flash(context, replacedSpans.map((span) => rangeOf(textAfter, span.start, span.start + span.length)));
   return applied.reverse();
 }
 
-function flash(ranges: Range[]) {
-  replacedFlash ??= createHighlight(REPLACED_HIGHLIGHT);
-  replacedFlash.show(ranges);
-  clearTimeout(flashTimer);
-  flashTimer = setTimeout(() => replacedFlash?.show([]), REPLACED_FLASH_MS);
+function flash(context: AssistantContext, ranges: Range[]) {
+  showHighlight(REPLACED_HIGHLIGHT, ranges);
+  clearTimeout(context.replacedFlashTimer);
+  context.replacedFlashTimer = setTimeout(() => showHighlight(REPLACED_HIGHLIGHT, []), REPLACED_FLASH_MS);
 }

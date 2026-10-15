@@ -1,6 +1,7 @@
-import { createPolish } from './polish/polish';
+import { acceptPolish, dismissPolish, polishNow, stopPolish, updatePolishButton } from './polish/polish';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
-import { createTypingAssist } from './typing/typing-assist';
+import * as checkWhileTyping from './typing/check-while-typing';
+import * as spelling from './typing/spelling';
 import { trace } from './trace';
 
 export type { AssistantOptions, AssistantState, AssistEvent } from './types';
@@ -12,18 +13,25 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
 
   const context: AssistantContext = {
     field,
-    ignoredWords: options.ignoredWords,
+    options,
     log: (event) => options.log?.(event),
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
       listeners.forEach((listener) => listener());
     },
+    isReleased: false,
+    isReplacingWords: false,
+    ignoredWords: options.ignoredWords,
+    customWords: new Set(options.customWords),
+    spelling: { mistakes: [], replacementByOriginal: new Map(), lastUnderlinedWords: '', spellcheckAttributeBefore: null },
+    typing: { changedDuringRequest: false, pauseStartedAt: 0, lastSentText: '', isComposing: false },
+    polish: {},
   };
 
   trace('assistant', 'attached to the field', { spelling: options.spelling, completion: options.completion, hasApiKey: !!options.apiKey });
-  const typingAssist = options.spelling !== 'off' || options.completion ? createTypingAssist(context, options) : undefined;
-  const polish = createPolish(context, { ...options, beforeRequest: () => typingAssist?.closePanels() });
+  if (options.spelling !== 'off') spelling.startSpelling(context);
+  updatePolishButton(context);
 
   return {
     getState: () => state,
@@ -33,29 +41,31 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     },
 
     handleInput(event: InputEvent) {
-      typingAssist?.handleInput(event);
-      polish.handleFieldChanged();
+      checkWhileTyping.handleInput(context, event);
+      updatePolishButton(context);
     },
-    handleKeyDown: (event: KeyboardEvent) => typingAssist?.handleKeyDown(event),
-    handleClick: () => typingAssist?.handleClick(),
-    handleSelectionChange: () => typingAssist?.handleSelectionChange(),
-    handleCompositionStart: () => typingAssist?.handleCompositionStart(),
-    handleCompositionEnd: () => typingAssist?.handleCompositionEnd(),
-    handleFocusChange: () => typingAssist?.handleFocusChange(),
-    handleKeyUp: (event: KeyboardEvent) => typingAssist?.handleKeyUp(event),
+    handleKeyDown: (event: KeyboardEvent) => checkWhileTyping.handleKeyDown(context, event),
+    handleClick: () => checkWhileTyping.handleClick(context),
+    handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),
+    handleCompositionStart: () => checkWhileTyping.handleCompositionStart(context),
+    handleCompositionEnd: () => checkWhileTyping.handleCompositionEnd(context),
+    handleFocusChange: () => checkWhileTyping.handleFocusChange(context),
+    handleKeyUp: (event: KeyboardEvent) => checkWhileTyping.handleKeyUp(context, event),
 
-    pickSuggestion: (suggestion: string) => typingAssist?.pickSuggestion(suggestion),
-    ignoreWord: () => typingAssist?.ignoreWord(),
-    addToDictionary: (word: string) => typingAssist?.addToDictionary(word),
-    closePopover: (returnCaret: boolean) => typingAssist?.closePopover(returnCaret),
-    polishNow: () => polish.polishNow(),
-    acceptPolish: () => polish.accept(),
-    dismissPolish: () => polish.dismiss(),
+    pickSuggestion: (suggestion: string) => spelling.pickSuggestion(context, suggestion),
+    ignoreWord: () => spelling.ignoreWord(context),
+    addToDictionary: (word: string) => spelling.addToDictionary(context, word),
+    closePopover: (returnCaret: boolean) => spelling.closePopover(context, returnCaret),
+    polishNow: () => polishNow(context),
+    acceptPolish: () => acceptPolish(context),
+    dismissPolish: () => dismissPolish(context),
 
     release() {
       trace('assistant', 'released (settings changed or the page is closing)');
-      typingAssist?.release();
-      polish.release();
+      context.isReleased = true;
+      checkWhileTyping.stopCheckWhileTyping(context);
+      if (options.spelling !== 'off') spelling.stopSpelling(context);
+      stopPolish(context);
       listeners.clear();
     },
   };
