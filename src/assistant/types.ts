@@ -9,11 +9,6 @@ export interface Rect {
   bottom: number;
 }
 
-export interface Turn {
-  role: 'customer' | 'agent';
-  text: string;
-}
-
 export interface PopoverState {
   word: string;
   wordStartOffset: number;
@@ -58,7 +53,7 @@ export interface AssistantOptions {
   customWords: string[];
   canned: string[];
   kb: string[];
-  conversation: () => Turn[];
+  conversation: string;
   log?: (event: AssistEvent) => void;
 }
 

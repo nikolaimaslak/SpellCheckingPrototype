@@ -1,12 +1,11 @@
 import { scriptOf } from '../text/words';
-import type { Turn } from '../types';
 import { askLLM } from './client';
 import { trace } from '../trace';
 
 export interface CheckRequest {
   draft: string;
   textBeforeCaret: string | null;
-  conversation: Turn[];
+  conversation: string;
   cannedResponses: string[];
   articles: string[];
   customWords: string[];
@@ -62,12 +61,11 @@ export async function requestCheck(apiKey: string, request: CheckRequest, signal
 }
 
 function buildMessage(request: CheckRequest): string {
-  const conversation = request.conversation.map((turn) => `${turn.role === 'customer' ? 'Customer' : 'Agent'}: ${turn.text}`).join('\n');
   return [
     bulletList('Canned responses', request.cannedResponses),
     bulletList('Articles', request.articles),
     bulletList('Custom words', request.customWords),
-    `Conversation:\n${conversation}`,
+    `Conversation:\n${request.conversation}`,
     `Agent's draft:\n${request.draft}`,
     request.textBeforeCaret === null ? '' : `Continue after:\n${request.textBeforeCaret}\n\n${caretNote(request.textBeforeCaret)}`,
   ]

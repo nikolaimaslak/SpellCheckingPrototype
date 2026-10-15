@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { AssistantOptions, AssistEvent } from '../../assistant';
-import type { Turn } from '../../assistant/types';
 import { useAssistant } from '../hooks/useAssistant';
 import { lines, type AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
@@ -9,13 +8,8 @@ import { PauseRing } from './PauseRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
-  /** Changing any of them except the conversation re-attaches the assistant. */
   settings: AppSettings;
-  /** Read on every request, so editing the conversation never re-attaches (which would forget ignored words). */
-  readConversation: () => Turn[];
   onLog: (event: AssistEvent) => void;
-  /** Enter: the message is added to the Conversation field as Agent, and the field is cleared. */
-  onSend: (text: string) => void;
   onAddToDictionary: (word: string) => void;
 }
 
@@ -24,24 +18,21 @@ interface Props {
  * field's content is owned by the browser and the assistant, never rendered
  * by React: it has no children here. The field's events go to the assistant.
  */
-export function MessageField({ settings, readConversation, onLog, onSend, onAddToDictionary }: Props) {
-  const { conversation: _conversation, ...attachedSettings } = settings;
-  const attachedKey = JSON.stringify(attachedSettings);
+export function MessageField({ settings, onLog, onAddToDictionary }: Props) {
   const options = useMemo(() => {
-    const attached: Omit<AppSettings, 'conversation'> = JSON.parse(attachedKey);
     const assistantOptions: AssistantOptions = {
-      spelling: !attached.spellCheck ? 'off' : attached.autoCorrect ? 'auto' : 'suggest',
-      customWords: lines(attached.customDictionary),
-      completion: attached.completion,
-      debounceMs: attached.debounceMs,
-      apiKey: attached.apiKey,
-      canned: lines(attached.canned),
-      kb: lines(attached.kb),
-      conversation: readConversation,
+      spelling: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto' : 'suggest',
+      customWords: lines(settings.customDictionary),
+      completion: settings.completion,
+      debounceMs: settings.debounceMs,
+      apiKey: settings.apiKey,
+      canned: lines(settings.canned),
+      kb: lines(settings.kb),
+      conversation: settings.conversation,
       log: onLog,
     };
     return assistantOptions;
-  }, [attachedKey, readConversation, onLog]);
+  }, [settings, onLog]);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const { assistant, state } = useAssistant(fieldRef, options);
@@ -56,19 +47,6 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
     };
   }, [assistant]);
 
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    assistant?.handleKeyDown(e.nativeEvent);
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && !e.nativeEvent.defaultPrevented) {
-      e.preventDefault();
-      const text = e.currentTarget.innerText.trim();
-      if (!text) {
-        return;
-      }
-      onSend(text);
-      e.currentTarget.replaceChildren();
-      assistant?.handleCleared();
-    }
-  };
 
   return (
     <section className="space-y-2">
@@ -80,9 +58,9 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
           role="textbox"
           aria-multiline="true"
           aria-label="Agent message"
-          className="min-h-24 rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
+          className="min-h-24 resize-y overflow-auto rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
           onInput={(e) => assistant?.handleInput(e.nativeEvent as InputEvent)}
-          onKeyDown={onKeyDown}
+          onKeyDown={(e) => assistant?.handleKeyDown(e.nativeEvent)}
           onKeyUp={(e) => assistant?.handleKeyUp(e.nativeEvent)}
           onMouseUp={() => assistant?.handleClick()}
           onCompositionStart={() => assistant?.handleCompositionStart()}
@@ -99,7 +77,7 @@ export function MessageField({ settings, readConversation, onLog, onSend, onAddT
         )}
       </div>
       <p className="text-xs text-slate-500">
-        Enter adds the message to Conversation as Agent, Shift+Enter breaks the line. Click an underlined word (or Ctrl+.) for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
+        Click an underlined word (or Ctrl+.) for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
       </p>
       {assistant && (
         <>

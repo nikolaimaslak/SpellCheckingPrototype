@@ -3,8 +3,8 @@ import { replaceWords } from '../replace-words';
 import type { Mistake } from '../llm/check-request';
 import { caretOffset, rangeOf, readFieldText, type FieldText } from '../text/field-text';
 import { placeMistakes, type PlacedMistake } from '../text/mistake-places';
-import { capitalizedWordsIn, directionOfLastWord, lowercaseWordsIn } from '../text/words';
-import type { AssistantContext, Turn } from '../types';
+import { directionOfLastWord, lowercaseWordsIn } from '../text/words';
+import type { AssistantContext } from '../types';
 import { trace } from '../trace';
 
 const SPELLING_ERROR_HIGHLIGHT = 'bp-spelling-error';
@@ -13,7 +13,6 @@ const MAX_SUGGESTIONS = 5;
 interface SpellingSettings {
   autoCorrect: boolean;
   customWords: string[];
-  conversation: () => Turn[];
 }
 
 export function createSpelling(context: AssistantContext, settings: SpellingSettings) {
@@ -63,15 +62,9 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   const wouldUndoAutoCorrection = (place: PlacedMistake) => replacementByOriginal.get(place.mistake.fixes[0]) === place.word;
 
   function autoCorrectSureMistakes() {
-    const namesFromCustomer = new Set(
-      settings
-        .conversation()
-        .filter((turn) => turn.role === 'customer')
-        .flatMap((turn) => capitalizedWordsIn(turn.text)),
-    );
     const candidates = finishedMistakePlaces(readFieldText(field));
     const whySkipped = (place: PlacedMistake) =>
-      !place.mistake.sure ? 'model not sure' : namesFromCustomer.has(place.word) ? 'a name the customer wrote' : wouldUndoAutoCorrection(place) ? 'would undo an earlier auto-correction' : '';
+      !place.mistake.sure ? 'model not sure' : wouldUndoAutoCorrection(place) ? 'would undo an earlier auto-correction' : '';
     candidates.filter(whySkipped).forEach((place) => trace('spelling', `not auto-corrected: ${place.word} (${whySkipped(place)})`));
     const placesToFix = candidates.filter((place) => !whySkipped(place));
     if (placesToFix.length) trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));

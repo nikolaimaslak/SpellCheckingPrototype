@@ -16,7 +16,7 @@ export function EventLog({ entries, onClear }: { entries: LogEntry[]; onClear: (
           Clear
         </button>
       </div>
-      <pre ref={pre} className="h-64 overflow-auto rounded bg-slate-900 p-2 text-xs leading-5 whitespace-pre-wrap break-all text-green-200">
+      <pre ref={pre} className="h-64 min-h-16 resize-y overflow-auto rounded bg-slate-900 p-2 text-xs leading-5 whitespace-pre-wrap break-all text-green-200">
         {entries.map(formatEntry).join('\n')}
       </pre>
     </section>

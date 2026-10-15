@@ -11,7 +11,7 @@ export interface AppSettings {
   debounceMs: number;
   /** OpenAI key for spelling, completion and polish; empty = all three are off. */
   apiKey: string;
-  /** `Customer:` / `Agent:` lines: auto-correct protection and LLM context. */
+  /** `Customer:` / `Agent:` lines, sent to the LLM as context. */
   conversation: string;
   /** One canned response per line; empty = no canned responses. */
   canned: string;

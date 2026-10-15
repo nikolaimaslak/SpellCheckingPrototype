@@ -55,7 +55,7 @@ export function createPolish(context: AssistantContext, settings: PolishSettings
       {
         draft,
         textBeforeCaret: null,
-        conversation: settings.conversation(),
+        conversation: settings.conversation,
         cannedResponses: settings.canned,
         articles: settings.kb,
         customWords: settings.customWords,

@@ -1,11 +1,10 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import { EventLog } from "./components/EventLog";
 import { MessageField } from "./components/MessageField";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { useDebounced } from "./hooks/useDebounced";
 import { useEventLog } from "./hooks/useEventLog";
 import { useSettings } from "./hooks/useSettings";
-import { appendTurn, parseConversation } from "./lib/conversation";
 import { lines } from "./lib/settings";
 
 export function App() {
@@ -14,20 +13,6 @@ export function App() {
   const appliedSettings = useDebounced(settings, 400);
   const { logEntries, logEvent, clearLog } = useEventLog();
 
-  // The conversation is read live on every use, so editing it never re-attaches (which would forget ignored words).
-  const conversationRef = useRef(settings.conversation);
-  conversationRef.current = settings.conversation;
-  const readConversation = useCallback(
-    () => parseConversation(conversationRef.current),
-    [],
-  );
-  const addAgentMessage = useCallback(
-    (text: string) =>
-      updateSettings((current) => ({
-        conversation: appendTurn(current.conversation, { role: "agent", text }),
-      })),
-    [updateSettings],
-  );
 
   const addToDictionary = useCallback(
     (word: string) =>
@@ -51,9 +36,7 @@ export function App() {
         <main className="space-y-4">
           <MessageField
             settings={appliedSettings}
-            readConversation={readConversation}
             onLog={logEvent}
-            onSend={addAgentMessage}
             onAddToDictionary={addToDictionary}
           />
           <EventLog entries={logEntries} onClear={clearLog} />

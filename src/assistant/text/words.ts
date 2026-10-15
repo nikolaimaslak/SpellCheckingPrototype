@@ -22,10 +22,6 @@ export function lowercaseWordsIn(text: string): string[] {
   return (text.match(LETTERS) ?? []).map((word) => word.toLowerCase());
 }
 
-export function capitalizedWordsIn(text: string): string[] {
-  return (text.match(LETTERS) ?? []).filter((word) => word[0] !== word[0].toLowerCase());
-}
-
 export function countWords(text: string): number {
   return (text.match(/[\p{L}\p{N}]+/gu) ?? []).length;
 }

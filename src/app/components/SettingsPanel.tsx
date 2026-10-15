@@ -93,7 +93,7 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
         </div>
         <TextArea
           label="Conversation"
-          hint="Customer: / Agent: per line. Customer words are never auto-corrected. All of it goes to the LLM."
+          hint="Customer: / Agent: per line. All of it goes to the LLM."
           rows={5}
           value={settings.conversation}
           onChange={(conversation) => onUpdate({ conversation })}

@@ -32,7 +32,7 @@ Everything needs an **OpenAI API key**: type it in the settings panel (it is not
 
 ## What the demo contains
 
-- **One message field:** Enter adds the message to the Conversation as the agent, Shift+Enter breaks the line. Spelling underlines, the suggestions popover (click a word or Ctrl+.), auto-correct, the grey completion (Tab accepts) and the **Polish** button all work on it. Ctrl/Cmd+Z undoes any automatic change.
+- **One message field:** Spelling underlines, the suggestions popover (click a word or Ctrl+.), auto-correct, the grey completion (Tab accepts) and the **Polish** button all work on it. Ctrl/Cmd+Z undoes any automatic change.
 - **Settings:** the OpenAI API key, spell check, auto-correct, custom dictionary, completion on or off, and the sources as plain text: **Conversation** (`Customer:` / `Agent:` lines), **Canned responses** and **Knowledge base**, with English and Arabic buttons that fill all three. Saved in the browser; **Reset** goes back to the defaults.
 - **Events:** every event (the request to the model and its answer, underlined word, auto-correction, completion, polish) as one JSON line, at the bottom of the page.
 

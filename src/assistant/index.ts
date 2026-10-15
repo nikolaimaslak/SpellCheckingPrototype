@@ -42,10 +42,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     handleCompositionEnd: () => typingAssist?.handleCompositionEnd(),
     handleFocusChange: () => typingAssist?.handleFocusChange(),
     handleKeyUp: (event: KeyboardEvent) => typingAssist?.handleKeyUp(event),
-    handleCleared() {
-      typingAssist?.handleCleared();
-      polish.handleFieldChanged();
-    },
 
     pickSuggestion: (suggestion: string) => typingAssist?.pickSuggestion(suggestion),
     ignoreWord: () => typingAssist?.ignoreWord(),

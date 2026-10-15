@@ -18,7 +18,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   const spelling =
     options.spelling === 'off'
       ? undefined
-      : createSpelling(context, { autoCorrect: options.spelling === 'auto', customWords: options.customWords, conversation: options.conversation });
+      : createSpelling(context, { autoCorrect: options.spelling === 'auto', customWords: options.customWords });
   const ghostText = options.completion ? createGhostText(context) : undefined;
 
   let requestTimer: ReturnType<typeof setTimeout> | undefined;
@@ -86,7 +86,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       {
         draft: sentText.text,
         textBeforeCaret,
-        conversation: options.conversation(),
+        conversation: options.conversation,
         cannedResponses: options.canned,
         articles: options.kb,
         customWords: options.customWords,
@@ -214,15 +214,6 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     ghostText?.redraw();
   }
 
-  function handleCleared() {
-    trace('typing', 'field cleared by the page (message sent): pending request cancelled');
-    clearTimeout(requestTimer);
-    requestTimer = undefined;
-    updateLoader();
-    ghostText?.hide();
-    spelling?.redrawUnderlines();
-  }
-
   function release() {
     isReleased = true;
     clearTimeout(requestTimer);
@@ -240,7 +231,6 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     handleCompositionEnd,
     handleFocusChange,
     handleKeyUp,
-    handleCleared,
     closePanels,
     closePopover: (returnCaret: boolean) => spelling?.closePopover(returnCaret),
     pickSuggestion: (suggestion: string) => spelling?.pickSuggestion(suggestion),
