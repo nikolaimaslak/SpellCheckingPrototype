@@ -28,11 +28,9 @@ function updateLoader(context: AssistantContext) {
 function scheduleRequest(context: AssistantContext) {
   const { typing, options } = context;
   if (typing.runningRequest) {
-    typing.changedDuringRequest = true;
-    trace('typing', 'text changed while a request is running: will send again after its answer');
-  }
-  if (typing.runningRequest) {
-    return;
+    trace('typing', 'text changed while a request is running: it is aborted');
+    typing.runningRequest.abort();
+    typing.runningRequest = undefined;
   }
   if (options.spelling === 'off' && !options.completion) {
     trace('typing', 'spelling and completion are off: no request');
@@ -82,7 +80,7 @@ async function sendRequestNow(context: AssistantContext) {
     request.signal,
   );
   if (request.signal.aborted) {
-    trace('typing', 'answer dropped: the assistant was released meanwhile');
+    trace('typing', 'answer dropped: the request was aborted');
     return;
   }
   typing.runningRequest = undefined;
@@ -106,11 +104,6 @@ async function sendRequestNow(context: AssistantContext) {
     }
   } else {
     trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
-  }
-  if (typing.changedDuringRequest) {
-    typing.changedDuringRequest = false;
-    trace('typing', 'the text changed while waiting: scheduling the next request');
-    scheduleRequest(context);
   }
   updateLoader(context);
 }

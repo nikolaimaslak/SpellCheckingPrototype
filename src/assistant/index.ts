@@ -24,7 +24,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
     spelling: { mistakes: [], replacementByOriginal: new Map() },
-    typing: { changedDuringRequest: false, pauseStartedAt: 0, lastSentText: '', isComposing: false },
+    typing: { pauseStartedAt: 0, lastSentText: '', isComposing: false },
     polish: {},
   };
 

@@ -72,7 +72,6 @@ export interface SpellingData {
 export interface TypingData {
   requestTimer?: ReturnType<typeof setTimeout>;
   runningRequest?: AbortController;
-  changedDuringRequest: boolean;
   pauseStartedAt: number;
   lastSentText: string;
   isComposing: boolean;
