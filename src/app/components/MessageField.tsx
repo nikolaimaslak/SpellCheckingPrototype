@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
-import type { AssistEvent } from '../../assistant';
+import type { AssistantOptions, AssistEvent } from '../../assistant';
 import type { Turn } from '../../assistant/types';
 import { useAssistant } from '../hooks/useAssistant';
-import { assistantOptions, type AppSettings } from '../lib/settings';
+import { lines, type AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
 import { PolishBar } from './PolishBar';
 import { PauseRing } from './PauseRing';
@@ -27,10 +27,21 @@ interface Props {
 export function MessageField({ settings, readConversation, onLog, onSend, onAddToDictionary }: Props) {
   const { conversation: _conversation, ...attachedSettings } = settings;
   const attachedKey = JSON.stringify(attachedSettings);
-  const options = useMemo(
-    () => assistantOptions(JSON.parse(attachedKey), readConversation, onLog),
-    [attachedKey, readConversation, onLog],
-  );
+  const options = useMemo(() => {
+    const attached: Omit<AppSettings, 'conversation'> = JSON.parse(attachedKey);
+    const assistantOptions: AssistantOptions = {
+      spelling: !attached.spellCheck ? 'off' : attached.autoCorrect ? 'auto' : 'suggest',
+      customWords: lines(attached.customDictionary),
+      completion: attached.completion,
+      debounceMs: attached.debounceMs,
+      apiKey: attached.apiKey,
+      canned: lines(attached.canned),
+      kb: lines(attached.kb),
+      conversation: readConversation,
+      log: onLog,
+    };
+    return assistantOptions;
+  }, [attachedKey, readConversation, onLog]);
 
   const fieldRef = useRef<HTMLDivElement>(null);
   const { assistant, state } = useAssistant(fieldRef, options);

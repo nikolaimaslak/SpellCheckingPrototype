@@ -17,7 +17,7 @@ interface ChatCompletion {
 
 export async function askLLM(question: Question): Promise<string | null> {
   if (!question.apiKey) {
-    trace('openai', 'no API key: request skipped');
+    trace('llm', 'no API key: request skipped');
     return null;
   }
   const startedAt = performance.now();
@@ -37,14 +37,14 @@ export async function askLLM(question: Question): Promise<string | null> {
       signal: AbortSignal.any([question.signal, AbortSignal.timeout(question.timeoutMs)]),
     });
     if (!response.ok) {
-      trace('openai', `HTTP ${response.status} after ${Math.round(performance.now() - startedAt)} ms`);
+      trace('llm', `HTTP ${response.status} after ${Math.round(performance.now() - startedAt)} ms`);
       return null;
     }
     const completion = (await response.json()) as ChatCompletion;
-    trace('openai', `answered in ${Math.round(performance.now() - startedAt)} ms`);
+    trace('llm', `answered in ${Math.round(performance.now() - startedAt)} ms`);
     return completion.choices?.[0]?.message?.content ?? null;
   } catch (error) {
-    trace('openai', `failed after ${Math.round(performance.now() - startedAt)} ms (aborted, timeout or network)`, error);
+    trace('llm', `failed after ${Math.round(performance.now() - startedAt)} ms (aborted, timeout or network)`, error);
     return null;
   }
 }

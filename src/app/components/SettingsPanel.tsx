@@ -1,5 +1,5 @@
 import { MODEL } from '../../assistant/llm/client';
-import { CONVERSATION_PRESETS } from '../lib/conversation';
+import { CONTEXT_PRESETS } from '../lib/context-presets';
 import type { AppSettings } from '../lib/settings';
 import { Checkbox } from './Checkbox';
 import { Section } from './Section';
@@ -25,7 +25,7 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
         <label className="block text-sm">
           Model
           <select disabled className="mt-1 block w-full rounded border border-slate-300 bg-slate-50 p-2 text-xs text-slate-500">
-            <option>OpenAI {MODEL}</option>
+            <option>{MODEL}</option>
           </select>
         </label>
         <label className="block text-sm">
@@ -37,7 +37,7 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
             value={settings.apiKey}
             onChange={(e) => onUpdate({ apiKey: e.target.value.trim() })}
           />
-          <span className="mt-1 block text-xs text-slate-500">Spelling, completion and Polish all ask OpenAI. Saved in this browser only. Reset clears it.</span>
+          <span className="mt-1 block text-xs text-slate-500">Spelling, completion and Polish all ask the LLM. Saved in this browser only. Reset clears it.</span>
         </label>
         <label className="block text-sm">
           Debounce, ms
@@ -75,9 +75,24 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
       </Section>
 
       <Section title="LLM context">
+        <div className="flex items-center">
+          <span className="mr-2 text-sm">Presets:</span>
+          {Object.entries(CONTEXT_PRESETS).map(([name, preset]) => {
+            const isApplied = settings.conversation === preset.conversation && settings.canned === preset.canned && settings.kb === preset.kb;
+            return (
+              <button
+                key={name}
+                type="button"
+                className={`border border-slate-300 px-2 py-1 text-sm first:rounded-l last:rounded-r not-first:-ml-px ${isApplied ? 'bg-slate-100 font-semibold' : 'bg-white hover:bg-slate-50'}`}
+                onClick={() => onUpdate(preset)}
+              >
+                {name}
+              </button>
+            );
+          })}
+        </div>
         <TextArea
           label="Conversation"
-          presets={CONVERSATION_PRESETS}
           hint="Customer: / Agent: per line. Customer words are never auto-corrected. All of it goes to the LLM."
           rows={5}
           value={settings.conversation}

@@ -1,7 +1,7 @@
 const AREA_COLORS = {
   assistant: '#0f172a',
   typing: '#2563eb',
-  openai: '#9333ea',
+  llm: '#9333ea',
   spelling: '#dc2626',
   replace: '#ea580c',
   ghost: '#64748b',

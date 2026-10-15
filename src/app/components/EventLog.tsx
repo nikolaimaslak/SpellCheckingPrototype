@@ -11,7 +11,7 @@ export function EventLog({ entries, onClear }: { entries: LogEntry[]; onClear: (
   return (
     <section className="space-y-1">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Events</h2>
+        <h2 className="text-sm font-semibold">Debugger</h2>
         <button type="button" className="text-xs text-slate-500 hover:underline" onClick={onClear}>
           Clear
         </button>

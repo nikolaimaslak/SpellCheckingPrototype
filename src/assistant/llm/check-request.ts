@@ -32,31 +32,32 @@ Judge a real word only by the words already written around it: never report a wo
 Only words that are wrong: never suggest a different style, tone or wording for a correct word ("Dear" is never wrong, so never "Hello" or "Hi").
 One entry per place: the same word in two places is two entries, each with its own context.
 "word": exactly as written in the draft. "context": the word with one or two words around it, copied exactly from the draft, so the place can be found. The word must appear in the context only once: if the same word is nearby, take fewer words or words from the other side.
-"fixes": up to 3 replacements for that one word, best first; each fix is one word. Never add words or punctuation.
+"fixes": up to 3 replacements for that one word, best first; each fix is one word. Never add words or punctuation, except this one case:
+a correct word that must be followed by a punctuation sign that is missing (a comma after the name in "Hello Sahsa we"): report it with one fix, the same word with that sign ("Sahsa,"), and "sure": true. Names count here too. Only when the word itself has no mistake.
 Check each fix by putting it in place of the word in its context: the result must read correctly. A word that should be removed, not replaced, is not a mistake.
-"sure": when true, the first fix replaces the word at once, without asking the agent. So true only when the word is clearly wrong there and there is only one right fix; with two or more fixes, or when the word could be a name, always false.
-Never report names, words the customer wrote, codes, links, emails, numbers, or the custom words.
+"sure": when true, the first fix replaces the word at once, without asking the agent. So true only when the word is clearly wrong there and there is only one right fix; with two or more fixes, or when the word could be a name, always false (the missing punctuation case is always true).
+Never report names, words the customer wrote, codes, links, emails, numbers, or the custom words as wrong; the missing punctuation case above is the only exception.
 Keep the agent's language: a fix is in the same language as the word it replaces; never translate.
 
 completion: only when "Continue after" is given. The text that goes right after it, nothing that is already there.
 If it stops in the middle of a word, start with the rest of that word; if it stops after a word, start with a space.
 Continue the draft as written, even if it has typos: never repeat or rewrite words that are already there. Mistakes are fixed through "mistakes", so a fix never goes into the completion: after a misspelled last word, the completion starts with what comes after that word.
-If punctuation is missing before your words (a comma after a greeting, a period after a finished sentence), start the completion with that punctuation sign.
+If punctuation is missing before your words (a comma after a greeting, a period after a finished sentence) and no mistake already adds it, start the completion with that punctuation sign.
 After a comma (typed or yours), continue the same sentence: no capital letter, no new sentence.
 At most one short sentence, in the language the agent is typing right before it, never another language. Use the canned responses and articles when they fit.
 Empty when not asked or when you are not sure what comes next.`;
 
 export async function requestCheck(apiKey: string, request: CheckRequest, signal: AbortSignal): Promise<CheckAnswer | null> {
   const message = buildMessage(request);
-  trace('openai', 'check: message sent to the model', message);
+  trace('llm', 'check: message sent to the model', message);
   const reply = await askLLM({ apiKey, instructions: INSTRUCTIONS, message, signal, timeoutMs: 5000, answerAsJson: true });
-  trace('openai', 'check: raw reply', reply);
+  trace('llm', 'check: raw reply', reply);
   const answer = reply === null ? null : parseAnswer(reply);
   if (!answer) {
     return null;
   }
   const completion = cleanCompletion(answer.completion, request.textBeforeCaret);
-  if (completion !== answer.completion) trace('openai', `completion cleaned: ${JSON.stringify(answer.completion)} → ${JSON.stringify(completion)}`);
+  if (completion !== answer.completion) trace('llm', `completion cleaned: ${JSON.stringify(answer.completion)} → ${JSON.stringify(completion)}`);
   return { mistakes: answer.mistakes, completion };
 }
 
@@ -102,6 +103,7 @@ function parseAnswer(reply: string): CheckAnswer | null {
 }
 
 const isOneWord = (text: string) => /^[\p{L}\p{M}'’-]+$/u.test(text);
+const isWordWithPunctuation = (fix: string, word: string) => fix.startsWith(word) && /^[,.!?;:،؛؟]$/u.test(fix.slice(word.length));
 
 function toMistake(raw: { word?: unknown; context?: unknown; fixes?: unknown; sure?: unknown } | null): Mistake[] {
   if (typeof raw?.word !== 'string' || typeof raw.context !== 'string' || !Array.isArray(raw.fixes)) {
@@ -109,12 +111,12 @@ function toMistake(raw: { word?: unknown; context?: unknown; fixes?: unknown; su
   }
   const { word, context } = raw;
   if (!isOneWord(word) || !context.includes(word)) {
-    trace('openai', `mistake dropped: "${word}" is not one word or is not in its context`, raw);
+    trace('llm', `mistake dropped: "${word}" is not one word or is not in its context`, raw);
     return [];
   }
   const sameLanguage = (fix: string) => scriptOf(fix) === scriptOf(word);
-  const fixes = raw.fixes.filter((fix): fix is string => typeof fix === 'string' && isOneWord(fix) && fix !== word && sameLanguage(fix));
-  if (fixes.length < raw.fixes.length) trace('openai', `fixes dropped for "${word}" (not one word, same as the word, or another alphabet)`, raw.fixes);
+  const fixes = raw.fixes.filter((fix): fix is string => typeof fix === 'string' && (isOneWord(fix) || isWordWithPunctuation(fix, word)) && fix !== word && sameLanguage(fix));
+  if (fixes.length < raw.fixes.length) trace('llm', `fixes dropped for "${word}" (not one word, same as the word, or another alphabet)`, raw.fixes);
   return fixes.length
     ? [
       { word, context, fixes, sure: raw.sure === true }]
