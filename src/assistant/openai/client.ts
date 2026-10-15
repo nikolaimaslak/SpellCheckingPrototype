@@ -1,3 +1,5 @@
+import { trace } from '../trace';
+
 export const MODEL = 'gpt-4.1-mini';
 
 interface Question {
@@ -14,7 +16,11 @@ interface ChatCompletion {
 }
 
 export async function askOpenAi(question: Question): Promise<string | null> {
-  if (!question.apiKey) return null;
+  if (!question.apiKey) {
+    trace('openai', 'no API key: request skipped');
+    return null;
+  }
+  const startedAt = performance.now();
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -30,10 +36,15 @@ export async function askOpenAi(question: Question): Promise<string | null> {
       }),
       signal: AbortSignal.any([question.signal, AbortSignal.timeout(question.timeoutMs)]),
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      trace('openai', `HTTP ${response.status} after ${Math.round(performance.now() - startedAt)} ms`);
+      return null;
+    }
     const completion = (await response.json()) as ChatCompletion;
+    trace('openai', `answered in ${Math.round(performance.now() - startedAt)} ms`);
     return completion.choices?.[0]?.message?.content ?? null;
-  } catch {
+  } catch (error) {
+    trace('openai', `failed after ${Math.round(performance.now() - startedAt)} ms (aborted, timeout or network)`, error);
     return null;
   }
 }

@@ -48,9 +48,10 @@ export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
   polish: PolishState;
+  isChecking: boolean;
 }
 
-export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false } };
+export const INITIAL_STATE: AssistantState = { polish: { canPolish: false, busy: false }, isChecking: false };
 
 export type AssistEvent =
   | { type: 'check-request'; text: string; completion: boolean }

@@ -1,6 +1,7 @@
 import { createPolish } from './polish/polish';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import { createTypingAssist } from './typing/typing-assist';
+import { trace } from './trace';
 
 export type { AssistantOptions, AssistantState, AssistEvent } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
@@ -19,6 +20,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     },
   };
 
+  trace('assistant', 'attached to the field', { spelling: options.spelling, completion: options.completion, hasApiKey: !!options.apiKey });
   const typingAssist = options.spelling !== 'off' || options.completion ? createTypingAssist(context, options) : undefined;
   const polish = createPolish(context, { ...options, beforeRequest: () => typingAssist?.closePanels() });
 
@@ -53,6 +55,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     dismissPolish: () => polish.dismiss(),
 
     release() {
+      trace('assistant', 'released (settings changed or the page is closing)');
       typingAssist?.release();
       polish.release();
       listeners.clear();

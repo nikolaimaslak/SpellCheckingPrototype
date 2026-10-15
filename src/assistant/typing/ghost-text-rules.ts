@@ -1,23 +1,6 @@
 import type { GhostLayout, Rect, TextDirection } from '../types';
 
-const MIN_WORDS_IN_SENTENCE = 3;
-const SENTENCE_END = /[.!?؟\n]/u;
 const KEYS_THAT_DISMISS = new Set(['Enter', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown']);
-
-export interface CompletionMoment {
-  textBeforeCaret: string;
-  restOfLine: string;
-  isComposing: boolean;
-  isPanelOpen: boolean;
-}
-
-export function isGoodMomentForCompletion(moment: CompletionMoment): boolean {
-  if (moment.isComposing || moment.isPanelOpen) return false;
-  if (moment.restOfLine.trim() !== '') return false;
-  const currentSentence = moment.textBeforeCaret.split(SENTENCE_END).at(-1) ?? '';
-  const wordsInSentence = currentSentence.match(/[\p{L}\p{N}]+/gu) ?? [];
-  return wordsInSentence.length >= MIN_WORDS_IN_SENTENCE;
-}
 
 export type GhostKeyAction = 'accept-all' | 'accept-word' | 'dismiss' | 'escape' | 'none';
 

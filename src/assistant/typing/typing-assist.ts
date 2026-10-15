@@ -2,10 +2,12 @@ import { requestCheck } from '../openai/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantOptions } from '../types';
 import { createGhostText } from './ghost-text';
-import { isGoodMomentForCompletion } from './ghost-text-rules';
 import { createSpelling } from './spelling';
+import { trace } from '../trace';
 
-const MIN_MS_BETWEEN_REQUESTS = 1000;
+const PAUSE_BEFORE_REQUEST_MS = 700;
+const MIN_WORDS_IN_SENTENCE = 3;
+const SENTENCE_END = /[.!?؟\n]/u;
 
 const isPopoverShortcut = (event: KeyboardEvent) =>
   event.key === '.' && event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
@@ -19,17 +21,30 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   const ghostText = options.completion ? createGhostText(context) : undefined;
 
   let requestTimer: ReturnType<typeof setTimeout> | undefined;
-  let lastRequestAt = -Infinity;
   let runningRequest: AbortController | undefined;
+  let changedDuringRequest = false;
   let isComposing = false;
   let isReleased = false;
 
   const isPanelOpen = () => !!spelling?.isPopoverOpen() || !!context.getState().polish.preview;
 
+  function updateIsChecking() {
+    const isChecking = !!requestTimer || !!runningRequest || changedDuringRequest;
+    if (context.getState().isChecking === isChecking) return;
+    trace('typing', `loader ${isChecking ? 'on' : 'off'}`);
+    context.setState({ isChecking });
+  }
+
   function scheduleRequest() {
-    if (isReleased || requestTimer) return;
-    const waitMs = Math.max(0, lastRequestAt + MIN_MS_BETWEEN_REQUESTS - Date.now());
-    requestTimer = setTimeout(() => void sendRequestNow(), waitMs);
+    if (runningRequest) {
+      changedDuringRequest = true;
+      trace('typing', 'text changed while a request is running: will send again after its answer');
+    }
+    if (isReleased || runningRequest) return;
+    trace('typing', requestTimer ? `typing continues: pause timer restarted (${PAUSE_BEFORE_REQUEST_MS} ms)` : `pause timer started: request in ${PAUSE_BEFORE_REQUEST_MS} ms unless typing continues`);
+    clearTimeout(requestTimer);
+    requestTimer = setTimeout(() => void sendRequestNow(), PAUSE_BEFORE_REQUEST_MS);
+    updateIsChecking();
   }
 
   async function sendRequestNow() {
@@ -37,13 +52,21 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
     requestTimer = undefined;
     const sentText = readFieldText(field);
     const caret = caretOffset(sentText);
-    if (isReleased || !sentText.text.trim()) return;
-    const textBeforeCaret = caret !== undefined && wantsCompletionAt(sentText.text, caret) ? sentText.text.slice(0, caret) : null;
+    if (isReleased || !sentText.text.trim()) {
+      trace('typing', 'pause over, but the field is empty: nothing to send');
+      updateIsChecking();
+      return;
+    }
+    const noCompletionReason = whyNoCompletion(sentText.text, caret);
+    const textBeforeCaret = noCompletionReason === null ? sentText.text.slice(0, caret) : null;
+    trace('typing', `pause over: sending the draft${noCompletionReason === null ? ' (spelling + completion after the caret)' : ` (no completion: ${noCompletionReason})`}`, {
+      draft: sentText.text,
+      caret,
+    });
 
-    lastRequestAt = Date.now();
-    runningRequest?.abort();
     const request = new AbortController();
     runningRequest = request;
+    updateIsChecking();
     log({ type: 'check-request', text: sentText.text, completion: textBeforeCaret !== null });
     const answer = await requestCheck(
       options.apiKey,
@@ -57,25 +80,44 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
       },
       request.signal,
     );
-    if (isReleased || request.signal.aborted) return;
+    if (isReleased || request.signal.aborted) {
+      trace('typing', 'answer dropped: the assistant was released meanwhile');
+      return;
+    }
     runningRequest = undefined;
     log({ type: 'check-reply', reply: answer });
-    if (!answer) return;
 
-    spelling?.applyMistakes(answer.mistakes);
-    const currentText = readFieldText(field);
-    const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
-    if (textBeforeCaret !== null && nothingMoved && !isPanelOpen()) ghostText?.show(answer.completion, caret!, textBeforeCaret);
+    if (!answer) trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
+    if (answer) {
+      const currentText = readFieldText(field);
+      const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
+      trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
+      spelling?.applyMistakes(answer.mistakes);
+      if (textBeforeCaret === null) trace('typing', 'no completion was asked for');
+      else if (!nothingMoved) trace('typing', 'completion dropped: the text or the caret moved while waiting');
+      else if (isPanelOpen()) trace('typing', 'completion dropped: the popover or the polish preview is open');
+      else ghostText?.show(answer.completion, caret!, textBeforeCaret);
+    }
+    if (changedDuringRequest) {
+      changedDuringRequest = false;
+      trace('typing', 'the text changed while waiting: scheduling the next request');
+      scheduleRequest();
+    }
+    updateIsChecking();
   }
 
-  function wantsCompletionAt(text: string, caret: number): boolean {
-    if (!ghostText || ghostText.isShown()) return false;
-    return isGoodMomentForCompletion({
-      textBeforeCaret: text.slice(0, caret),
-      restOfLine: text.slice(caret).split('\n')[0],
-      isComposing,
-      isPanelOpen: isPanelOpen(),
-    });
+  function whyNoCompletion(text: string, caret: number | undefined): string | null {
+    if (!ghostText) return 'inline completion is off';
+    if (ghostText.isShown()) return 'a completion is already shown';
+    if (caret === undefined) return 'the caret is not in the field (or text is selected)';
+    if (isComposing) return 'an input method (IME) is composing';
+    if (isPanelOpen()) return 'the popover or the polish preview is open';
+    const restOfLine = text.slice(caret).split('\n')[0];
+    if (restOfLine.trim() !== '') return 'there is text after the caret on this line';
+    const currentSentence = text.slice(0, caret).split(SENTENCE_END).at(-1) ?? '';
+    const wordsInSentence = currentSentence.match(/[\p{L}\p{N}]+/gu) ?? [];
+    if (wordsInSentence.length < MIN_WORDS_IN_SENTENCE) return `the current sentence has ${wordsInSentence.length} word(s), fewer than ${MIN_WORDS_IN_SENTENCE}`;
+    return null;
   }
 
   function openPopover(): boolean {
@@ -90,6 +132,7 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   }
 
   function handleInput(event: InputEvent) {
+    trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
     if (event.inputType === 'historyUndo') spelling?.noticeUndo();
     if (!ghostText?.continueTyping(event)) ghostText?.hide();
     spelling?.redrawUnderlines();
@@ -133,6 +176,10 @@ export function createTypingAssist(context: AssistantContext, options: Assistant
   }
 
   function handleCleared() {
+    trace('typing', 'field cleared by the page (message sent): pending request cancelled');
+    clearTimeout(requestTimer);
+    requestTimer = undefined;
+    updateIsChecking();
     ghostText?.hide();
     spelling?.redrawUnderlines();
   }

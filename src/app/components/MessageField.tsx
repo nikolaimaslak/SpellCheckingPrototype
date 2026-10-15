@@ -21,7 +21,6 @@ export function MessageField({ options, onSend }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const { assistant, state } = useAssistant(fieldRef, options);
 
-  // The caret, scrolling and resizing happen outside the field's own events.
   useEffect(() => {
     if (!assistant) return;
     document.addEventListener('selectionchange', assistant.handleSelectionChange);
@@ -48,22 +47,30 @@ export function MessageField({ options, onSend }: Props) {
 
   return (
     <section className="space-y-2">
-      <div
-        ref={fieldRef}
-        contentEditable
-        dir="auto"
-        role="textbox"
-        aria-multiline="true"
-        aria-label="Agent message"
-        className="min-h-24 rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
-        onInput={(e) => assistant?.handleInput(e.nativeEvent as InputEvent)}
-        onKeyDown={onKeyDown}
-        onMouseUp={() => assistant?.handleClick()}
-        onCompositionStart={() => assistant?.handleCompositionStart()}
-        onCompositionEnd={() => assistant?.handleCompositionEnd()}
-        onBlur={() => assistant?.handleBlur()}
-        onScroll={() => assistant?.handleLayoutChange()}
-      />
+      <div className="relative">
+        <div
+          ref={fieldRef}
+          contentEditable
+          dir="auto"
+          role="textbox"
+          aria-multiline="true"
+          aria-label="Agent message"
+          className="min-h-24 rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
+          onInput={(e) => assistant?.handleInput(e.nativeEvent as InputEvent)}
+          onKeyDown={onKeyDown}
+          onMouseUp={() => assistant?.handleClick()}
+          onCompositionStart={() => assistant?.handleCompositionStart()}
+          onCompositionEnd={() => assistant?.handleCompositionEnd()}
+          onBlur={() => assistant?.handleBlur()}
+          onScroll={() => assistant?.handleLayoutChange()}
+        />
+        {(state.isChecking || state.polish.busy) && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-2 right-2 size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"
+          />
+        )}
+      </div>
       <p className="text-xs text-slate-500">
         Enter adds the message to Conversation as Agent, Shift+Enter breaks the line. Click an underlined word (or Ctrl+.) for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
       </p>

@@ -1,6 +1,7 @@
 import { createHighlight, replaceText } from './browser';
 import { caretOffset, placeCaret, rangeOf, readFieldText } from './text/field-text';
 import type { WordPlace } from './text/words';
+import { trace } from './trace';
 
 export interface WordReplacement {
   place: WordPlace;
@@ -23,7 +24,11 @@ export function replaceWords(field: HTMLElement, replacements: WordReplacement[]
   for (const replacement of lastFirst) {
     const { place } = replacement;
     const currentText = readFieldText(field);
-    if (currentText.text.slice(place.start, place.end) !== place.word) continue;
+    if (currentText.text.slice(place.start, place.end) !== place.word) {
+      trace('replace', `skipped "${place.word}" @${place.start}: the text there changed`);
+      continue;
+    }
+    trace('replace', `"${place.word}" @${place.start} → "${replacement.replacement}" (native edit: one Ctrl/Cmd+Z)`);
 
     replaceText(field, rangeOf(currentText, place.start, place.end), replacement.replacement);
     const lengthChange = replacement.replacement.length - place.word.length;
@@ -35,7 +40,10 @@ export function replaceWords(field: HTMLElement, replacements: WordReplacement[]
   if (!applied.length) return applied;
 
   const textAfter = readFieldText(field);
-  if (caretBefore !== undefined) placeCaret(textAfter, caretBefore + caretShift);
+  if (caretBefore !== undefined) {
+    trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
+    placeCaret(textAfter, caretBefore + caretShift);
+  }
   flash(replacedSpans.map((span) => rangeOf(textAfter, span.start, span.start + span.length)));
   return applied.reverse();
 }

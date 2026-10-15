@@ -3,6 +3,7 @@ import { caretOffset, readFieldText } from '../text/field-text';
 import { directionOfLastWord } from '../text/words';
 import type { AssistantContext, TextDirection } from '../types';
 import { ghostKeyAction, ghostLayout, nextWord } from './ghost-text-rules';
+import { trace } from '../trace';
 
 export function createGhostText(context: AssistantContext) {
   const { field, log } = context;
@@ -11,7 +12,11 @@ export function createGhostText(context: AssistantContext) {
   const currentCaretOffset = () => caretOffset(readFieldText(field));
 
   function show(completion: string, atCaretOffset: number, textBeforeCaret: string) {
-    if (!completion) return;
+    if (!completion) {
+      trace('ghost', 'the model has no completion for this place');
+      return;
+    }
+    trace('ghost', `showing ${JSON.stringify(completion)} after the caret`);
     shown = { remainingText: completion, caretOffset: atCaretOffset, direction: directionOfLastWord(textBeforeCaret) };
     redraw();
   }
@@ -29,6 +34,7 @@ export function createGhostText(context: AssistantContext) {
 
   function hide() {
     if (!shown) return;
+    trace('ghost', 'hidden');
     shown = undefined;
     redraw();
   }
@@ -41,6 +47,7 @@ export function createGhostText(context: AssistantContext) {
     const caret = caretRange();
     if (!shown || !caret) return;
     const acceptedText = shown.remainingText;
+    trace('ghost', `accepted ${JSON.stringify(acceptedText)} (one undo step)`);
     hide();
     replaceText(field, caret, acceptedText);
     log({ type: 'completion-accepted', text: acceptedText });
@@ -48,7 +55,9 @@ export function createGhostText(context: AssistantContext) {
 
   function acceptNextWord() {
     const caret = caretRange();
-    if (shown && caret) replaceText(field, caret, nextWord(shown.remainingText));
+    if (!shown || !caret) return;
+    trace('ghost', `accepting the next word ${JSON.stringify(nextWord(shown.remainingText))}`);
+    replaceText(field, caret, nextWord(shown.remainingText));
   }
 
   function continueTyping(event: InputEvent): boolean {
@@ -58,6 +67,7 @@ export function createGhostText(context: AssistantContext) {
     if (caretAfterTyping !== shown.caretOffset + event.data.length) return false;
     shown.remainingText = shown.remainingText.slice(event.data.length);
     shown.caretOffset = caretAfterTyping;
+    trace('ghost', `typed what the ghost text said: ${JSON.stringify(shown.remainingText)} left`);
     if (shown.remainingText) redraw();
     else hide();
     return true;
@@ -68,6 +78,7 @@ export function createGhostText(context: AssistantContext) {
     if (!shown || !focused || !field.contains(focused)) return;
     const action = ghostKeyAction(event, shown.direction, isMac);
     if (action === 'none') return;
+    trace('ghost', `key ${event.key}: ${action}`);
     if (action === 'dismiss') {
       hide();
       return;

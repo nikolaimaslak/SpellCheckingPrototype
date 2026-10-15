@@ -2,8 +2,10 @@ import { createHighlight, rectOfRange, replaceText, restoreSelection, selectedRa
 import { replaceWords } from '../replace-words';
 import type { Mistake } from '../openai/check-request';
 import { caretOffset, rangeOf, readFieldText, type FieldText } from '../text/field-text';
-import { directionOfLastWord, findWordPlaces, lowercaseWordsIn, type WordPlace } from '../text/words';
+import { placeMistakes, type PlacedMistake } from '../text/mistake-places';
+import { capitalizedWordsIn, directionOfLastWord, lowercaseWordsIn } from '../text/words';
 import type { AssistantContext, Turn } from '../types';
+import { trace } from '../trace';
 
 const SPELLING_ERROR_HIGHLIGHT = 'bp-spelling-error';
 const MAX_SUGGESTIONS = 5;
@@ -19,44 +21,61 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
   const customWords = new Set(settings.customWords);
   const underline = createHighlight(SPELLING_ERROR_HIGHLIGHT);
 
-  let mistakesByWord = new Map<string, Mistake>();
+  let mistakes: Mistake[] = [];
   const ignoredWords = new Set<string>();
   const replacementByOriginal = new Map<string, string>();
-  let openPopover: { place: WordPlace; selectionBefore?: Range } | undefined;
+  let openPopover: { place: PlacedMistake; selectionBefore?: Range } | undefined;
+  let lastUnderlinedWords = '';
 
   const spellcheckAttributeBefore = field.getAttribute('spellcheck');
   field.setAttribute('spellcheck', 'false');
 
-  const isOpenMistake = (word: string) => mistakesByWord.has(word) && !ignoredWords.has(word) && !customWords.has(word);
-  const mistakePlaces = (text: string) => findWordPlaces(text, [...mistakesByWord.keys()].filter(isOpenMistake));
+  const isOpenMistake = (place: PlacedMistake) => !ignoredWords.has(place.word) && !customWords.has(place.word);
+  const mistakePlaces = (text: string) => placeMistakes(text, mistakes).filter(isOpenMistake);
   const finishedMistakePlaces = (fieldText: FieldText) => {
     const caret = caretOffset(fieldText);
-    return mistakePlaces(fieldText.text).filter((place) => place.end !== caret);
+    const isFollowedByBoundary = (place: PlacedMistake) => /^[^\p{L}\p{M}\p{N}]/u.test(fieldText.text.slice(place.end));
+    return mistakePlaces(fieldText.text).filter((place) => place.end !== caret && isFollowedByBoundary(place));
   };
 
-  function applyMistakes(mistakes: Mistake[]) {
-    mistakesByWord = new Map(mistakes.map((mistake) => [mistake.word, mistake]));
+  function applyMistakes(newMistakes: Mistake[]) {
+    mistakes = newMistakes;
+    const fieldText = readFieldText(field);
+    const placed = placeMistakes(fieldText.text, mistakes);
+    const notFound = mistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
+    trace('spelling', `model reported ${mistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.sure ? ' (sure)' : ''}`));
+    if (notFound.length) trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
+    if (!settings.autoCorrect) trace('spelling', 'auto-correct is off: mistakes are only underlined');
     if (settings.autoCorrect) autoCorrectSureMistakes();
     redrawUnderlines();
   }
 
   function redrawUnderlines() {
     const fieldText = readFieldText(field);
-    if (!fieldText.text.trim()) mistakesByWord = new Map();
-    underline.show(finishedMistakePlaces(fieldText).map((place) => rangeOf(fieldText, place.start, place.end)));
+    if (!fieldText.text.trim()) mistakes = [];
+    const underlined = finishedMistakePlaces(fieldText);
+    const underlinedWords = underlined.map((place) => `${place.word}@${place.start}`).join(', ');
+    if (underlinedWords !== lastUnderlinedWords) trace('spelling', `underlined: ${underlinedWords || 'nothing'}`);
+    lastUnderlinedWords = underlinedWords;
+    underline.show(underlined.map((place) => rangeOf(fieldText, place.start, place.end)));
   }
 
+  const wouldUndoAutoCorrection = (place: PlacedMistake) => replacementByOriginal.get(place.mistake.fixes[0]) === place.word;
+
   function autoCorrectSureMistakes() {
-    const customerWords = new Set(
+    const namesFromCustomer = new Set(
       settings
         .conversation()
         .filter((turn) => turn.role === 'customer')
-        .flatMap((turn) => lowercaseWordsIn(turn.text)),
+        .flatMap((turn) => capitalizedWordsIn(turn.text)),
     );
-    const placesToFix = finishedMistakePlaces(readFieldText(field)).filter(
-      (place) => mistakesByWord.get(place.word)!.sure && !customerWords.has(place.word.toLowerCase()),
-    );
-    const replacements = placesToFix.map((place) => ({ place, replacement: mistakesByWord.get(place.word)!.fixes[0] }));
+    const candidates = finishedMistakePlaces(readFieldText(field));
+    const whySkipped = (place: PlacedMistake) =>
+      !place.mistake.sure ? 'model not sure' : namesFromCustomer.has(place.word) ? 'a name the customer wrote' : wouldUndoAutoCorrection(place) ? 'would undo an earlier auto-correction' : '';
+    candidates.filter(whySkipped).forEach((place) => trace('spelling', `not auto-corrected: ${place.word} (${whySkipped(place)})`));
+    const placesToFix = candidates.filter((place) => !whySkipped(place));
+    if (placesToFix.length) trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
+    const replacements = placesToFix.map((place) => ({ place, replacement: place.mistake.fixes[0] }));
     for (const { place, replacement } of replaceWords(field, replacements)) {
       replacementByOriginal.set(place.word, replacement);
       log({ type: 'autocorrect', original: place.word, replacement });
@@ -67,6 +86,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     const wordsInField = new Set(lowercaseWordsIn(readFieldText(field).text));
     for (const [original, replacement] of replacementByOriginal) {
       if (!wordsInField.has(original.toLowerCase())) continue;
+      trace('spelling', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
       replacementByOriginal.delete(original);
       ignoredWords.add(original);
       log({ type: 'revert', original, replacement });
@@ -81,13 +101,14 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     const place = mistakePlaces(fieldText.text).find((candidate) => candidate.start <= caret && caret <= candidate.end);
     if (!place) return false;
 
+    trace('spelling', `popover opened for "${place.word}"`, place.mistake.fixes);
     openPopover = { place, selectionBefore: selectedRange() };
     context.setState({
       popover: {
         wordRect: rectOfRange(rangeOf(fieldText, place.start, place.end)),
         dir: directionOfLastWord(place.word),
         font: getComputedStyle(field).font,
-        suggestions: mistakesByWord.get(place.word)!.fixes.slice(0, MAX_SUGGESTIONS),
+        suggestions: place.mistake.fixes.slice(0, MAX_SUGGESTIONS),
       },
     });
     return true;
@@ -105,7 +126,11 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     const place = openPopover?.place;
     closePopover(true);
     const fieldText = readFieldText(field);
-    if (!place || fieldText.text.slice(place.start, place.end) !== place.word) return;
+    if (!place || fieldText.text.slice(place.start, place.end) !== place.word) {
+      trace('spelling', 'pick ignored: the word changed while the popover was open');
+      return;
+    }
+    trace('spelling', `picked "${suggestion}" for "${place.word}"`);
     replaceText(field, rangeOf(fieldText, place.start, place.end), suggestion);
     log({ type: 'pick', original: place.word, replacement: suggestion });
     redrawUnderlines();
@@ -116,6 +141,7 @@ export function createSpelling(context: AssistantContext, settings: SpellingSett
     closePopover(true);
     if (!place) return;
     ignoredWords.add(place.word);
+    trace('spelling', `"${place.word}" ignored until the page reloads or a setting changes`);
     log({ type: 'ignore', word: place.word });
     redrawUnderlines();
   }
