@@ -32,7 +32,8 @@ export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
           OpenAI API key
           <input
             type="password"
-            className="mt-1 block w-full rounded border border-slate-300 p-2 font-mono text-xs"
+            className={`mt-1 block w-full rounded border p-2 font-mono text-xs ${settings.apiKey ? 'border-slate-300' : 'border-amber-500 ring-2 ring-amber-200'}`}
+            placeholder={settings.apiKey ? undefined : 'Paste your API key to turn the assistant on'}
             autoComplete="off"
             value={settings.apiKey}
             onChange={(e) => onUpdate({ apiKey: e.target.value.trim() })}
