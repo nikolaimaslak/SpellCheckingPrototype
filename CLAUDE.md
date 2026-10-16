@@ -12,7 +12,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 
 ## Layout
 
-- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (in memory only, lost on reload; applied to the field 500 ms after the last change, Reset), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
+- `index.html` + `src/app/`: the demo page, React + Tailwind: settings (in memory only, lost on reload; applied to the field 500 ms after the last change), one message field, the popover, ghost text and the Polish button drawn from the assistant's state, an on-page event log. `components/` and `hooks/` only draw and call; `lib/` holds the non-UI parts (settings, the English and Arabic LLM context presets, `ghost-layout.ts`: where the ghost text is drawn).
 - `src/assistant/`: `createAssistant(field, options)` in `index.ts`, the one entry point; it keeps the state the page draws (`popover`, `ghost`, `polish`) and makes the one `AssistantContext` that holds all the assistant's data. The other modules are plain functions that take that context; none keeps its own variables.
   - `types.ts`: options, state and event types.
   - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.

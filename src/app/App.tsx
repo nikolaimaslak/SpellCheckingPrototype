@@ -38,11 +38,7 @@ export function App() {
         Auto-complete and auto-correct
       </h1>
       <div className="grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
-        <SettingsPanel
-          settings={settings}
-          onUpdate={updateSettings}
-          onReset={() => setSettings(DEFAULT_SETTINGS)}
-        />
+        <SettingsPanel settings={settings} onUpdate={updateSettings} />
         <main className="space-y-4">
           <div className="flex flex-col gap-3 md:h-64 md:resize-y md:flex-row md:overflow-hidden">
             <LLMContextField value={settings.llmContext} onChange={(llmContext) => updateSettings({ llmContext })} />

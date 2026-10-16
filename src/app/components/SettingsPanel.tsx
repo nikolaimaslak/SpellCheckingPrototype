@@ -6,18 +6,12 @@ import { Section } from './Section';
 interface Props {
   settings: AppSettings;
   onUpdate: (patch: Partial<AppSettings>) => void;
-  onReset: () => void;
 }
 
-export function SettingsPanel({ settings, onUpdate, onReset }: Props) {
+export function SettingsPanel({ settings, onUpdate }: Props) {
   return (
     <aside className="space-y-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Settings</h2>
-        <button type="button" className="rounded border border-slate-300 px-2 py-1 text-sm hover:bg-slate-100" onClick={onReset}>
-          Reset
-        </button>
-      </div>
+      <h2 className="text-lg font-semibold">Settings</h2>
 
       <Section title="LLM">
         <label className="block text-sm">
