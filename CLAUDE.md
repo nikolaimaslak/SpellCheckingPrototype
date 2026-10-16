@@ -9,6 +9,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 | `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1). Spelling, completion and Fix spelling need an OpenAI API key typed on the page |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` |
+| `npm test` | Playwright tests in Chrome with a fake LLM (`tests/`), no key or network needed; also run in GitHub Actions |
 
 ## Layout
 
@@ -21,6 +22,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
   - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct, Undo as revert), `ghost-text.ts` (the completion shown after the caret and its keys; React draws it).
   - `replace-words.ts`: replaces words in the field (one undo step each), keeps the caret, flashes the replaced words. Used by auto-correct.
   - `fix-spelling/`: `fix-spelling.ts` (the Fix spelling button: the same check request, a preview replacing every mistake with its first fix, sure or not; Accept replaces the whole text as one undo step), `word-diff.ts` (the preview's diff).
+- `tests/`: Playwright tests. `demo-page.ts` opens the page with a fake LLM; `*.spec.ts` cover ghost text, spelling, Fix spelling, the page, reading the field's text (in the browser) and the pure text functions (in Node).
 - Code has no comments: names say what things are.
 
 ## Hard constraints

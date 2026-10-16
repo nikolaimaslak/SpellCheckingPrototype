@@ -247,7 +247,7 @@ async function askLLM(apiKey: string, userMessage: string, signal: AbortSignal):
   }
 }
 
-function buildUserMessage(request: CheckRequest): string {
+export function buildUserMessage(request: CheckRequest): string {
   return [
     request.llmContext,
     bulletList('Custom words', request.customWords),
@@ -272,7 +272,7 @@ function buildUserMessage(request: CheckRequest): string {
   }
 }
 
-function parseAnswer(reply: string): CheckAnswer | null {
+export function parseAnswer(reply: string): CheckAnswer | null {
   try {
     const parsed = JSON.parse(reply) as { mistakes?: unknown; nextSentence?: unknown };
     const rawMistakes = Array.isArray(parsed.mistakes) ? parsed.mistakes : [];

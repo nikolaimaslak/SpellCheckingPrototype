@@ -20,6 +20,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
+  const hasApiKey = !!settings.apiKey;
   const { assistant, state } = useAssistant(fieldRef, settings, onLog, onIgnoredWordsChange);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <button
           type="button"
           className="rounded border border-slate-300 bg-white px-2 py-1 text-sm hover:bg-slate-100 disabled:opacity-50"
-          disabled={!assistant || !settings.apiKey || state.fixSpelling.busy}
+          disabled={!assistant || !hasApiKey || state.fixSpelling.busy}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => void assistant?.fixSpellingNow()}
         >
@@ -50,14 +51,15 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
       <div className="relative">
         <div
           ref={fieldRef}
-          contentEditable
+          contentEditable={hasApiKey}
+          aria-disabled={!hasApiKey}
           spellCheck={!settings.spellCheck}
           dir="auto"
           role="textbox"
           aria-multiline="true"
           aria-label="Agent message"
-          aria-placeholder="Type your message to the customer…"
-          className={`relative min-h-40 resize-y overflow-auto rounded-lg border border-slate-300 bg-white p-3 text-base shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${isEmpty ? 'before:pointer-events-none before:absolute before:text-slate-400 before:content-[attr(aria-placeholder)]' : ''}`}
+          aria-placeholder={hasApiKey ? 'Type your message to the customer…' : 'Paste your API key in the settings to start typing.'}
+          className={`relative min-h-40 resize-y overflow-auto rounded-lg border border-slate-300 bg-white p-3 aria-disabled:cursor-not-allowed aria-disabled:bg-slate-50 text-base shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${isEmpty ? 'before:pointer-events-none before:absolute before:text-slate-400 before:content-[attr(aria-placeholder)]' : ''}`}
           onInput={(e) => {
             setIsEmpty(!e.currentTarget.textContent);
             assistant?.handleInput(e.nativeEvent as InputEvent);
