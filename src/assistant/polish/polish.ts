@@ -1,4 +1,4 @@
-import { checkDraftWithLLM } from '../llm/check-request';
+import { checkDraftWithLLM } from '../llm';
 import { replaceText } from '../browser';
 import type { WordReplacement } from '../replace-words';
 import { rangeOf, readFieldText } from '../text/field-text';
@@ -38,9 +38,7 @@ export async function polishNow(context: AssistantContext) {
     {
       draft,
       shouldAskCompletion: false,
-      conversation: options.conversation,
-      cannedResponses: options.canned,
-      articles: options.kb,
+      llmContext: options.llmContext,
       customWords: [...context.customWords],
       ignoredWords: context.ignoredWords,
     },

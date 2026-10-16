@@ -14,8 +14,12 @@ export function measureGhost(field: HTMLElement, direction: TextDirection): CSSP
   const lineHeight = parseFloat(style.lineHeight);
   const halfLeading = Number.isFinite(lineHeight) ? (lineHeight - (caret.bottom - caret.top)) / 2 : 0;
   const indentToCaret = direction === 'rtl' ? content.right - caret.left : caret.right - content.left;
+  const top = startOnNextLine ? caret.bottom + halfLeading : caret.top - halfLeading;
+  const spaceBelow = Math.max(0, content.bottom - parseFloat(style.paddingBottom) - top);
   return {
-    top: startOnNextLine ? caret.bottom + halfLeading : caret.top - halfLeading,
+    top,
+    maxHeight: Number.isFinite(lineHeight) ? Math.floor(spaceBelow / lineHeight) * lineHeight : spaceBelow,
+    overflow: 'hidden',
     left: content.left,
     width: Math.max(0, content.right - content.left),
     textIndent: startOnNextLine ? 0 : Math.max(0, indentToCaret),

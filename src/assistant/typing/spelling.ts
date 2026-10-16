@@ -1,6 +1,6 @@
 import { removeHighlight, replaceText, restoreSelection, selectedRange, showHighlight } from '../browser';
 import { replaceWords } from '../replace-words';
-import type { Mistake } from '../llm/check-request';
+import type { Mistake } from '../llm';
 import { caretOffset, rangeOf, readFieldText, type FieldText } from '../text/field-text';
 import { findMistakesInText, type PlacedMistake } from '../text/mistake-places';
 import { directionOfLastWord, findWordPlaces } from '../text/words';

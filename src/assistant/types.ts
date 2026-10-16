@@ -1,4 +1,4 @@
-import type { Mistake } from './llm/check-request';
+import type { Mistake } from './llm';
 import type { DiffSegment } from './polish/word-diff';
 import type { PlacedMistake } from './text/mistake-places';
 
@@ -35,7 +35,7 @@ export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
   polish: PolishState;
-  loader?: { kind: 'pause'; startedAt: number; durationMs: number } | { kind: 'request' };
+  loader?: { kind: 'debounce'; startedAt: number; durationMs: number } | { kind: 'request' };
 }
 
 export const INITIAL_STATE: AssistantState = { polish: { busy: false } };
@@ -57,9 +57,7 @@ export interface AssistantOptions {
   customWords: string[];
   ignoredWords: string[];
   onIgnoredWordsChange: (words: string[]) => void;
-  canned: string[];
-  kb: string[];
-  conversation: string;
+  llmContext: string;
   log: (event: AssistEvent) => void;
 }
 
@@ -72,7 +70,7 @@ export interface SpellingData {
 export interface TypingData {
   requestTimer?: ReturnType<typeof setTimeout>;
   runningRequest?: AbortController;
-  pauseStartedAt: number;
+  debounceStartedAt: number;
   lastSentText: string;
   isComposing: boolean;
 }

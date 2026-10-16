@@ -1,11 +1,32 @@
-import { useEffect, useState, useSyncExternalStore, type RefObject } from 'react';
-import { createAssistant, type Assistant, type AssistantOptions } from '../../assistant';
+import { useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
+import { createAssistant, type Assistant, type AssistantOptions, type AssistEvent } from '../../assistant';
 import { INITIAL_STATE } from '../../assistant/types';
+import { lines, type AppSettings } from '../lib/settings';
 
 const noSubscription = () => () => {};
 const initialState = () => INITIAL_STATE;
 
-export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: AssistantOptions) {
+export function useAssistant(
+  fieldRef: RefObject<HTMLElement | null>,
+  settings: AppSettings,
+  onLog: (event: AssistEvent) => void,
+  onIgnoredWordsChange: (text: string) => void,
+) {
+  const options = useMemo(() => {
+    const assistantOptions: AssistantOptions = {
+      spellCheckMode: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto-correct' : 'underline',
+      customWords: lines(settings.customDictionary),
+      ignoredWords: lines(settings.ignoredWords),
+      onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
+      withCompletion: settings.completion,
+      debounceMs: settings.debounceMs,
+      apiKey: settings.apiKey,
+      llmContext: settings.llmContext,
+      log: onLog,
+    };
+    return assistantOptions;
+  }, [settings, onLog, onIgnoredWordsChange]);
+
   const [assistant, setAssistant] = useState<Assistant>();
 
   useEffect(() => {
@@ -19,7 +40,11 @@ export function useAssistant(fieldRef: RefObject<HTMLElement | null>, options: A
       created.release();
       setAssistant(undefined);
     };
-  }, [fieldRef, options]);
+  }, [fieldRef]);
+
+  useEffect(() => {
+    assistant?.updateOptions(options);
+  }, [assistant, options]);
 
   const state = useSyncExternalStore(assistant?.subscribe ?? noSubscription, assistant?.getState ?? initialState);
   return { assistant, state };

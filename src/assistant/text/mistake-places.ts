@@ -1,4 +1,4 @@
-import type { Mistake } from '../llm/check-request';
+import type { Mistake } from '../llm';
 import { findWordPlaces, type WordPlace } from './words';
 import { trace } from '../trace';
 

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { AssistantOptions, AssistEvent } from '../../assistant';
+import { useEffect, useRef, useState } from 'react';
+import type { AssistEvent } from '../../assistant';
 import { useAssistant } from '../hooks/useAssistant';
-import { lines, type AppSettings } from '../lib/settings';
+import type { AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
 import { PolishBar } from './PolishBar';
-import { PauseRing } from './PauseRing';
+import { DebounceRing } from './DebounceRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
@@ -15,26 +15,9 @@ interface Props {
 }
 
 export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
-  const options = useMemo(() => {
-    const assistantOptions: AssistantOptions = {
-      spellCheckMode: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto-correct' : 'underline',
-      customWords: lines(settings.customDictionary),
-      ignoredWords: lines(settings.ignoredWords),
-      onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
-      withCompletion: settings.completion,
-      debounceMs: settings.debounceMs,
-      apiKey: settings.apiKey,
-      canned: lines(settings.canned),
-      kb: lines(settings.kb),
-      conversation: settings.conversation,
-      log: onLog,
-    };
-    return assistantOptions;
-  }, [settings, onLog, onIgnoredWordsChange]);
-
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const { assistant, state } = useAssistant(fieldRef, options);
+  const { assistant, state } = useAssistant(fieldRef, settings, onLog, onIgnoredWordsChange);
 
   useEffect(() => {
     if (!assistant) {
@@ -67,7 +50,7 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
-        {state.loader?.kind === 'pause' && <PauseRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
+        {state.loader?.kind === 'debounce' && <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
         {(state.loader?.kind === 'request' || state.polish.busy) && (
           <span
             aria-hidden="true"

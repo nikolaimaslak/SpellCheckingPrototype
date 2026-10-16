@@ -1,4 +1,4 @@
-import { checkDraftWithLLM } from '../llm/check-request';
+import { checkDraftWithLLM } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
@@ -12,7 +12,7 @@ function updateLoader(context: AssistantContext) {
   const loader: AssistantState['loader'] = typing.runningRequest
     ? { kind: 'request' }
     : typing.requestTimer
-      ? { kind: 'pause', startedAt: typing.pauseStartedAt, durationMs: context.options.debounceMs }
+      ? { kind: 'debounce', startedAt: typing.debounceStartedAt, durationMs: context.options.debounceMs }
       : undefined;
   if (JSON.stringify(context.getState().loader) === JSON.stringify(loader)) {
     return;
@@ -32,10 +32,10 @@ function scheduleLLMRequest(context: AssistantContext) {
     trace('typing', 'spelling and completion are off: no request');
     return;
   }
-  trace('typing', typing.requestTimer ? `typing continues: pause timer restarted (${options.debounceMs} ms)` : `pause timer started: request in ${options.debounceMs} ms unless typing continues`);
+  trace('typing', typing.requestTimer ? `typing continues: debounce timer restarted (${options.debounceMs} ms)` : `debounce timer started: request in ${options.debounceMs} ms unless typing continues`);
   clearTimeout(typing.requestTimer);
   typing.requestTimer = setTimeout(() => void sendLLMRequest(context), options.debounceMs);
-  typing.pauseStartedAt = Date.now();
+  typing.debounceStartedAt = Date.now();
   updateLoader(context);
 }
 
@@ -47,12 +47,12 @@ async function sendLLMRequest(context: AssistantContext) {
   const caret = caretOffset(sentText);
   typing.lastSentText = sentText.text;
   if (!sentText.text.trim()) {
-    trace('typing', 'pause over, but the field is empty: nothing to send');
+    trace('typing', 'debounce over, but the field is empty: nothing to send');
     updateLoader(context);
     return;
   }
   const shouldAskCompletion = canAskCompletion(context, sentText.text, caret);
-  trace('typing', `pause over: sending the draft${shouldAskCompletion ? ' (spelling + completion after the caret)' : ' (spelling only)'}`, {
+  trace('typing', `debounce over: sending the draft${shouldAskCompletion ? ' (spelling + completion after the caret)' : ' (spelling only)'}`, {
     draft: sentText.text,
     caret,
   });
@@ -67,9 +67,7 @@ async function sendLLMRequest(context: AssistantContext) {
       draft: sentText.text,
       shouldAskCompletion,
       isCaretOnNewLine: sentText.text.slice(0, caret).endsWith('\n'),
-      conversation: options.conversation,
-      cannedResponses: options.canned,
-      articles: options.kb,
+      llmContext: options.llmContext,
       customWords: [...context.customWords],
       ignoredWords: context.ignoredWords,
     },
@@ -126,12 +124,17 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   if (event.inputType === 'historyUndo') {
     noticeUndo(context);
   }
-  if (!ghostFollowsTyping(context, event)) {
+  const isFollowingGhost = ghostFollowsTyping(context, event);
+  if (!isFollowingGhost) {
     hideGhost(context);
   }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
     trace('typing', 'our own replacement (auto-correct, pick or Polish): no new request');
+    return;
+  }
+  if (isFollowingGhost && context.getState().ghost) {
+    trace('typing', 'the input followed the ghost text and some of it is left: no new request');
     return;
   }
   if (

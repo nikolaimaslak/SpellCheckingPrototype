@@ -1,7 +1,7 @@
 import { acceptPolish, dismissPolish, polishNow, stopPolish } from './polish/polish';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
-import { handleGhostKey } from './typing/ghost-text';
+import { handleGhostKey, hideGhost } from './typing/ghost-text';
 import * as spelling from './typing/spelling';
 import { trace } from './trace';
 
@@ -15,7 +15,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
   const context: AssistantContext = {
     field,
     options,
-    log: options.log,
+    log: (event) => context.options.log(event),
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
@@ -25,7 +25,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
     spelling: { mistakes: [], replacementByOriginal: new Map() },
-    typing: { pauseStartedAt: 0, lastSentText: '', isComposing: false },
+    typing: { debounceStartedAt: 0, lastSentText: '', isComposing: false },
     polish: {},
   };
 
@@ -54,8 +54,24 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     acceptPolish: () => acceptPolish(context),
     dismissPolish: () => dismissPolish(context),
 
+    updateOptions(newOptions: AssistantOptions) {
+      trace('assistant', 'settings changed', { spellCheckMode: newOptions.spellCheckMode, withCompletion: newOptions.withCompletion, hasApiKey: !!newOptions.apiKey });
+      context.options = newOptions;
+      context.ignoredWords = newOptions.ignoredWords;
+      context.customWords = new Set(newOptions.customWords);
+      if (newOptions.spellCheckMode === 'off') {
+        context.spelling.mistakes = [];
+        spelling.stopSpelling(context);
+      } else {
+        spelling.redrawUnderlines(context);
+      }
+      if (!newOptions.withCompletion) {
+        hideGhost(context);
+      }
+    },
+
     release() {
-      trace('assistant', 'released (settings changed or the page is closing)');
+      trace('assistant', 'released (the page is closing)');
       checkWhileTyping.stopCheckWhileTyping(context);
       spelling.stopSpelling(context);
       stopPolish(context);
