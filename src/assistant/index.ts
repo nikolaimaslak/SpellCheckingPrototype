@@ -1,7 +1,7 @@
 import { acceptSpellingFixes, dismissSpellingFixes, fixSpellingNow, stopFixSpelling } from './fix-spelling/fix-spelling';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
-import { handleGhostKey, hideGhost } from './typing/ghost-text';
+import { hideGhost } from './typing/ghost-text';
 import * as spelling from './typing/spelling';
 import { trace } from './trace';
 
@@ -39,7 +39,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     },
 
     handleInput: (event: InputEvent) => checkWhileTyping.handleInput(context, event),
-    handleKeyDown: (event: KeyboardEvent) => handleGhostKey(context, event),
+    handleKeyDown: (event: KeyboardEvent) => checkWhileTyping.handleKeyDown(context, event),
     handleClick: () => checkWhileTyping.handleClick(context),
     handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),
     handleCompositionStart: () => checkWhileTyping.handleCompositionStart(context),

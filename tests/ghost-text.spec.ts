@@ -85,3 +85,13 @@ test('no completion is asked for with text after the caret on its line', async (
   expect(demo.userMessages[1]).not.toContain('Complete the draft');
   expect(demo.sentDrafts()[1]).toBe('XHi Sasha');
 });
+
+test('Escape while the debounce runs cancels the request', async ({ page }) => {
+  const demo = await openDemoPage(page, completionAfterReceived);
+  await demo.field.click();
+  await page.keyboard.type('Your request was received');
+  await page.keyboard.press('Escape');
+  await demo.waitPastDebounce();
+  expect(demo.userMessages).toHaveLength(0);
+  await expect.poll(demo.ghostText).toBe(null);
+});

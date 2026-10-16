@@ -1,7 +1,7 @@
 import { checkDraftWithLLM } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
-import { ghostFollowsTyping, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
+import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
 import { displayAndAutocorrectMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
@@ -21,13 +21,29 @@ function updateLoader(context: AssistantContext) {
   context.setState({ loader });
 }
 
-function scheduleLLMRequest(context: AssistantContext) {
-  const { typing, options } = context;
+function abortRunningRequest(context: AssistantContext, why: string) {
+  const { typing } = context;
   if (typing.runningRequest) {
-    trace('typing', 'text changed while a request is running: it is aborted');
+    trace('typing', `${why}: the running request is aborted`);
     typing.runningRequest.abort();
     typing.runningRequest = undefined;
   }
+}
+
+export function cancelPendingRequest(context: AssistantContext) {
+  const { typing } = context;
+  if (typing.requestTimer) {
+    trace('typing', 'Escape: the debounce timer is cleared');
+    clearTimeout(typing.requestTimer);
+    typing.requestTimer = undefined;
+  }
+  abortRunningRequest(context, 'Escape');
+  updateLoader(context);
+}
+
+function scheduleLLMRequest(context: AssistantContext) {
+  const { typing, options } = context;
+  abortRunningRequest(context, 'text changed');
   if (options.spellCheckMode === 'off' && !options.withCompletion) {
     trace('typing', 'spelling and completion are off: no request');
     return;
@@ -151,6 +167,13 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
     return;
   }
   scheduleLLMRequest(context);
+}
+
+export function handleKeyDown(context: AssistantContext, event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    cancelPendingRequest(context);
+  }
+  handleGhostKey(context, event);
 }
 
 export function handleKeyUp(context: AssistantContext, event: KeyboardEvent) {
