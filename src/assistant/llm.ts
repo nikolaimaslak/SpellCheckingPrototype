@@ -5,6 +5,7 @@ export const MODEL = 'gpt-4.1-mini';
 export interface CheckRequest {
   draft: string;
   shouldAskCompletion: boolean;
+  caretOffset?: number;
   isCaretOnNewLine?: boolean;
   llmContext: string;
   customWords: string[];
@@ -42,15 +43,16 @@ Proofreading rules:
 - If an unknown word has no plausible spelling correction, treat it as a name and leave it unchanged.
 - Words listed under "Ignored words" may still be reported when incorrect, but always with "sure": false. Being listed does not itself make a word incorrect.
 - Exclusions take priority: an ignored word that also belongs to an excluded category must not be reported.
+- ‸ marks the agent's caret and is not part of the draft: never put it in "word" or "context".
 - Do not report a word solely because punctuation is missing after it.
-- Do not report an unfinished final word that "nextSentence" can continue.
+- Do not report an unfinished word right before ‸ that "nextSentence" can continue.
 - Return "mistakes": [] when there are no reportable mistakes.
 
 Completion rules:
-- Generate "nextSentence" only when explicitly instructed to "Complete the draft with one short sentence." Otherwise, return "nextSentence": "".
-- Return only the text to append at the caret after the draft. Never repeat, replace, or correct existing draft text.
+- Generate "nextSentence" only when explicitly instructed to "Complete the draft at ‸ with one short sentence." Otherwise, return "nextSentence": "".
+- Return only the text to insert at ‸. Never repeat, replace, or correct existing draft text, before or after ‸.
 - Keep the continuation short and limited to one sentence. It may complete a partial sentence or supply the remaining letters of an unfinished word.
-- Use the language at the end of the draft.
+- Use the language of the text just before ‸.
 - Include any necessary leading space or punctuation.
 - When told the agent is on a new line, start a new sentence with no leading space or newline.
 - Use case fields and the customer profile to determine what fits. Adapt or translate wording from canned responses and the knowledge base, shortening it as needed.
@@ -62,9 +64,9 @@ const EXAMPLE_MESSAGES = [
   {
     role: 'user',
     content: `Agent's draft:
-Hi John we will update you details
+Hi John we will update you details‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -73,9 +75,9 @@ Complete the draft with one short sentence.`,
   {
     role: 'user',
     content: `Agent's draft:
-Hi Sasha your request has been received
+Hi Sasha your request has been received‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -84,9 +86,9 @@ Complete the draft with one short sentence.`,
   {
     role: 'user',
     content: `Agent's draft:
-Hi Sasha
+Hi Sasha‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -96,9 +98,9 @@ Complete the draft with one short sentence.`,
     role: 'user',
     content: `Agent's draft:
 Hi Sasha,
+‸
 
-
-Complete the draft with one short sentence. The agent is on a new line: start a new sentence with no leading space.`,
+Complete the draft at ‸ with one short sentence. The agent is on a new line: start a new sentence with no leading space.`,
   },
   {
     role: 'assistant',
@@ -107,9 +109,9 @@ Complete the draft with one short sentence. The agent is on a new line: start a 
   {
     role: 'user',
     content: `Agent's draft:
-I will sen the form
+I will sen the form‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -127,9 +129,9 @@ We will update update your details`,
   {
     role: 'user',
     content: `Agent's draft:
-Your contribution rec
+Your contribution rec‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -142,9 +144,9 @@ Complete the draft with one short sentence.`,
 - Thank you for contacting us; is there anything else I can help you with today?
 
 Agent's draft:
-Hi John, your request
+Hi John, your request‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
@@ -161,9 +163,9 @@ Knowledge base:
 Agent's draft:
 Dear Sasha, your request has been received.
 
+‸
 
-
-Complete the draft with one short sentence. The agent is on a new line: start a new sentence with no leading space.`,
+Complete the draft at ‸ with one short sentence. The agent is on a new line: start a new sentence with no leading space.`,
   },
   {
     role: 'assistant',
@@ -175,13 +177,26 @@ Complete the draft with one short sentence. The agent is on a new line: start a 
 - Thank you for contacting us; is there anything else I can help you with today?
 
 Agent's draft:
-شكراً لتواصلك معنا
+شكراً لتواصلك معنا‸
 
-Complete the draft with one short sentence.`,
+Complete the draft at ‸ with one short sentence.`,
   },
   {
     role: 'assistant',
     content: '{"mistakes": [], "nextSentence": "، هل يمكنني مساعدتك في شيء آخر؟"}',
+  },
+  {
+    role: 'user',
+    content: `Agent's draft:
+Hi Sasha,
+‸
+Best regards, Daniel
+
+Complete the draft at ‸ with one short sentence. The agent is on a new line: start a new sentence with no leading space.`,
+  },
+  {
+    role: 'assistant',
+    content: '{"mistakes": [], "nextSentence": "Your request has been received and will be processed soon."}',
   },
 ];
 
@@ -237,13 +252,20 @@ function buildUserMessage(request: CheckRequest): string {
     request.llmContext,
     bulletList('Custom words', request.customWords),
     bulletList('Ignored words', request.ignoredWords),
-    `Agent's draft:\n${request.draft}`,
+    `Agent's draft:\n${draftWithCaret(request)}`,
     request.shouldAskCompletion
-      ? `Complete the draft with one short sentence.${request.isCaretOnNewLine ? ' The agent is on a new line: start a new sentence with no leading space.' : ''}`
+      ? `Complete the draft at ‸ with one short sentence.${request.isCaretOnNewLine ? ' The agent is on a new line: start a new sentence with no leading space.' : ''}`
       : '',
   ]
     .filter(Boolean)
     .join('\n\n');
+
+  function draftWithCaret({ draft, shouldAskCompletion, caretOffset }: CheckRequest): string {
+    if (!shouldAskCompletion || caretOffset === undefined) {
+      return draft;
+    }
+    return `${draft.slice(0, caretOffset)}‸${draft.slice(caretOffset)}`;
+  }
 
   function bulletList(title: string, items: string[]): string {
     return items.length ? `${title}:\n${items.map((item) => `- ${item}`).join('\n')}` : '';

@@ -66,6 +66,7 @@ async function sendLLMRequest(context: AssistantContext) {
     {
       draft: sentText.text,
       shouldAskCompletion,
+      caretOffset: caret,
       isCaretOnNewLine: sentText.text.slice(0, caret).endsWith('\n'),
       llmContext: options.llmContext,
       customWords: [...context.customWords],
@@ -105,7 +106,8 @@ function canAskCompletion(context: AssistantContext, text: string, caret: number
   if (!context.options.withCompletion || caret === undefined || context.typing.isComposing) {
     return false;
   }
-  return text.slice(caret).trim() === '';
+  const restOfCaretLine = text.slice(caret).split('\n')[0];
+  return restOfCaretLine.trim() === '';
 }
 
 function openPopover(context: AssistantContext) {

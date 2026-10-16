@@ -13,7 +13,8 @@ export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: Re
     };
   }, []);
 
-  const layout = fieldRef.current && measureGhost(fieldRef.current, ghost.direction);
+  const hasTextBelow = ghost.fieldText.slice(ghost.caretOffset).trim() !== '';
+  const layout = fieldRef.current && measureGhost(fieldRef.current, ghost.direction, hasTextBelow);
   if (!layout) {
     return null;
   }

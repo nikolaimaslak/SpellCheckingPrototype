@@ -98,18 +98,27 @@ function followDeletedSpaces(context: AssistantContext, ghost: GhostState): bool
 }
 
 function followNewLine(context: AssistantContext, ghost: GhostState): boolean {
-  const now = readFieldText(context.field);
-  const caret = caretOffset(now);
-  if (caret === undefined || caret <= ghost.caretOffset) {
+  const textNow = readFieldText(context.field);
+  const caretNow = caretOffset(textNow);
+  if (caretNow === undefined || caretNow <= ghost.caretOffset) {
     return false;
   }
-  const before = ghost.fieldText;
-  const inserted = now.text.slice(ghost.caretOffset, caret);
-  if (before.slice(0, ghost.caretOffset) + inserted + before.slice(ghost.caretOffset) !== now.text || inserted.trim()) {
+  const textWhenGhostShown = ghost.fieldText;
+  const typedSinceGhostShown = textNow.text.slice(ghost.caretOffset, caretNow);
+  const textIfOnlyTypedAtGhost = textWhenGhostShown.slice(0, ghost.caretOffset) + typedSinceGhostShown + textWhenGhostShown.slice(ghost.caretOffset);
+  const isAddedOnlyAtGhost = textIfOnlyTypedAtGhost === textNow.text;
+  const isAddedOnlyNewLines = typedSinceGhostShown.trim() === '';
+  if (!isAddedOnlyAtGhost || !isAddedOnlyNewLines) {
     return false;
   }
-  trace('ghost', 'new line: the ghost text moves to it');
-  context.setState({ ghost: { ...ghost, caretOffset: caret, fieldText: now.text } });
+  const ghostTextWithoutLeadingSpacesAndCommas = ghost.text.replace(/^[\s,،]+/u, '');
+  if (!ghostTextWithoutLeadingSpacesAndCommas) {
+    return false;
+  }
+  trace('ghost', `new line: the ghost text moves to it as ${JSON.stringify(ghostTextWithoutLeadingSpacesAndCommas)}`);
+  context.setState({
+    ghost: { ...ghost, text: ghostTextWithoutLeadingSpacesAndCommas, caretOffset: caretNow, fieldText: textNow.text },
+  });
   return true;
 }
 
@@ -130,6 +139,10 @@ export function ghostFollowsTyping(context: AssistantContext, event: InputEvent)
   const fieldText = readFieldText(context.field);
   const caretAfterTyping = caretOffset(fieldText);
   if (caretAfterTyping !== ghost.caretOffset + event.data.length) {
+    trace('ghost', `typed text matches the ghost, but the caret is at ${caretAfterTyping}, not ${ghost.caretOffset} + ${event.data.length}: hidden`, {
+      textWhenShown: ghost.fieldText,
+      textNow: fieldText.text,
+    });
     return false;
   }
   const remainingText = ghost.text.slice(event.data.length);

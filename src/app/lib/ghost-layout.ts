@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { caretRect, contentRect } from '../../assistant/browser';
 import type { TextDirection } from '../../assistant/types';
 
-export function measureGhost(field: HTMLElement, direction: TextDirection): CSSProperties | null {
+export function measureGhost(field: HTMLElement, direction: TextDirection, hasTextBelow: boolean): CSSProperties | null {
   const caret = caretRect(field);
   const content = contentRect(field);
   const style = getComputedStyle(field);
@@ -15,7 +15,8 @@ export function measureGhost(field: HTMLElement, direction: TextDirection): CSSP
   const halfLeading = Number.isFinite(lineHeight) ? (lineHeight - (caret.bottom - caret.top)) / 2 : 0;
   const indentToCaret = direction === 'rtl' ? content.right - caret.left : caret.right - content.left;
   const top = startOnNextLine ? caret.bottom + halfLeading : caret.top - halfLeading;
-  const spaceBelow = Math.max(0, content.bottom - parseFloat(style.paddingBottom) - top);
+  const spaceToFieldBottom = Math.max(0, content.bottom - parseFloat(style.paddingBottom) - top);
+  const spaceBelow = hasTextBelow && Number.isFinite(lineHeight) ? Math.min(lineHeight, spaceToFieldBottom) : spaceToFieldBottom;
   return {
     top,
     maxHeight: Number.isFinite(lineHeight) ? Math.floor(spaceBelow / lineHeight) * lineHeight : spaceBelow,

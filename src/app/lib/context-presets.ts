@@ -3,16 +3,10 @@ export const CONTEXT_PRESETS: Record<string, string> = {
 - Name: Daniel Haddad
 - Team: Pension Services, Tier 1
 - Languages: English, Arabic
-- Signature: Best regards, Daniel
 
 Customer profile:
 - Name: Sasha Ivanova
-- Registration number: 1048 2273 91
-- Member since: 2009
-- Employer: Al Noor Trading Co.
 - Phone: +966 5X XXX 4417
-- Preferred language: English
-- Preferred contact: SMS
 
 Conversation:
 Customer: Hello, I submitted a request for my pension documents last week. When will it be processed?

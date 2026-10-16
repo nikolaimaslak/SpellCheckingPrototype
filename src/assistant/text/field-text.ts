@@ -4,10 +4,16 @@ interface TextPiece {
   length: number;
 }
 
+interface EmptyLine {
+  element: Element;
+  start: number;
+}
+
 export interface FieldText {
   field: HTMLElement;
   text: string;
   pieces: TextPiece[];
+  emptyLines: EmptyLine[];
 }
 
 const BLOCK_TAGS = new Set(['DIV', 'P', 'LI', 'UL', 'OL', 'BLOCKQUOTE', 'PRE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'TABLE', 'TR', 'TD', 'TH']);
@@ -16,16 +22,26 @@ const IMAGE_PLACEHOLDER = '￼';
 export function readFieldText(field: HTMLElement): FieldText {
   let text = '';
   const pieces: TextPiece[] = [];
-  const startNewLine = () => {
-    if (text && !text.endsWith('\n')) {
+  const emptyLines: EmptyLine[] = [];
+  let hasLines = false;
+  let isNewLinePending = false;
+
+  const write = (data: string) => {
+    if (isNewLinePending) {
       text += '\n';
+      isNewLinePending = false;
     }
+    text += data;
+    hasLines = true;
   };
+  const isLastInBlock = (node: Node) =>
+    !node.nextSibling && (node.parentNode === field || BLOCK_TAGS.has((node.parentNode as Element).tagName));
 
   const visit = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {
       const data = (node as Text).data;
       if (data) {
+        write('');
         pieces.push({ node: node as Text, start: text.length, length: data.length });
         text += data;
       }
@@ -36,25 +52,33 @@ export function readFieldText(field: HTMLElement): FieldText {
     }
     const tag = (node as Element).tagName;
     if (tag === 'BR') {
-      text += '\n';
+      if (!isLastInBlock(node)) {
+        write('\n');
+      }
       return;
     }
     if (tag === 'IMG') {
-      text += IMAGE_PLACEHOLDER;
+      write(IMAGE_PLACEHOLDER);
       return;
     }
-    const isBlock = BLOCK_TAGS.has(tag);
-    if (isBlock) {
-      startNewLine();
+    if (!BLOCK_TAGS.has(tag)) {
+      node.childNodes.forEach(visit);
+      return;
     }
+    if (hasLines) {
+      isNewLinePending = true;
+    }
+    const lengthBefore = text.length;
     node.childNodes.forEach(visit);
-    if (isBlock) {
-      startNewLine();
+    if (text.length === lengthBefore) {
+      write('');
+      emptyLines.push({ element: node as Element, start: text.length });
     }
+    isNewLinePending = true;
   };
 
   field.childNodes.forEach(visit);
-  return { field, text, pieces };
+  return { field, text, pieces, emptyLines };
 }
 
 export function caretOffset(fieldText: FieldText): number | undefined {
@@ -71,6 +95,10 @@ function offsetOfDomPoint(fieldText: FieldText, node: Node, offsetInNode: number
     return piece.start + Math.min(offsetInNode, piece.length);
   }
 
+  const emptyLine = fieldText.emptyLines.find((line) => line.element.contains(node));
+  if (emptyLine) {
+    return emptyLine.start;
+  }
   const point = document.createRange();
   point.setStart(node, offsetInNode);
   const firstPieceAfter = fieldText.pieces.find((candidate) => point.comparePoint(candidate.node, 0) >= 0);
