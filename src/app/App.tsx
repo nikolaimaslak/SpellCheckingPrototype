@@ -68,7 +68,7 @@ export function App() {
                 disabled={!settings.apiKey || !settings.spellCheck}
                 onChange={(autoCorrect) => updateSettings({ autoCorrect })}
               />
-              <Checkbox label="Completion" checked={settings.completion} disabled={!settings.apiKey} onChange={(completion) => updateSettings({ completion })} />
+              <Checkbox label="Auto-complete" checked={settings.completion} disabled={!settings.apiKey} onChange={(completion) => updateSettings({ completion })} />
             </>
           }
           onLog={logEvent}

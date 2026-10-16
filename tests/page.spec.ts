@@ -6,7 +6,7 @@ test('without a key the field and the toggles are off', async ({ page }) => {
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'false');
   expect(await field.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('"Paste your API key above to start typing."');
-  for (const name of ['Spell check', 'Auto-correct', 'Completion']) {
+  for (const name of ['Spell check', 'Auto-correct', 'Auto-complete']) {
     await expect(page.getByRole('checkbox', { name })).toBeDisabled();
   }
 });

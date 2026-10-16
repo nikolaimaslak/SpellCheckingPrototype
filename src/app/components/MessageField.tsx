@@ -75,7 +75,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <dt>
           <kbd>Tab</kbd>
         </dt>
-        <dd>accept the grey suggestion</dd>
+        <dd>accept the auto-completion</dd>
         <dt>
           <kbd>{isMac ? 'Option' : 'Ctrl'}</kbd>+<kbd>→</kbd>
         </dt>
@@ -83,9 +83,9 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <dt>
           <kbd>Esc</kbd>
         </dt>
-        <dd>hide the suggestion or close the popup</dd>
+        <dd>hide the auto-completion / close the suggestions popup / cancel the LLM request</dd>
         <dt>
-          <kbd>↑</kbd>,<kbd>↓</kbd>,<kbd>Enter</kbd>
+          <kbd>↑</kbd>/<kbd>↓</kbd>,<kbd>Enter</kbd>
         </dt>
         <dd>pick a fix in the popup</dd>
         <dt>

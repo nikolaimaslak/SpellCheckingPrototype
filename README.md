@@ -1,6 +1,6 @@
 # Auto-complete and auto-correct
 
-Demo of LLM spell checking, auto-correct, inline completion and a Fix spelling button, in English and Arabic.
+Demo of LLM spell checking, auto-correct, inline auto-completion and a Fix spelling button, in English and Arabic.
 
 **Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
 
