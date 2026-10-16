@@ -77,8 +77,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         </dt>
         <dd>accept the grey suggestion</dd>
         <dt>
-          <kbd>{isMac ? 'Option' : 'Ctrl'}</kbd>
-          <kbd>→</kbd>
+          <kbd>{isMac ? 'Option' : 'Ctrl'}</kbd>+<kbd>→</kbd>
         </dt>
         <dd>accept one word of it</dd>
         <dt>
@@ -86,14 +85,11 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         </dt>
         <dd>hide the suggestion or close the popup</dd>
         <dt>
-          <kbd>↑</kbd>
-          <kbd>↓</kbd>
-          <kbd>Enter</kbd>
+          <kbd>↑</kbd>,<kbd>↓</kbd>,<kbd>Enter</kbd>
         </dt>
         <dd>pick a fix in the popup</dd>
         <dt>
-          <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>
-          <kbd>Z</kbd>
+          <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>+<kbd>Z</kbd>
         </dt>
         <dd>undo an auto-correction</dd>
       </dl>
