@@ -25,7 +25,7 @@ export function LLMContextField({ value, onChange }: Props) {
         </div>
       </div>
       <textarea
-        className="block h-40 w-full resize-none rounded border border-slate-300 p-2 font-mono text-xs lg:h-full lg:min-h-0 [unicode-bidi:plaintext]"
+        className="block h-28 w-full resize-none rounded border border-slate-300 p-2 font-mono text-xs lg:h-full lg:min-h-0 [unicode-bidi:plaintext]"
         dir="auto"
         spellCheck={false}
         value={value}

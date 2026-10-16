@@ -1,6 +1,6 @@
 import { trace } from './trace';
 
-export const MODEL = 'gpt-4.1-mini';
+const MODEL = 'gpt-4.1-mini';
 
 export interface CheckRequest {
   draft: string;

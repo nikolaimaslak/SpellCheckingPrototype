@@ -6,7 +6,6 @@ export interface AppSettings {
   customDictionary: string;
   ignoredWords: string;
   completion: boolean;
-  debounceMs: number;
   apiKey: string;
   llmContext: string;
 }
@@ -17,7 +16,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   ignoredWords: '',
   completion: true,
-  debounceMs: 1000,
   apiKey: '',
   llmContext: CONTEXT_PRESETS.English,
 };

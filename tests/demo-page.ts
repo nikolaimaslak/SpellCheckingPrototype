@@ -7,7 +7,7 @@ export interface FakeAnswer {
 }
 
 export const ACCEPT_WORD_KEY = process.platform === 'darwin' ? 'Alt+ArrowRight' : 'Control+ArrowRight';
-export const DEBOUNCE_MS = 100;
+export const DEBOUNCE_MS = 1000;
 
 export async function openDemoPage(page: Page, answerFor: (draft: string) => FakeAnswer) {
   const userMessages: string[] = [];
@@ -20,7 +20,6 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(answer) } }] } });
   });
   await page.goto('/');
-  await page.getByLabel('Debounce, ms').fill(String(DEBOUNCE_MS));
   await page.getByLabel('OpenAI API key').fill('test-key');
   await expect(page.getByRole('button', { name: 'Fix spelling' })).toBeEnabled();
 
@@ -31,6 +30,6 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     userMessages,
     ghostText: () => ghost.textContent({ timeout: 1000 }).catch(() => null),
     sentDrafts: () => userMessages.map((message) => message.split("Agent's draft:\n")[1].split('\n\nComplete the draft')[0]),
-    waitPastDebounce: () => page.waitForTimeout(DEBOUNCE_MS * 4),
+    waitPastDebounce: () => page.waitForTimeout(DEBOUNCE_MS * 1.5),
   };
 }

@@ -4,7 +4,7 @@ Demo of LLM spell checking, auto-correct, inline completion and a Fix spelling b
 
 **Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
 
-Paste an OpenAI API key in the settings (kept in memory only, not saved).
+Paste an OpenAI API key at the top of the page (kept in memory only, not saved).
 
 ## Run locally
 

@@ -3,6 +3,8 @@ import { createAssistant, type Assistant, type AssistantOptions, type AssistEven
 import { INITIAL_STATE } from '../../assistant/types';
 import { lines, type AppSettings } from '../lib/settings';
 
+const DEBOUNCE_MS = 1000;
+
 const noSubscription = () => () => {};
 const initialState = () => INITIAL_STATE;
 
@@ -19,7 +21,7 @@ export function useAssistant(
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
       withCompletion: settings.completion,
-      debounceMs: settings.debounceMs,
+      debounceMs: DEBOUNCE_MS,
       apiKey: settings.apiKey,
       llmContext: settings.llmContext,
       log: onLog,

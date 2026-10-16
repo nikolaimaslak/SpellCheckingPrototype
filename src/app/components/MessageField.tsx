@@ -58,7 +58,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
           role="textbox"
           aria-multiline="true"
           aria-label="Agent message"
-          aria-placeholder={hasApiKey ? 'Type your message to the customer…' : 'Paste your API key in the settings to start typing.'}
+          aria-placeholder={hasApiKey ? 'Type your message to the customer…' : 'Paste your API key above to start typing.'}
           className={`relative min-h-40 resize-y overflow-auto rounded-lg border border-slate-300 bg-white p-3 aria-disabled:cursor-not-allowed aria-disabled:bg-slate-50 text-base shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${isEmpty ? 'before:pointer-events-none before:absolute before:text-slate-400 before:content-[attr(aria-placeholder)]' : ''}`}
           onInput={(e) => {
             setIsEmpty(!e.currentTarget.textContent);
