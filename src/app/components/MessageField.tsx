@@ -17,6 +17,7 @@ interface Props {
 export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [isEmpty, setIsEmpty] = useState(true);
   const { assistant, state } = useAssistant(fieldRef, settings, onLog, onIgnoredWordsChange);
 
   useEffect(() => {
@@ -40,8 +41,12 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           role="textbox"
           aria-multiline="true"
           aria-label="Agent message"
-          className="min-h-24 resize-y overflow-auto rounded border border-slate-300 bg-white p-2 text-base outline-none focus:border-blue-500"
-          onInput={(e) => assistant?.handleInput(e.nativeEvent as InputEvent)}
+          aria-placeholder="Type your reply to the customer…"
+          className={`relative min-h-40 resize-y overflow-auto rounded-lg border border-slate-300 bg-white p-3 text-base shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${isEmpty ? 'before:pointer-events-none before:absolute before:text-slate-400 before:content-[attr(aria-placeholder)]' : ''}`}
+          onInput={(e) => {
+            setIsEmpty(!e.currentTarget.textContent);
+            assistant?.handleInput(e.nativeEvent as InputEvent);
+          }}
           onKeyDown={(e) => assistant?.handleKeyDown(e.nativeEvent)}
           onKeyUp={(e) => assistant?.handleKeyUp(e.nativeEvent)}
           onMouseUp={() => assistant?.handleClick()}

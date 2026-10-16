@@ -1,6 +1,5 @@
 import { MODEL } from '../../assistant/llm';
 import type { AppSettings } from '../lib/settings';
-import { Checkbox } from './Checkbox';
 import { Section } from './Section';
 
 interface Props {
@@ -44,20 +43,6 @@ export function SettingsPanel({ settings, onUpdate }: Props) {
           />
           <span className="mt-1 block text-xs text-slate-500">Pause after the last keystroke before the text is sent to the model.</span>
         </label>
-      </Section>
-
-      <Section title="Spelling">
-        <Checkbox label="Spell check (underline + suggestions)" checked={settings.spellCheck} onChange={(spellCheck) => onUpdate({ spellCheck })} />
-        <Checkbox
-          label="Auto-correct words the model is sure about"
-          checked={settings.autoCorrect}
-          disabled={!settings.spellCheck}
-          onChange={(autoCorrect) => onUpdate({ autoCorrect })}
-        />
-      </Section>
-
-      <Section title="Completion">
-        <Checkbox label="Inline completion (Tab accepts)" checked={settings.completion} onChange={(completion) => onUpdate({ completion })} />
       </Section>
     </aside>
   );
