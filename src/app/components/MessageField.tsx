@@ -17,11 +17,11 @@ interface Props {
 export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
-      spelling: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto' : 'suggest',
+      spellCheckMode: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto-correct' : 'underline',
       customWords: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
-      completion: settings.completion,
+      withCompletion: settings.completion,
       debounceMs: settings.debounceMs,
       apiKey: settings.apiKey,
       canned: lines(settings.canned),

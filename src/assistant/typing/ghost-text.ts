@@ -30,17 +30,18 @@ function nextWord(text: string): string {
   return /^\s*\S+/u.exec(text)?.[0] ?? text;
 }
 
-export function showGhost(context: AssistantContext, completion: string, atCaretOffset: number, textBeforeCaret: string) {
+export function showGhost(context: AssistantContext, completion: string, atCaretOffset: number) {
   if (!completion) {
     trace('ghost', 'the model has no completion for this place');
     return;
   }
   trace('ghost', `showing ${JSON.stringify(completion)} after the caret`);
+  const fieldText = readFieldText(context.field).text;
   const ghost: GhostState = {
     text: completion,
     caretOffset: atCaretOffset,
-    fieldText: readFieldText(context.field).text,
-    direction: directionOfLastWord(textBeforeCaret),
+    fieldText,
+    direction: directionOfLastWord(fieldText),
   };
   context.setState({ ghost });
 }

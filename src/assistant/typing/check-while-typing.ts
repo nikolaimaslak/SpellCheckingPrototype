@@ -1,4 +1,4 @@
-import { requestCheck } from '../llm/check-request';
+import { checkDraftWithLLM } from '../llm/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
@@ -6,10 +6,6 @@ import { applyMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnde
 import { trace } from '../trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
-const MIN_WORDS_IN_SENTENCE = 3;
-const SENTENCE_END = /[.!?؟\n]/u;
-
-const isPanelOpen = (context: AssistantContext) => !!context.spelling.openPopover || !!context.getState().polish.preview;
 
 function updateLoader(context: AssistantContext) {
   const { typing } = context;
@@ -32,7 +28,7 @@ function scheduleLLMRequest(context: AssistantContext) {
     typing.runningRequest.abort();
     typing.runningRequest = undefined;
   }
-  if (options.spelling === 'off' && !options.completion) {
+  if (options.spellCheckMode === 'off' && !options.withCompletion) {
     trace('typing', 'spelling and completion are off: no request');
     return;
   }
@@ -55,9 +51,8 @@ async function sendLLMRequest(context: AssistantContext) {
     updateLoader(context);
     return;
   }
-  const noCompletionReason = whyNoCompletion(context, sentText.text, caret);
-  const textBeforeCaret = noCompletionReason === null ? sentText.text.slice(0, caret) : null;
-  trace('typing', `pause over: sending the draft${noCompletionReason === null ? ' (spelling + completion after the caret)' : ` (no completion: ${noCompletionReason})`}`, {
+  const shouldAskCompletion = canAskCompletion(context, sentText.text, caret);
+  trace('typing', `pause over: sending the draft${shouldAskCompletion ? ' (spelling + completion after the caret)' : ' (spelling only)'}`, {
     draft: sentText.text,
     caret,
   });
@@ -65,12 +60,13 @@ async function sendLLMRequest(context: AssistantContext) {
   const request = new AbortController();
   typing.runningRequest = request;
   updateLoader(context);
-  context.log({ type: 'send-to-llm', text: sentText.text, completion: textBeforeCaret !== null });
-  const answer = await requestCheck(
+  context.log({ type: 'send-to-llm', text: sentText.text, withCompletion: shouldAskCompletion });
+  const answer = await checkDraftWithLLM(
     options.apiKey,
     {
       draft: sentText.text,
-      textBeforeCaret,
+      shouldAskCompletion,
+      isCaretOnNewLine: sentText.text.slice(0, caret).endsWith('\n'),
       conversation: options.conversation,
       cannedResponses: options.canned,
       articles: options.kb,
@@ -90,17 +86,15 @@ async function sendLLMRequest(context: AssistantContext) {
     const currentText = readFieldText(field);
     const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
     trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
-    if (options.spelling !== 'off') {
+    if (options.spellCheckMode !== 'off') {
       applyMistakes(context, answer.mistakes);
     }
-    if (textBeforeCaret === null) {
+    if (!shouldAskCompletion) {
       trace('typing', 'no completion was asked for');
     } else if (!nothingMoved) {
       trace('typing', 'completion dropped: the text or the caret moved while waiting');
-    } else if (isPanelOpen(context)) {
-      trace('typing', 'completion dropped: the popover or the polish preview is open');
     } else {
-      showGhost(context, answer.completion, caret!, textBeforeCaret);
+      showGhost(context, answer.completion, caret!);
     }
   } else {
     trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
@@ -108,29 +102,12 @@ async function sendLLMRequest(context: AssistantContext) {
   updateLoader(context);
 }
 
-function whyNoCompletion(context: AssistantContext, text: string, caret: number | undefined): string | null {
-  if (!context.options.completion) {
-    return 'inline completion is off';
+function canAskCompletion(context: AssistantContext, text: string, caret: number | undefined): boolean {
+  // isComposing: an input method (Japanese, Chinese, accent keys) is still building the last word.
+  if (!context.options.withCompletion || caret === undefined || context.typing.isComposing) {
+    return false;
   }
-  if (caret === undefined) {
-    return 'the caret is not in the field (or text is selected)';
-  }
-  if (context.typing.isComposing) {
-    return 'an input method (IME) is composing';
-  }
-  if (isPanelOpen(context)) {
-    return 'the popover or the polish preview is open';
-  }
-  const restOfLine = text.slice(caret).split('\n')[0];
-  if (restOfLine.trim() !== '') {
-    return 'there is text after the caret on this line';
-  }
-  const currentSentence = text.slice(0, caret).split(SENTENCE_END).at(-1) ?? '';
-  const wordsInSentence = currentSentence.match(/[\p{L}\p{N}]+/gu) ?? [];
-  if (wordsInSentence.length < MIN_WORDS_IN_SENTENCE) {
-    return `the current sentence has ${wordsInSentence.length} word(s), fewer than ${MIN_WORDS_IN_SENTENCE}`;
-  }
-  return null;
+  return text.slice(caret).trim() === '';
 }
 
 function openPopover(context: AssistantContext) {
@@ -157,7 +134,10 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
     trace('typing', 'our own replacement (auto-correct, pick or Polish): no new request');
     return;
   }
-  if (event.inputType.startsWith('delete') && readFieldText(context.field).text.trimEnd() === context.typing.lastSentText.trimEnd()) {
+  if (
+    event.inputType.startsWith('delete') &&
+    readFieldText(context.field).text.trimEnd() === context.typing.lastSentText.trimEnd()
+  ) {
     trace('typing', 'only trailing spaces were removed since the last request: no new request');
     return;
   }

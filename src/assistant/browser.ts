@@ -44,7 +44,15 @@ export function caretRect(field: HTMLElement): Rect | null {
   }
   range.setStart(node, selection.anchorOffset);
   const box = range.getBoundingClientRect();
-  return box.height ? toRect(box) : null;
+  if (box.height) {
+    return toRect(box);
+  }
+  const emptyLineBreak = node.childNodes[selection.anchorOffset];
+  if (emptyLineBreak instanceof HTMLBRElement) {
+    const lineBox = emptyLineBreak.getBoundingClientRect();
+    return { left: lineBox.left, right: lineBox.left, top: lineBox.top, bottom: lineBox.bottom };
+  }
+  return null;
 }
 
 export function contentRect(field: HTMLElement): Rect {

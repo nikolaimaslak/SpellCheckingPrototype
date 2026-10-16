@@ -1,4 +1,4 @@
-import { requestCheck } from '../llm/check-request';
+import { checkDraftWithLLM } from '../llm/check-request';
 import { replaceText } from '../browser';
 import type { WordReplacement } from '../replace-words';
 import { rangeOf, readFieldText } from '../text/field-text';
@@ -33,11 +33,11 @@ export async function polishNow(context: AssistantContext) {
   polish.runningRequest = request;
   updateState(context, { busy: true, preview: undefined });
   context.log({ type: 'polish-request', text: draft });
-  const answer = await requestCheck(
+  const answer = await checkDraftWithLLM(
     options.apiKey,
     {
       draft,
-      textBeforeCaret: null,
+      shouldAskCompletion: false,
       conversation: options.conversation,
       cannedResponses: options.canned,
       articles: options.kb,

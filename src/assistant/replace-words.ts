@@ -1,4 +1,4 @@
-import { replaceText, showHighlight } from './browser';
+import { replaceText, restoreSelection, selectedRange, showHighlight } from './browser';
 import { caretOffset, placeCaret, rangeOf, readFieldText } from './text/field-text';
 import type { WordPlace } from './text/words';
 import type { AssistantContext } from './types';
@@ -24,6 +24,8 @@ export function replaceWords(context: AssistantContext, replacements: WordReplac
 function replaceWordsNow(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
   const { field } = context;
   const caretBefore = caretOffset(readFieldText(field));
+  const selectionBefore = selectedRange();
+  const isCaretOnEmptyLine = selectionBefore?.startContainer.nodeType === Node.ELEMENT_NODE;
   const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
   const applied: WordReplacement[] = [];
   const replacedSpans: { start: number; length: number }[] = [];
@@ -52,7 +54,10 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
   }
 
   const textAfter = readFieldText(field);
-  if (caretBefore !== undefined) {
+  if (isCaretOnEmptyLine && selectionBefore) {
+    trace('replace', 'caret put back on its empty line');
+    restoreSelection(field, selectionBefore);
+  } else if (caretBefore !== undefined) {
     trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     placeCaret(textAfter, caretBefore + caretShift);
   }

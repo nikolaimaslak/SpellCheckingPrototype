@@ -33,7 +33,7 @@ export function applyMistakes(context: AssistantContext, newMistakes: Mistake[])
   if (notFound.length) {
     trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
   }
-  if (context.options.spelling === 'auto') {
+  if (context.options.spellCheckMode === 'auto-correct') {
     autoCorrectSureMistakes(context);
   } else {
     trace('spelling', 'auto-correct is off: mistakes are only underlined');

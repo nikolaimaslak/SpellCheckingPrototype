@@ -41,7 +41,7 @@ export interface AssistantState {
 export const INITIAL_STATE: AssistantState = { polish: { busy: false } };
 
 export type AssistEvent =
-  | { type: 'send-to-llm'; text: string; completion: boolean }
+  | { type: 'send-to-llm'; text: string; withCompletion: boolean }
   | { type: 'llm-answer' | 'polish-reply'; reply: unknown }
   | { type: 'polish-request'; text: string }
   | { type: 'autocorrect' | 'revert' | 'pick'; original: string; replacement: string }
@@ -51,8 +51,8 @@ export type AssistEvent =
 
 export interface AssistantOptions {
   apiKey: string;
-  spelling: 'off' | 'suggest' | 'auto';
-  completion: boolean;
+  spellCheckMode: 'off' | 'underline' | 'auto-correct';
+  withCompletion: boolean;
   debounceMs: number;
   customWords: string[];
   ignoredWords: string[];

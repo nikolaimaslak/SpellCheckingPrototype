@@ -2,10 +2,10 @@ import { trace } from '../trace';
 
 export const MODEL = 'gpt-4.1-mini';
 
-interface Question {
+interface LLMQuestion {
   apiKey: string;
-  instructions: string;
-  message: string;
+  systemMessage: string;
+  userMessage: string;
   signal: AbortSignal;
   timeoutMs: number;
   answerAsJson?: boolean;
@@ -15,7 +15,7 @@ interface ChatCompletion {
   choices?: { message?: { content?: string | null } }[];
 }
 
-export async function askLLM(question: Question): Promise<string | null> {
+export async function askLLM(question: LLMQuestion): Promise<string | null> {
   if (!question.apiKey) {
     trace('llm', 'no API key: request skipped');
     return null;
@@ -30,8 +30,8 @@ export async function askLLM(question: Question): Promise<string | null> {
         temperature: 0.2,
         ...(question.answerAsJson && { response_format: { type: 'json_object' } }),
         messages: [
-          { role: 'system', content: question.instructions },
-          { role: 'user', content: question.message },
+          { role: 'system', content: question.systemMessage },
+          { role: 'user', content: question.userMessage },
         ],
       }),
       signal: AbortSignal.any([question.signal, AbortSignal.timeout(question.timeoutMs)]),

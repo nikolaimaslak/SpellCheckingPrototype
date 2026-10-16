@@ -29,7 +29,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     polish: {},
   };
 
-  trace('assistant', 'attached to the field', { spelling: options.spelling, completion: options.completion, hasApiKey: !!options.apiKey });
+  trace('assistant', 'attached to the field', { spellCheckMode: options.spellCheckMode, withCompletion: options.withCompletion, hasApiKey: !!options.apiKey });
 
   return {
     getState: () => state,
