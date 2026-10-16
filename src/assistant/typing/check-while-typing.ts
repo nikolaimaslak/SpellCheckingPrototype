@@ -1,7 +1,7 @@
 import { requestCheck } from '../llm/check-request';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
-import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
+import { ghostFollowsTyping, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
 import { applyMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
@@ -25,7 +25,7 @@ function updateLoader(context: AssistantContext) {
   context.setState({ loader });
 }
 
-function scheduleRequest(context: AssistantContext) {
+function scheduleLLMRequest(context: AssistantContext) {
   const { typing, options } = context;
   if (typing.runningRequest) {
     trace('typing', 'text changed while a request is running: it is aborted');
@@ -38,12 +38,12 @@ function scheduleRequest(context: AssistantContext) {
   }
   trace('typing', typing.requestTimer ? `typing continues: pause timer restarted (${options.debounceMs} ms)` : `pause timer started: request in ${options.debounceMs} ms unless typing continues`);
   clearTimeout(typing.requestTimer);
-  typing.requestTimer = setTimeout(() => void sendRequestNow(context), options.debounceMs);
+  typing.requestTimer = setTimeout(() => void sendLLMRequest(context), options.debounceMs);
   typing.pauseStartedAt = Date.now();
   updateLoader(context);
 }
 
-async function sendRequestNow(context: AssistantContext) {
+async function sendLLMRequest(context: AssistantContext) {
   const { typing, options, field } = context;
   clearTimeout(typing.requestTimer);
   typing.requestTimer = undefined;
@@ -161,11 +161,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
     trace('typing', 'only trailing spaces were removed since the last request: no new request');
     return;
   }
-  scheduleRequest(context);
-}
-
-export function handleKeyDown(context: AssistantContext, event: KeyboardEvent) {
-  handleGhostKey(context, event);
+  scheduleLLMRequest(context);
 }
 
 export function handleKeyUp(context: AssistantContext, event: KeyboardEvent) {

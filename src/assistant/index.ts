@@ -1,6 +1,7 @@
 import { acceptPolish, dismissPolish, polishNow, stopPolish } from './polish/polish';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
+import { handleGhostKey } from './typing/ghost-text';
 import * as spelling from './typing/spelling';
 import { trace } from './trace';
 
@@ -38,7 +39,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     },
 
     handleInput: (event: InputEvent) => checkWhileTyping.handleInput(context, event),
-    handleKeyDown: (event: KeyboardEvent) => checkWhileTyping.handleKeyDown(context, event),
+    handleKeyDown: (event: KeyboardEvent) => handleGhostKey(context, event),
     handleClick: () => checkWhileTyping.handleClick(context),
     handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),
     handleCompositionStart: () => checkWhileTyping.handleCompositionStart(context),
