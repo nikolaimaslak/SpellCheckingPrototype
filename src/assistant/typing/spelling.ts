@@ -24,7 +24,7 @@ function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText):
   return mistakePlaces(context, fieldText.text).filter((place) => place.end !== caret && isFollowedByBoundary(place));
 }
 
-export function applyMistakes(context: AssistantContext, newMistakes: Mistake[]) {
+export function displayAndAutocorrectMistakes(context: AssistantContext, newMistakes: Mistake[]) {
   context.spelling.mistakes = newMistakes;
   const fieldText = readFieldText(context.field);
   const placed = findMistakesInText(fieldText.text, newMistakes);
@@ -76,7 +76,7 @@ export function noticeUndo(context: AssistantContext) {
 }
 
 export function openPopoverAtCaret(context: AssistantContext): boolean {
-  if (context.getState().polish.preview) {
+  if (context.getState().fixSpelling.preview) {
     return false;
   }
   const fieldText = readFieldText(context.field);

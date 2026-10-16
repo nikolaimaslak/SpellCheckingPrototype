@@ -1,4 +1,4 @@
-import { acceptPolish, dismissPolish, polishNow, stopPolish } from './polish/polish';
+import { acceptSpellingFixes, dismissSpellingFixes, fixSpellingNow, stopFixSpelling } from './fix-spelling/fix-spelling';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
 import { handleGhostKey, hideGhost } from './typing/ghost-text';
@@ -26,7 +26,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     customWords: new Set(options.customWords),
     spelling: { mistakes: [], replacementByOriginal: new Map() },
     typing: { debounceStartedAt: 0, lastSentText: '', isComposing: false },
-    polish: {},
+    fixSpelling: {},
   };
 
   trace('assistant', 'attached to the field', { spellCheckMode: options.spellCheckMode, withCompletion: options.withCompletion, hasApiKey: !!options.apiKey });
@@ -50,9 +50,9 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     ignoreWord: () => spelling.ignoreWord(context),
     addToDictionary: (word: string) => spelling.addToDictionary(context, word),
     closePopover: (returnCaret: boolean) => spelling.closePopover(context, returnCaret),
-    polishNow: () => polishNow(context),
-    acceptPolish: () => acceptPolish(context),
-    dismissPolish: () => dismissPolish(context),
+    fixSpellingNow: () => fixSpellingNow(context),
+    acceptSpellingFixes: () => acceptSpellingFixes(context),
+    dismissSpellingFixes: () => dismissSpellingFixes(context),
 
     updateOptions(newOptions: AssistantOptions) {
       trace('assistant', 'settings changed', { spellCheckMode: newOptions.spellCheckMode, withCompletion: newOptions.withCompletion, hasApiKey: !!newOptions.apiKey });
@@ -74,7 +74,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       trace('assistant', 'released (the page is closing)');
       checkWhileTyping.stopCheckWhileTyping(context);
       spelling.stopSpelling(context);
-      stopPolish(context);
+      stopFixSpelling(context);
       listeners.clear();
     },
   };

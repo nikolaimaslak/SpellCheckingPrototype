@@ -1,20 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AssistEvent } from '../../assistant';
+import { isMac } from '../../assistant/browser';
 import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
-import { PolishBar } from './PolishBar';
+import { SpellingFixesPreview } from './SpellingFixesPreview';
 import { DebounceRing } from './DebounceRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
 interface Props {
   settings: AppSettings;
+  toolbar: ReactNode;
   onLog: (event: AssistEvent) => void;
   onAddToDictionary: (word: string) => void;
   onIgnoredWordsChange: (text: string) => void;
 }
 
-export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
+export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
@@ -32,6 +34,19 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
 
   return (
     <section className="space-y-2">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+        <h2 className="mr-auto text-lg font-semibold">Message field</h2>
+        {toolbar}
+        <button
+          type="button"
+          className="rounded border border-slate-300 bg-white px-2 py-1 text-sm hover:bg-slate-100 disabled:opacity-50"
+          disabled={!assistant || !settings.apiKey || state.fixSpelling.busy}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => void assistant?.fixSpellingNow()}
+        >
+          {state.fixSpelling.busy ? 'Fixing…' : 'Fix spelling'}
+        </button>
+      </div>
       <div className="relative">
         <div
           ref={fieldRef}
@@ -41,7 +56,7 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           role="textbox"
           aria-multiline="true"
           aria-label="Agent message"
-          aria-placeholder="Type your reply to the customer…"
+          aria-placeholder="Type your message to the customer…"
           className={`relative min-h-40 resize-y overflow-auto rounded-lg border border-slate-300 bg-white p-3 text-base shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 ${isEmpty ? 'before:pointer-events-none before:absolute before:text-slate-400 before:content-[attr(aria-placeholder)]' : ''}`}
           onInput={(e) => {
             setIsEmpty(!e.currentTarget.textContent);
@@ -56,24 +71,44 @@ export function MessageField({ settings, onLog, onAddToDictionary, onIgnoredWord
           onBlur={() => setIsFocused(false)}
         />
         {state.loader?.kind === 'debounce' && <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
-        {(state.loader?.kind === 'request' || state.polish.busy) && (
+        {(state.loader?.kind === 'request' || state.fixSpelling.busy) && (
           <span
             aria-hidden="true"
             className="pointer-events-none absolute top-2 right-2 size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"
           />
         )}
       </div>
-      <p className="text-xs text-slate-500">
-        Click an underlined word for suggestions. Tab accepts the grey suggestion. Ctrl/Cmd+Z undoes any automatic change.
-      </p>
+      <dl className="grid grid-cols-[auto_auto] justify-start items-center gap-x-3 gap-y-1 text-sm text-slate-600 [&_dt]:flex [&_dt]:justify-end [&_dt]:gap-1 [&_kbd]:rounded [&_kbd]:border [&_kbd]:border-b-2 [&_kbd]:border-slate-300 [&_kbd]:bg-slate-50 [&_kbd]:px-1.5 [&_kbd]:font-mono [&_kbd]:text-xs">
+        <dt>
+          <kbd>Tab</kbd>
+        </dt>
+        <dd>accept the grey suggestion</dd>
+        <dt>
+          <kbd>{isMac ? 'Option' : 'Ctrl'}</kbd>
+          <kbd>→</kbd>
+        </dt>
+        <dd>accept one word of it</dd>
+        <dt>
+          <kbd>Esc</kbd>
+        </dt>
+        <dd>hide the suggestion or close the popup</dd>
+        <dt>
+          <kbd>↑</kbd>
+          <kbd>↓</kbd>
+          <kbd>Enter</kbd>
+        </dt>
+        <dd>pick a fix in the popup</dd>
+        <dt>
+          <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>
+          <kbd>Z</kbd>
+        </dt>
+        <dd>undo an auto-correction</dd>
+      </dl>
       {assistant && (
         <>
-          <PolishBar
-            polish={state.polish}
-            onPolish={() => void assistant.polishNow()}
-            onAccept={assistant.acceptPolish}
-            onDismiss={assistant.dismissPolish}
-          />
+          {state.fixSpelling.preview && (
+            <SpellingFixesPreview preview={state.fixSpelling.preview} onAccept={assistant.acceptSpellingFixes} onDismiss={assistant.dismissSpellingFixes} />
+          )}
           {state.ghost && isFocused && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover

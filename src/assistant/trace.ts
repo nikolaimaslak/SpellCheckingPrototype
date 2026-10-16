@@ -5,7 +5,7 @@ const AREA_COLORS = {
   spelling: '#dc2626',
   replace: '#ea580c',
   ghost: '#64748b',
-  polish: '#16a34a',
+  'fix-spelling': '#16a34a',
 };
 
 export type TraceArea = keyof typeof AREA_COLORS;

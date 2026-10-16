@@ -29,7 +29,7 @@ export function SettingsPanel({ settings, onUpdate }: Props) {
             value={settings.apiKey}
             onChange={(e) => onUpdate({ apiKey: e.target.value.trim() })}
           />
-          <span className="mt-1 block text-xs text-slate-500">Spelling, completion and Polish all ask the LLM. Kept in memory only, never saved.</span>
+          <span className="mt-1 block text-xs text-slate-500">Spelling, completion and Fix spelling all ask the LLM. Kept in memory only, never saved.</span>
         </label>
         <label className="block text-sm">
           Debounce, ms

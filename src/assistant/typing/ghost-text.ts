@@ -97,6 +97,22 @@ function followDeletedSpaces(context: AssistantContext, ghost: GhostState): bool
   return true;
 }
 
+function followNewLine(context: AssistantContext, ghost: GhostState): boolean {
+  const now = readFieldText(context.field);
+  const caret = caretOffset(now);
+  if (caret === undefined || caret <= ghost.caretOffset) {
+    return false;
+  }
+  const before = ghost.fieldText;
+  const inserted = now.text.slice(ghost.caretOffset, caret);
+  if (before.slice(0, ghost.caretOffset) + inserted + before.slice(ghost.caretOffset) !== now.text || inserted.trim()) {
+    return false;
+  }
+  trace('ghost', 'new line: the ghost text moves to it');
+  context.setState({ ghost: { ...ghost, caretOffset: caret, fieldText: now.text } });
+  return true;
+}
+
 export function ghostFollowsTyping(context: AssistantContext, event: InputEvent): boolean {
   const ghost = context.getState().ghost;
   if (!ghost) {
@@ -104,6 +120,9 @@ export function ghostFollowsTyping(context: AssistantContext, event: InputEvent)
   }
   if (event.inputType === 'deleteContentBackward') {
     return followDeletedSpaces(context, ghost);
+  }
+  if (event.inputType === 'insertParagraph' || event.inputType === 'insertLineBreak') {
+    return followNewLine(context, ghost);
   }
   if (event.inputType !== 'insertText' || !event.data || !ghost.text.startsWith(event.data)) {
     return false;

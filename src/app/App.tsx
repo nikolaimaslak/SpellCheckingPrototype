@@ -60,25 +60,24 @@ export function App() {
               />
             </div>
           </div>
-          <section className="space-y-2">
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-              <h2 className="mr-auto text-lg font-semibold">Reply</h2>
-              <Checkbox label="Spell check" checked={settings.spellCheck} onChange={(spellCheck) => updateSettings({ spellCheck })} />
-              <Checkbox
-                label="Auto-correct"
-                checked={settings.autoCorrect}
-                disabled={!settings.spellCheck}
-                onChange={(autoCorrect) => updateSettings({ autoCorrect })}
-              />
-              <Checkbox label="Completion" checked={settings.completion} onChange={(completion) => updateSettings({ completion })} />
-            </div>
-            <MessageField
-              settings={appliedSettings}
-              onLog={logEvent}
-              onAddToDictionary={addToDictionary}
-              onIgnoredWordsChange={changeIgnoredWords}
-            />
-          </section>
+          <MessageField
+            settings={appliedSettings}
+            toolbar={
+              <>
+                <Checkbox label="Spell check" checked={settings.spellCheck} disabled={!settings.apiKey} onChange={(spellCheck) => updateSettings({ spellCheck })} />
+                <Checkbox
+                  label="Auto-correct"
+                  checked={settings.autoCorrect}
+                  disabled={!settings.apiKey || !settings.spellCheck}
+                  onChange={(autoCorrect) => updateSettings({ autoCorrect })}
+                />
+                <Checkbox label="Completion" checked={settings.completion} disabled={!settings.apiKey} onChange={(completion) => updateSettings({ completion })} />
+              </>
+            }
+            onLog={logEvent}
+            onAddToDictionary={addToDictionary}
+            onIgnoredWordsChange={changeIgnoredWords}
+          />
           <EventLog lines={logLines} onClear={clearLog} />
         </main>
       </div>

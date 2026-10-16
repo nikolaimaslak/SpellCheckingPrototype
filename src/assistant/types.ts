@@ -1,5 +1,5 @@
 import type { Mistake } from './llm';
-import type { DiffSegment } from './polish/word-diff';
+import type { DiffSegment } from './fix-spelling/word-diff';
 import type { PlacedMistake } from './text/mistake-places';
 
 export type TextDirection = 'ltr' | 'rtl';
@@ -26,7 +26,7 @@ export interface GhostState {
   direction: TextDirection;
 }
 
-export interface PolishState {
+export interface FixSpellingState {
   busy: boolean;
   preview?: { dir: TextDirection; segments: DiffSegment[]; message?: string };
 }
@@ -34,18 +34,18 @@ export interface PolishState {
 export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
-  polish: PolishState;
+  fixSpelling: FixSpellingState;
   loader?: { kind: 'debounce'; startedAt: number; durationMs: number } | { kind: 'request' };
 }
 
-export const INITIAL_STATE: AssistantState = { polish: { busy: false } };
+export const INITIAL_STATE: AssistantState = { fixSpelling: { busy: false } };
 
 export type AssistEvent =
   | { type: 'send-to-llm'; text: string; withCompletion: boolean }
-  | { type: 'llm-answer' | 'polish-reply'; reply: unknown }
-  | { type: 'polish-request'; text: string }
+  | { type: 'llm-answer' | 'fix-spelling-reply'; reply: unknown }
+  | { type: 'fix-spelling-request'; text: string }
   | { type: 'autocorrect' | 'revert' | 'pick'; original: string; replacement: string }
-  | { type: 'polish'; text: string }
+  | { type: 'fix-spelling'; text: string }
   | { type: 'ignore'; word: string }
   | { type: 'completion-accepted'; text: string };
 
@@ -75,9 +75,9 @@ export interface TypingData {
   isComposing: boolean;
 }
 
-export interface PolishData {
+export interface FixSpellingData {
   runningRequest?: AbortController;
-  openPreview?: { sentDraft: string; polishedText: string };
+  openPreview?: { sentDraft: string; fixedText: string };
 }
 
 export interface AssistantContext {
@@ -92,5 +92,5 @@ export interface AssistantContext {
   customWords: Set<string>;
   spelling: SpellingData;
   typing: TypingData;
-  polish: PolishData;
+  fixSpelling: FixSpellingData;
 }

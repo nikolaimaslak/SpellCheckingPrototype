@@ -2,7 +2,7 @@ import { checkDraftWithLLM } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
-import { applyMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
+import { displayAndAutocorrectMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
@@ -85,7 +85,7 @@ async function sendLLMRequest(context: AssistantContext) {
     const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
     trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
     if (options.spellCheckMode !== 'off') {
-      applyMistakes(context, answer.mistakes);
+      displayAndAutocorrectMistakes(context, answer.mistakes);
     }
     if (!shouldAskCompletion) {
       trace('typing', 'no completion was asked for');
@@ -130,7 +130,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
-    trace('typing', 'our own replacement (auto-correct, pick or Polish): no new request');
+    trace('typing', 'our own replacement (auto-correct, pick or Fix spelling): no new request');
     return;
   }
   if (isFollowingGhost && context.getState().ghost) {

@@ -24,7 +24,7 @@ export interface CheckAnswer {
 }
 
 const SYSTEM_MESSAGE = `
-You help a customer support agent proofread a chat reply and, when requested, complete it.
+You help a customer support agent proofread a chat message and, when requested, complete it.
 
 Return valid JSON only, with exactly this structure:
 {"mistakes": [{"word": "...", "context": "...", "fixes": ["..."], "sure": true}], "nextSentence": "..."}
