@@ -41,24 +41,20 @@ export function App() {
       <div className="grid gap-6 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         <SettingsPanel settings={settings} onUpdate={updateSettings} />
         <main className="space-y-4">
-          <div className="flex flex-col gap-3 md:h-64 md:resize-y md:flex-row md:overflow-hidden">
+          <div className="flex flex-col gap-3 lg:grid lg:h-64 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
             <LLMContextField value={settings.llmContext} onChange={(llmContext) => updateSettings({ llmContext })} />
-            <div className="flex md:w-36">
-              <TextArea
-                label="Custom dictionary"
-                hint="Never underlined."
-                value={settings.customDictionary}
-                onChange={(customDictionary) => updateSettings({ customDictionary })}
-              />
-            </div>
-            <div className="flex md:w-36">
-              <TextArea
-                label="Ignored words"
-                hint="Never auto-corrected."
-                value={settings.ignoredWords}
-                onChange={(ignoredWords) => updateSettings({ ignoredWords })}
-              />
-            </div>
+            <TextArea
+              label="Custom dictionary"
+              hint="Never underlined."
+              value={settings.customDictionary}
+              onChange={(customDictionary) => updateSettings({ customDictionary })}
+            />
+            <TextArea
+              label="Ignored words"
+              hint="Never auto-corrected."
+              value={settings.ignoredWords}
+              onChange={(ignoredWords) => updateSettings({ ignoredWords })}
+            />
           </div>
           <MessageField
             settings={appliedSettings}

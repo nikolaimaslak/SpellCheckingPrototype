@@ -7,7 +7,7 @@ interface Props {
 
 export function LLMContextField({ value, onChange }: Props) {
   return (
-    <section className="flex min-w-0 flex-1 flex-col gap-1">
+    <section className="flex min-w-0 flex-col gap-1 lg:row-span-3 lg:grid lg:grid-rows-subgrid">
       <div className="flex h-6 items-center justify-between">
         <h2 className="text-sm font-semibold">LLM context</h2>
         <div className="flex items-center">
@@ -25,7 +25,7 @@ export function LLMContextField({ value, onChange }: Props) {
         </div>
       </div>
       <textarea
-        className="block h-40 w-full resize-none rounded border border-slate-300 p-2 font-mono text-xs md:h-auto md:min-h-0 md:flex-1 [unicode-bidi:plaintext]"
+        className="block h-40 w-full resize-none rounded border border-slate-300 p-2 font-mono text-xs lg:h-full lg:min-h-0 [unicode-bidi:plaintext]"
         dir="auto"
         spellCheck={false}
         value={value}
