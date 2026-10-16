@@ -38,15 +38,6 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
         <h2 className="mr-auto text-lg font-semibold">Message field</h2>
         {toolbar}
-        <button
-          type="button"
-          className="rounded border border-slate-300 bg-white px-2 py-1 text-sm hover:bg-slate-100 disabled:opacity-50"
-          disabled={!assistant || !hasApiKey || state.fixSpelling.busy}
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => void assistant?.fixSpellingNow()}
-        >
-          {state.fixSpelling.busy ? 'Fixing…' : 'Fix spelling'}
-        </button>
       </div>
       <div className="relative">
         <div

@@ -4,7 +4,7 @@ import { openDemoPage } from './demo-page';
 const underlinedCount = (page: import('@playwright/test').Page) =>
   page.evaluate(() => CSS.highlights.get('bp-spelling-error')?.size ?? 0);
 
-test('a sure mistake is auto-corrected, and Ctrl/Cmd+Z brings it back as an ignored word', async ({ page }) => {
+test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, and neither undo nor redo asks again', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
@@ -13,6 +13,10 @@ test('a sure mistake is auto-corrected, and Ctrl/Cmd+Z brings it back as an igno
   await page.keyboard.press('ControlOrMeta+z');
   await expect(demo.field).toHaveText('I will sen the form');
   await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(demo.field).toHaveText('I will send the form');
+  await demo.waitPastDebounce();
+  expect(demo.userMessages).toHaveLength(1);
 });
 
 test('an unsure mistake is underlined and fixed from the popover', async ({ page }) => {
@@ -62,4 +66,26 @@ test('turning spell check off removes the underlines', async ({ page }) => {
   await expect.poll(() => underlinedCount(page)).toBe(1);
   await page.getByRole('checkbox', { name: 'Spell check' }).uncheck();
   await expect.poll(() => underlinedCount(page)).toBe(0);
+});
+
+test('a fix that adds or merges words is underlined and picked as a whole', async ({ page }) => {
+  const demo = await openDemoPage(page, () => ({
+    mistakes: [
+      { word: 'documents', context: 'and documents ready', fixes: ['documents are'], sure: false },
+      { word: 'portal', context: 'from portal when', fixes: ['the portal'], sure: false },
+      { word: 'will be', context: 'it will be convenient', fixes: ['is'], sure: true },
+    ],
+  }));
+  await demo.field.click();
+  await page.keyboard.type('I checked your file and documents ready you can download them from portal when it will be convenient for you');
+  await expect(demo.field).toHaveText('I checked your file and documents ready you can download them from portal when it is convenient for you');
+  await expect.poll(() => underlinedCount(page)).toBe(2);
+
+  await page.keyboard.press('Home');
+  for (let i = 0; i < 'I checked your file and docu'.length; i++) {
+    await page.keyboard.press('ArrowRight');
+  }
+  await expect(page.getByRole('listbox', { name: 'Spelling suggestions' })).toBeVisible();
+  await page.getByRole('option', { name: 'documents are' }).click();
+  await expect(demo.field).toHaveText('I checked your file and documents are ready you can download them from portal when it is convenient for you');
 });

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openDemoPage } from './demo-page';
 
-test('without a key the field, the toggles and Fix spelling are off', async ({ page }) => {
+test('without a key the field and the toggles are off', async ({ page }) => {
   await page.goto('/');
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'false');
@@ -9,7 +9,6 @@ test('without a key the field, the toggles and Fix spelling are off', async ({ p
   for (const name of ['Spell check', 'Auto-correct', 'Completion']) {
     await expect(page.getByRole('checkbox', { name })).toBeDisabled();
   }
-  await expect(page.getByRole('button', { name: 'Fix spelling' })).toBeDisabled();
 });
 
 test('the placeholder shows only while the field is empty', async ({ page }) => {

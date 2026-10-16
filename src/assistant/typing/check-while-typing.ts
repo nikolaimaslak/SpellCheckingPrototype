@@ -135,6 +135,10 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
     trace('typing', 'our own replacement (auto-correct, pick or Fix spelling): no new request');
     return;
   }
+  if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {
+    trace('typing', 'undo or redo: no new request');
+    return;
+  }
   if (isFollowingGhost && context.getState().ghost) {
     trace('typing', 'the input followed the ghost text and some of it is left: no new request');
     return;

@@ -21,9 +21,8 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
   });
   await page.goto('/');
   await page.getByLabel('OpenAI API key').fill('test-key');
-  await expect(page.getByRole('button', { name: 'Fix spelling' })).toBeEnabled();
-
   const field = page.getByRole('textbox', { name: 'Agent message' });
+  await expect(field).toHaveAttribute('contenteditable', 'true');
   const ghost = page.locator('div.fixed[aria-hidden="true"]');
   return {
     field,
