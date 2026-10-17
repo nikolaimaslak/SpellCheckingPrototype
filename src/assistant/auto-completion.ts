@@ -34,12 +34,12 @@ export function showAutoCompletion(context: AssistantContext, text: string, atCa
     return;
   }
   trace('auto-completion', `showing ${JSON.stringify(text)} after the caret`);
-  const fieldText = context.editorControl.getText();
+  const textWhenShown = context.editorControl.getText();
   const autoCompletion: AutoCompletionState = {
     text,
     caretOffset: atCaretOffset,
-    fieldText,
-    direction: directionOfLastWord(fieldText),
+    textWhenShown,
+    direction: directionOfLastWord(textWhenShown),
   };
   context.setState({ autoCompletion });
 }
@@ -67,7 +67,7 @@ function acceptAll(context: AssistantContext, autoCompletion: AutoCompletionStat
   trace('auto-completion', `accepted ${JSON.stringify(autoCompletion.text)} (one undo step)`);
   hideAutoCompletion(context);
   context.editorControl.replaceText(caret, caret, autoCompletion.text);
-  context.log({ type: 'auto-completion-accepted', text: autoCompletion.text });
+  context.log({ type: 'auto-completion-accept', text: autoCompletion.text });
 }
 
 function acceptNextWord(context: AssistantContext, autoCompletion: AutoCompletionState) {
@@ -85,7 +85,7 @@ function followDeletedSpaces(context: AssistantContext, autoCompletion: AutoComp
   if (caret === undefined || caret >= autoCompletion.caretOffset) {
     return false;
   }
-  const before = autoCompletion.fieldText;
+  const before = autoCompletion.textWhenShown;
   const deleted = before.slice(caret, autoCompletion.caretOffset);
   if (before.slice(0, caret) + before.slice(autoCompletion.caretOffset) !== textNow || deleted.trim()) {
     return false;
@@ -95,7 +95,7 @@ function followDeletedSpaces(context: AssistantContext, autoCompletion: AutoComp
     autoCompletion: {
       ...autoCompletion,
       caretOffset: caret,
-      fieldText: textNow,
+      textWhenShown: textNow,
     },
   });
   return true;
@@ -107,7 +107,7 @@ function followNewLine(context: AssistantContext, autoCompletion: AutoCompletion
   if (caretNow === undefined || caretNow <= autoCompletion.caretOffset) {
     return false;
   }
-  const textWhenShown = autoCompletion.fieldText;
+  const textWhenShown = autoCompletion.textWhenShown;
   const typedSinceShown = textNow.slice(autoCompletion.caretOffset, caretNow);
   const textIfOnlyTypedAtAutoCompletion = textWhenShown.slice(0, autoCompletion.caretOffset) + typedSinceShown + textWhenShown.slice(autoCompletion.caretOffset);
   const isAddedOnlyAtAutoCompletion = textIfOnlyTypedAtAutoCompletion === textNow;
@@ -125,7 +125,7 @@ function followNewLine(context: AssistantContext, autoCompletion: AutoCompletion
       ...autoCompletion,
       text: textWithoutLeadingSpacesAndCommas,
       caretOffset: caretNow,
-      fieldText: textNow,
+      textWhenShown: textNow,
     },
   });
   return true;
@@ -145,12 +145,12 @@ export function autoCompletionFollowsTyping(context: AssistantContext, event: Te
   if (event.inputType !== 'insertText' || !event.data || !autoCompletion.text.startsWith(event.data)) {
     return false;
   }
-  const fieldText = context.editorControl.getText();
+  const textNow = context.editorControl.getText();
   const caretAfterTyping = context.editorControl.getCaret();
   if (caretAfterTyping !== autoCompletion.caretOffset + event.data.length) {
     trace('auto-completion', `typed text matches the auto-completion, but the caret is at ${caretAfterTyping}, not ${autoCompletion.caretOffset} + ${event.data.length}: hidden`, {
-      textWhenShown: autoCompletion.fieldText,
-      textNow: fieldText,
+      textWhenShown: autoCompletion.textWhenShown,
+      textNow,
     });
     return false;
   }
@@ -162,7 +162,7 @@ export function autoCompletionFollowsTyping(context: AssistantContext, event: Te
         ...autoCompletion,
         text: remainingText,
         caretOffset: caretAfterTyping,
-        fieldText,
+        textWhenShown: textNow,
       },
     });
   } else {

@@ -4,7 +4,7 @@ import { hideAutoCompletion } from './auto-completion';
 import * as spellCheck from './spell-check';
 import { trace } from './trace';
 
-export type { AssistantOptions, AssistantState, AssistEvent, ChatMessage, EditorControl, LLMClient, LLMResult, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
+export type { AssistantOptions, AssistantState, AssistantEvent, ChatMessage, EditorControl, LLMClient, LLMResult, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
 export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
@@ -15,7 +15,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
   const context: AssistantContext = {
     editorControl,
     options,
-    log: (event) => context.options.log(event),
+    log: (event) => context.options.onEvent(event),
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };

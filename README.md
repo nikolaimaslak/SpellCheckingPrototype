@@ -1,4 +1,4 @@
-# Auto-complete and auto-correct demo
+# Auto-completion and auto-correct demo
 
 Demo of LLM spell checking, auto-correct, and inline auto-completion, in English and Arabic.
 

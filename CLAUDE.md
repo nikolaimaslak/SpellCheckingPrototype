@@ -1,6 +1,6 @@
 # SpellCheckingPrototype
 
-Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in English and Arabic: LLM spell check and auto-correct (PER #60254), and Smart Compose-style inline auto-completion (PER #60145).
+Demo of **auto-completion and auto-correct** in Bright Pattern Agent Desktop, in English and Arabic: LLM spell check and auto-correct (PER #60254), and Smart Compose-style inline auto-completion (PER #60145).
 
 ## Commands
 

@@ -119,9 +119,9 @@ function autoCorrectSureMistakes(context: AssistantContext) {
 }
 
 export function noticeUndo(context: AssistantContext) {
-  const fieldText = context.editorControl.getText();
+  const text = context.editorControl.getText();
   for (const [original, fix] of context.spellCheck.fixByOriginal) {
-    if (!findWordPlaces(fieldText, [original]).length) {
+    if (!findWordPlaces(text, [original]).length) {
       continue;
     }
     trace('spell-check', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
@@ -137,8 +137,8 @@ export function noticeUndo(context: AssistantContext) {
 }
 
 export function noticeRedo(context: AssistantContext) {
-  const fieldText = context.editorControl.getText();
-  const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
+  const text = context.editorControl.getText();
+  const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(text, [original]).length);
   for (const { original, fix } of redone) {
     trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
     context.spellCheck.fixByOriginal.set(original, fix);
@@ -201,7 +201,7 @@ export function pickFix(context: AssistantContext, fix: string) {
   trace('spell-check', `picked "${fix}" for "${place.word}"`);
   context.editorControl.replaceText(place.start, place.end, fix);
   context.log({
-    type: 'pick',
+    type: 'pick-fix',
     original: place.word,
     fix,
   });
@@ -215,6 +215,7 @@ function addIgnoredWord(context: AssistantContext, word: string) {
 
 export function addToDictionary(context: AssistantContext, word: string) {
   context.customDictionary.add(word);
+  context.options.onCustomDictionaryChange([...context.customDictionary]);
   trace('spell-check', `"${word}" added to the custom dictionary`);
   closePopover(context, true);
   redrawUnderlines(context);
@@ -228,5 +229,5 @@ export function ignoreWord(context: AssistantContext) {
   }
   addIgnoredWord(context, place.word);
   trace('spell-check', `"${place.word}" added to the ignored words: never auto-corrected`);
-  context.log({ type: 'ignore', word: place.word });
+  context.log({ type: 'ignore-word', word: place.word });
 }

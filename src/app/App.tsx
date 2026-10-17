@@ -6,14 +6,14 @@ import { LLMContextField } from "./components/LLMContextField";
 import { MessageField } from "./components/MessageField";
 import { TextArea } from "./components/TextArea";
 import { useDebugger } from "./hooks/useDebugger";
-import { DEFAULT_SETTINGS, lines, type AppSettings } from "./lib/settings";
+import { DEFAULT_SETTINGS, type AppSettings } from "./lib/settings";
 
 const APPLY_SETTINGS_DEBOUNCE_MS = 500;
 
 export function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [appliedSettings, setAppliedSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const { debuggerLines, logEvent, clearDebugger } = useDebugger();
+  const { debuggerLines, onEvent, clearDebugger } = useDebugger();
 
   useEffect(() => {
     const timer = setTimeout(() => setAppliedSettings(settings), APPLY_SETTINGS_DEBOUNCE_MS);
@@ -24,20 +24,13 @@ export function App() {
 
   const changeIgnoredWords = useCallback((ignoredWords: string) => setSettings((current) => ({ ...current, ignoredWords })), []);
 
-  const addToDictionary = useCallback(
-    (word: string) =>
-      setSettings((current) => ({
-        ...current,
-        customDictionary: [...lines(current.customDictionary), word].join("\n"),
-      })),
-    [],
-  );
+  const changeCustomDictionary = useCallback((customDictionary: string) => setSettings((current) => ({ ...current, customDictionary })), []);
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-4">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">
-          Auto-complete and auto-correct demo
+          Auto-completion and auto-correct demo
         </h1>
         <ApiKeyField value={settings.apiKey} onChange={(apiKey) => updateSettings({ apiKey })} />
       </header>
@@ -53,12 +46,12 @@ export function App() {
                 isDisabled={!settings.apiKey || !settings.withSpellCheck}
                 onChange={(withAutoCorrect) => updateSettings({ withAutoCorrect })}
               />
-              <Checkbox label="Auto-complete" isChecked={settings.withAutoCompletion} isDisabled={!settings.apiKey} onChange={(withAutoCompletion) => updateSettings({ withAutoCompletion })} />
+              <Checkbox label="Auto-completion" isChecked={settings.withAutoCompletion} isDisabled={!settings.apiKey} onChange={(withAutoCompletion) => updateSettings({ withAutoCompletion })} />
             </>
           }
-          onLog={logEvent}
-          onAddToDictionary={addToDictionary}
+          onEvent={onEvent}
           onIgnoredWordsChange={changeIgnoredWords}
+          onCustomDictionaryChange={changeCustomDictionary}
         />
         <div className="flex flex-col gap-3 lg:grid lg:h-48 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
           <LLMContextField value={settings.llmContext} onChange={(llmContext) => updateSettings({ llmContext })} />

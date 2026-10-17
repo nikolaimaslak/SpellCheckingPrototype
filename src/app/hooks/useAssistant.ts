@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
-import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions, type AssistEvent } from '../../assistant';
+import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions, type AssistantEvent } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { createContentEditableEditorControl } from '../lib/content-editable-editor-control';
 import { createOpenAILLMClient } from '../lib/openai-llm-client';
@@ -13,8 +13,9 @@ const initialState = () => INITIAL_STATE;
 export function useAssistant(
   fieldRef: RefObject<HTMLElement | null>,
   settings: AppSettings,
-  onLog: (event: AssistEvent) => void,
+  onEvent: (event: AssistantEvent) => void,
   onIgnoredWordsChange: (text: string) => void,
+  onCustomDictionaryChange: (text: string) => void,
 ) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
@@ -26,15 +27,16 @@ export function useAssistant(
       customDictionary: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
+      onCustomDictionaryChange: (words) => onCustomDictionaryChange(words.join('\n')),
       withAutoCompletion: settings.withAutoCompletion,
       isMac,
       debounceMs: DEBOUNCE_MS,
       llmClient: createOpenAILLMClient(settings.apiKey),
       llmContext: settings.llmContext,
-      log: onLog,
+      onEvent,
     };
     return assistantOptions;
-  }, [settings, onLog, onIgnoredWordsChange]);
+  }, [settings, onEvent, onIgnoredWordsChange, onCustomDictionaryChange]);
 
   const [assistant, setAssistant] = useState<Assistant>();
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { AssistEvent } from '../../assistant';
+import type { AssistantEvent } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
@@ -10,17 +10,17 @@ import { FixesPopover } from './FixesPopover';
 interface Props {
   settings: AppSettings;
   toolbar: ReactNode;
-  onLog: (event: AssistEvent) => void;
-  onAddToDictionary: (word: string) => void;
+  onEvent: (event: AssistantEvent) => void;
   onIgnoredWordsChange: (text: string) => void;
+  onCustomDictionaryChange: (text: string) => void;
 }
 
-export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIgnoredWordsChange }: Props) {
+export function MessageField({ settings, toolbar, onEvent, onIgnoredWordsChange, onCustomDictionaryChange }: Props) {
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const hasApiKey = !!settings.apiKey;
-  const { assistant, state } = useAssistant(fieldRef, settings, onLog, onIgnoredWordsChange);
+  const { assistant, state } = useAssistant(fieldRef, settings, onEvent, onIgnoredWordsChange, onCustomDictionaryChange);
 
   useEffect(() => {
     if (!assistant) {
@@ -125,10 +125,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
               fieldRef={fieldRef}
               onPick={assistant.pickFix}
               onIgnore={assistant.ignoreWord}
-              onAddToDictionary={(word) => {
-                assistant.addToDictionary(word);
-                onAddToDictionary(word);
-              }}
+              onAddToDictionary={assistant.addToDictionary}
               onClose={assistant.closePopover}
             />
           )}

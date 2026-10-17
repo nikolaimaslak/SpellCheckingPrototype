@@ -13,7 +13,7 @@ export function AutoCompletionText({ autoCompletion, fieldRef }: { autoCompletio
     };
   }, []);
 
-  const hasTextBelow = autoCompletion.fieldText.slice(autoCompletion.caretOffset).trim() !== '';
+  const hasTextBelow = autoCompletion.textWhenShown.slice(autoCompletion.caretOffset).trim() !== '';
   const layout = fieldRef.current && measureAutoCompletion(fieldRef.current, autoCompletion.direction, hasTextBelow);
   if (!layout) {
     return null;

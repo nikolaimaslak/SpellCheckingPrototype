@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createAssistant, type AssistantOptions, type AssistEvent, type EditorControl, type KeyPress, type LLMClient, type TextSpan } from '.';
+import { createAssistant, type AssistantOptions, type AssistantEvent, type EditorControl, type KeyPress, type LLMClient, type TextSpan } from '.';
 
 interface FakeLLMAnswer {
   mistakes: {
@@ -39,7 +39,7 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
   const llmClient: LLMClient = {
     ask: async () => ({ answer: JSON.stringify(answer) }),
   };
-  const events: AssistEvent[] = [];
+  const events: AssistantEvent[] = [];
   const options: AssistantOptions = {
     llmClient,
     spellCheckMode: 'auto-correct',
@@ -49,8 +49,9 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
     customDictionary: [],
     ignoredWords: [],
     onIgnoredWordsChange: () => {},
+    onCustomDictionaryChange: () => {},
     llmContext: '',
-    log: (event) => events.push(event),
+    onEvent: (event) => events.push(event),
   };
   return { assistant: createAssistant(editorControl, options), events };
 }

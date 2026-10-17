@@ -52,7 +52,7 @@ export interface PopoverState {
 export interface AutoCompletionState {
   text: string;
   caretOffset: number;
-  fieldText: string;
+  textWhenShown: string;
   direction: TextDirection;
 }
 
@@ -71,17 +71,17 @@ export interface AssistantState {
 
 export const INITIAL_STATE: AssistantState = {};
 
-export type AssistEvent =
+export type AssistantEvent =
   | { type: 'spell-check-request' | 'auto-completion-request'; text: string }
   | { type: 'spell-check-answer' | 'auto-completion-answer'; answer: unknown }
   | { type: 'spell-check-error' | 'auto-completion-error'; error: string }
   | {
-      type: 'auto-correct' | 'auto-correct-undo' | 'auto-correct-redo' | 'pick';
+      type: 'auto-correct' | 'auto-correct-undo' | 'auto-correct-redo' | 'pick-fix';
       original: string;
       fix: string;
     }
-  | { type: 'ignore'; word: string }
-  | { type: 'auto-completion-accepted'; text: string };
+  | { type: 'ignore-word'; word: string }
+  | { type: 'auto-completion-accept'; text: string };
 
 export interface AssistantOptions {
   llmClient: LLMClient;
@@ -92,8 +92,9 @@ export interface AssistantOptions {
   customDictionary: string[];
   ignoredWords: string[];
   onIgnoredWordsChange: (words: string[]) => void;
+  onCustomDictionaryChange: (words: string[]) => void;
   llmContext: string;
-  log: (event: AssistEvent) => void;
+  onEvent: (event: AssistantEvent) => void;
 }
 
 export interface SpellCheckData {
@@ -114,7 +115,7 @@ export interface TypingData {
 export interface AssistantContext {
   editorControl: EditorControl;
   options: AssistantOptions;
-  log(event: AssistEvent): void;
+  log(event: AssistantEvent): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;
   isAutoCorrecting: boolean;
