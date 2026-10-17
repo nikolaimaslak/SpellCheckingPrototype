@@ -49,8 +49,10 @@ test('after typing, redo is gone and an undone auto-correction stays ignored', a
   await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
 });
 
-test('an unsure mistake is underlined and fixed from the popover', async ({ page }) => {
+test('an unsure mistake is underlined and fixed from the popover, and picking a fix stops ignoring the word', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ mistakes: [unsureSen] }));
+  await page.getByLabel('Ignored words').fill('sen');
+  await page.waitForTimeout(700);
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
   await expect.poll(() => underlinedCount(page)).toBe(1);
@@ -62,6 +64,7 @@ test('an unsure mistake is underlined and fixed from the popover', async ({ page
   await expect(page.getByRole('listbox', { name: 'Spell check fixes' })).toBeVisible();
   await page.getByRole('option', { name: 'see' }).click();
   await expect(demo.field).toHaveText('I will see the form');
+  await expect(page.getByLabel('Ignored words')).toHaveValue('');
 });
 
 test('Ignore and Add to dictionary update the word lists', async ({ page }) => {

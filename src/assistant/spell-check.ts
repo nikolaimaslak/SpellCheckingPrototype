@@ -131,12 +131,9 @@ export function noticeRedo(context: AssistantContext) {
   for (const { original, fix } of redone) {
     context.debug('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
     context.spellCheck.fixByOriginal.set(original, fix);
-    context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
+    removeIgnoredWord(context, original);
   }
-  if (redone.length) {
-    context.spellCheck.undoneAutoCorrections = context.spellCheck.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
-    context.options.onIgnoredWordsChange(context.ignoredWords);
-  }
+  context.spellCheck.undoneAutoCorrections = context.spellCheck.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
 }
 
 export function openPopoverAtCaret(context: AssistantContext): boolean {
@@ -184,11 +181,20 @@ export function pickFix(context: AssistantContext, fix: string) {
   }
   context.debug('spell-check', `picked "${fix}" for "${place.word}"`);
   context.editorControl.replaceText(place.start, place.end, fix);
+  if (context.ignoredWords.includes(place.word)) {
+    context.debug('spell-check', `"${place.word}" is no longer ignored: a fix was picked for it`);
+    removeIgnoredWord(context, place.word);
+  }
   redrawUnderlines(context);
 }
 
 function addIgnoredWord(context: AssistantContext, word: string) {
   context.ignoredWords = [...new Set([...context.ignoredWords, word])];
+  context.options.onIgnoredWordsChange(context.ignoredWords);
+}
+
+function removeIgnoredWord(context: AssistantContext, word: string) {
+  context.ignoredWords = context.ignoredWords.filter((ignoredWord) => ignoredWord !== word);
   context.options.onIgnoredWordsChange(context.ignoredWords);
 }
 
