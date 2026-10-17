@@ -22,7 +22,7 @@ export function Debugger({ lines, onClear }: { lines: string[]; onClear: () => v
           {lines.length ? (
             lines.map((line, i) => <div key={i}>{line}</div>)
           ) : (
-            <div className="text-slate-500">Debugger events show up here as you type</div>
+            <div className="text-slate-500">Debugger events will show up here</div>
           )}
         </pre>
         {!!lines.length && (
