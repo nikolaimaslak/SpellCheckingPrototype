@@ -16,7 +16,7 @@ export interface Mistake {
   word: string;
   context: string;
   fixes: string[];
-  sure: boolean;
+  isSure: boolean;
 }
 
 export interface CheckAnswer {
@@ -305,7 +305,7 @@ export function parseAnswer(reply: string): CheckAnswer | null {
   }
 }
 
-function toMistake(raw: Partial<Record<keyof Mistake, unknown>> | null): Mistake[] {
+function toMistake(raw: Partial<Record<'word' | 'context' | 'fixes' | 'sure', unknown>> | null): Mistake[] {
   if (typeof raw?.word !== 'string' || typeof raw.context !== 'string' || !Array.isArray(raw.fixes)) {
     return [];
   }
@@ -317,7 +317,7 @@ function toMistake(raw: Partial<Record<keyof Mistake, unknown>> | null): Mistake
     word: raw.word,
     context: raw.context,
     fixes,
-    sure: raw.sure === true,
+    isSure: raw.sure === true,
   };
   return [mistake];
 }

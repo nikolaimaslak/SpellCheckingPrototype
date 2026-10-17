@@ -9,7 +9,7 @@ interface Props {
   onPick: (suggestion: string) => void;
   onIgnore: () => void;
   onAddToDictionary: (word: string) => void;
-  onClose: (restoreFocus: boolean) => void;
+  onClose: (shouldRestoreFocus: boolean) => void;
 }
 
 const GAP = 4;
@@ -20,17 +20,17 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
     ...popover.suggestions.map((s) => ({
       label: s,
       run: () => onPick(s),
-      strong: true,
+      isStrong: true,
     })),
     {
       label: 'Ignore',
       run: onIgnore,
-      strong: false,
+      isStrong: false,
     },
     {
       label: 'Add to dictionary',
       run: () => onAddToDictionary(popover.word),
-      strong: false,
+      isStrong: false,
     },
   ];
   const [focused, setFocused] = useState(0);
@@ -101,7 +101,7 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
         <div key={item.label} role="option" aria-selected={i === focused}>
           {item.label === 'Ignore' && <div role="separator" className="my-1 border-t border-slate-200" />}
           <div
-            className={`cursor-pointer px-3 py-1 whitespace-nowrap ${i === focused ? 'bg-slate-100' : ''} ${item.strong ? 'font-semibold' : ''}`}
+            className={`cursor-pointer px-3 py-1 whitespace-nowrap ${i === focused ? 'bg-slate-100' : ''} ${item.isStrong ? 'font-semibold' : ''}`}
             onMouseEnter={() => setFocused(i)}
             onClick={item.run}
           >

@@ -30,7 +30,7 @@ export function displayAndAutocorrectMistakes(context: AssistantContext, newMist
   const fieldText = readFieldText(context.field);
   const placed = findMistakesInText(fieldText.text, newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
-  trace('spelling', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.sure ? ' (sure)' : ''}`));
+  trace('spelling', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
   if (notFound.length) {
     trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
   }
@@ -115,7 +115,7 @@ function flash(context: AssistantContext, ranges: Range[]) {
 }
 
 function autoCorrectSureMistakes(context: AssistantContext) {
-  const placesToFix = finishedMistakePlaces(context, readFieldText(context.field)).filter((place) => place.mistake.sure);
+  const placesToFix = finishedMistakePlaces(context, readFieldText(context.field)).filter((place) => place.mistake.isSure);
   if (placesToFix.length) {
     trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }
@@ -192,14 +192,14 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
   return true;
 }
 
-export function closePopover(context: AssistantContext, returnCaret = false) {
+export function closePopover(context: AssistantContext, shouldReturnCaret = false) {
   const closing = context.spelling.openPopover;
   if (!closing) {
     return;
   }
   context.spelling.openPopover = undefined;
   context.setState({ popover: undefined });
-  if (returnCaret && closing.selectionBefore) {
+  if (shouldReturnCaret && closing.selectionBefore) {
     restoreSelection(context.field, closing.selectionBefore);
   }
 }

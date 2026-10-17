@@ -35,6 +35,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties).
 - No one-line `if` or `else`: every body goes in braces on its own line, even a single `return;` or call.
+- Boolean names start with `is`, `has`, `should`, `with`, `can` or a similar word (`isSure`, `withCompletion`, `shouldReturnCaret`). The only exceptions are names fixed by something outside the code: the LLM's JSON keys and library options.
 - No more than 2 keys on one line: an object literal or object type with 3 or more keys puts each key on its own line.
 - One React component per file in `src/app/components/`, named after the component. No second component in a file, not even a small helper one.
 - The page is React + Tailwind (`src/app/`). `src/assistant/` is plain TypeScript with no React.

@@ -6,14 +6,14 @@ const sureSen: Mistake = {
   word: 'sen',
   context: 'will sen the',
   fixes: ['send'],
-  sure: true,
+  isSure: true,
 };
 
 const unsureSen: Mistake = {
   word: 'sen',
   context: 'will sen the',
   fixes: ['send', 'see'],
-  sure: false,
+  isSure: false,
 };
 
 const underlinedCount = (page: import('@playwright/test').Page) =>
@@ -72,7 +72,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
         word: 'fomr',
         context: 'the fomr',
         fixes: ['form'],
-        sure: false,
+        isSure: false,
       },
     ],
   }));
@@ -110,19 +110,19 @@ test('a fix that adds or merges words is underlined and picked as a whole', asyn
         word: 'documents',
         context: 'and documents ready',
         fixes: ['documents are'],
-        sure: false,
+        isSure: false,
       },
       {
         word: 'portal',
         context: 'from portal when',
         fixes: ['the portal'],
-        sure: false,
+        isSure: false,
       },
       {
         word: 'will be',
         context: 'it will be convenient',
         fixes: ['is'],
-        sure: true,
+        isSure: true,
       },
     ],
   }));

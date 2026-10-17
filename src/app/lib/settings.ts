@@ -1,21 +1,21 @@
 import { CONTEXT_PRESETS } from './context-presets';
 
 export interface AppSettings {
-  spellCheck: boolean;
-  autoCorrect: boolean;
+  withSpellCheck: boolean;
+  withAutoCorrect: boolean;
   customDictionary: string;
   ignoredWords: string;
-  completion: boolean;
+  withCompletion: boolean;
   apiKey: string;
   llmContext: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  spellCheck: true,
-  autoCorrect: true,
+  withSpellCheck: true,
+  withAutoCorrect: true,
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   ignoredWords: '',
-  completion: true,
+  withCompletion: true,
   apiKey: '',
   llmContext: CONTEXT_PRESETS.English,
 };

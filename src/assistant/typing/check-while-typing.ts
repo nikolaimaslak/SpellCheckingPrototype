@@ -114,14 +114,14 @@ async function sendLLMRequest(context: AssistantContext) {
 
   if (answer) {
     const currentText = readFieldText(context.field);
-    const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
-    trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
+    const hasNothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
+    trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${hasNothingMoved ? 'unchanged' : 'changed'} since sending`);
     if (context.options.spellCheckMode !== 'off') {
       displayAndAutocorrectMistakes(context, answer.mistakes);
     }
     if (!shouldAskCompletion) {
       trace('typing', 'no completion was asked for');
-    } else if (!nothingMoved) {
+    } else if (!hasNothingMoved) {
       trace('typing', 'completion dropped: the text or the caret moved while waiting');
     } else {
       showGhost(context, answer.completion, caret!);
@@ -165,7 +165,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
-    trace('typing', 'our own replacement (auto-correct or pick): no new request');
+    trace('typing', 'auto-correct changed the text, not the user: no new request');
     return;
   }
   if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {

@@ -46,14 +46,14 @@ export function App() {
           settings={appliedSettings}
           toolbar={
             <>
-              <Checkbox label="Spell check" checked={settings.spellCheck} disabled={!settings.apiKey} onChange={(spellCheck) => updateSettings({ spellCheck })} />
+              <Checkbox label="Spell check" isChecked={settings.withSpellCheck} isDisabled={!settings.apiKey} onChange={(withSpellCheck) => updateSettings({ withSpellCheck })} />
               <Checkbox
                 label="Auto-correct"
-                checked={settings.autoCorrect}
-                disabled={!settings.apiKey || !settings.spellCheck}
-                onChange={(autoCorrect) => updateSettings({ autoCorrect })}
+                isChecked={settings.withAutoCorrect}
+                isDisabled={!settings.apiKey || !settings.withSpellCheck}
+                onChange={(withAutoCorrect) => updateSettings({ withAutoCorrect })}
               />
-              <Checkbox label="Auto-complete" checked={settings.completion} disabled={!settings.apiKey} onChange={(completion) => updateSettings({ completion })} />
+              <Checkbox label="Auto-complete" isChecked={settings.withCompletion} isDisabled={!settings.apiKey} onChange={(withCompletion) => updateSettings({ withCompletion })} />
             </>
           }
           onLog={logEvent}

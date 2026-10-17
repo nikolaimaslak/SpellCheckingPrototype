@@ -10,11 +10,11 @@ export function measureGhost(field: HTMLElement, direction: TextDirection, hasTe
   if (!caretIsVisible) {
     return null;
   }
-  const startOnNextLine = direction === 'rtl' && style.direction === 'ltr';
+  const shouldStartOnNextLine = direction === 'rtl' && style.direction === 'ltr';
   const lineHeight = parseFloat(style.lineHeight);
   const halfLeading = Number.isFinite(lineHeight) ? (lineHeight - (caret.bottom - caret.top)) / 2 : 0;
   const indentToCaret = direction === 'rtl' ? content.right - caret.left : caret.right - content.left;
-  const top = startOnNextLine ? caret.bottom + halfLeading : caret.top - halfLeading;
+  const top = shouldStartOnNextLine ? caret.bottom + halfLeading : caret.top - halfLeading;
   const spaceToFieldBottom = Math.max(0, content.bottom - parseFloat(style.paddingBottom) - top);
   const spaceBelow = hasTextBelow && Number.isFinite(lineHeight) ? Math.min(lineHeight, spaceToFieldBottom) : spaceToFieldBottom;
   return {
@@ -23,8 +23,8 @@ export function measureGhost(field: HTMLElement, direction: TextDirection, hasTe
     overflow: 'hidden',
     left: content.left,
     width: Math.max(0, content.right - content.left),
-    textIndent: startOnNextLine ? 0 : Math.max(0, indentToCaret),
-    textAlign: startOnNextLine ? 'left' : 'start',
+    textIndent: shouldStartOnNextLine ? 0 : Math.max(0, indentToCaret),
+    textAlign: shouldStartOnNextLine ? 'left' : 'start',
     direction,
     font: style.font,
     lineHeight: style.lineHeight,

@@ -59,7 +59,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     pickSuggestion: (suggestion: string) => spelling.pickSuggestion(context, suggestion),
     ignoreWord: () => spelling.ignoreWord(context),
     addToDictionary: (word: string) => spelling.addToDictionary(context, word),
-    closePopover: (returnCaret: boolean) => spelling.closePopover(context, returnCaret),
+    closePopover: (shouldReturnCaret: boolean) => spelling.closePopover(context, shouldReturnCaret),
 
     updateOptions(newOptions: AssistantOptions) {
       trace('assistant', 'settings changed', {

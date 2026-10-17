@@ -8,20 +8,20 @@ type GhostKeyAction = 'accept-all' | 'accept-word' | 'escape' | 'none';
 
 function ghostKeyAction(event: KeyboardEvent, direction: TextDirection): GhostKeyAction {
   const forwardArrow = direction === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
-  const noModifiers = !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
-  const wordJumpModifier = isMac ? event.altKey && !event.ctrlKey : event.ctrlKey && !event.altKey;
+  const hasNoModifiers = !event.ctrlKey && !event.altKey && !event.shiftKey && !event.metaKey;
+  const isWordJumpPressed = isMac ? event.altKey && !event.ctrlKey : event.ctrlKey && !event.altKey;
 
   if (event.key === 'Tab') {
-    return noModifiers ? 'accept-all' : 'none';
+    return hasNoModifiers ? 'accept-all' : 'none';
   }
   if (event.key === 'Escape') {
     return 'escape';
   }
   if (event.key === forwardArrow) {
-    if (noModifiers) {
+    if (hasNoModifiers) {
       return 'accept-all';
     }
-    return wordJumpModifier && !event.shiftKey && !event.metaKey ? 'accept-word' : 'none';
+    return isWordJumpPressed && !event.shiftKey && !event.metaKey ? 'accept-word' : 'none';
   }
   return 'none';
 }

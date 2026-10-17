@@ -8,7 +8,7 @@ test('findMistakesInText places a mistake by its context, also in Arabic', () =>
     word: 'you',
     context: 'you details',
     fixes: ['your'],
-    sure: true,
+    isSure: true,
   };
   const places = findMistakesInText('to you and you details', [you]);
   expect(places.map((place) => [place.word, place.start, place.end])).toEqual([['you', 11, 14]]);
@@ -17,7 +17,7 @@ test('findMistakesInText places a mistake by its context, also in Arabic', () =>
     word: 'شكرا',
     context: 'شكرا لتواصلك',
     fixes: ['شكراً'],
-    sure: true,
+    isSure: true,
   };
   const arabic = findMistakesInText('شكرا لتواصلك معنا', [thanks]);
   expect(arabic.map((place) => place.start)).toEqual([0]);
@@ -28,7 +28,7 @@ test('findMistakesInText drops a mistake whose word is twice in its context', ()
     word: 'the',
     context: 'the the form',
     fixes: ['the'],
-    sure: true,
+    isSure: true,
   };
   expect(findMistakesInText('the the form', [the])).toEqual([]);
 });
@@ -71,7 +71,7 @@ test('parseAnswer keeps well-formed mistakes and reads the next sentence', () =>
     word: 'sen',
     context: 'will sen',
     fixes: ['send'],
-    sure: true,
+    isSure: true,
   };
   expect(parseAnswer(reply)).toEqual({ mistakes: [sen], completion: ' to you.' });
   expect(parseAnswer('not json')).toBeNull();

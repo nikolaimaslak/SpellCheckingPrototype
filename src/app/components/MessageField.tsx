@@ -62,7 +62,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
           ref={fieldRef}
           contentEditable={hasApiKey}
           aria-disabled={!hasApiKey}
-          spellCheck={!settings.spellCheck}
+          spellCheck={!settings.withSpellCheck}
           dir="auto"
           role="textbox"
           aria-multiline="true"

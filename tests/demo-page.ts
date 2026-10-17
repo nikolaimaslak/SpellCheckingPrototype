@@ -21,7 +21,11 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
       nextSentence: '',
       ...answerFor(draft),
     };
-    await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(answer) } }] } });
+    const llmReply = {
+      mistakes: answer.mistakes?.map(({ isSure, ...mistake }) => ({ ...mistake, sure: isSure })),
+      nextSentence: answer.nextSentence,
+    };
+    await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(llmReply) } }] } });
   });
   await page.goto('/');
   await page.getByLabel('OpenAI API key').fill('test-key');

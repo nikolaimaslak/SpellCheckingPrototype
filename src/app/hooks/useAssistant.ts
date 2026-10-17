@@ -16,11 +16,11 @@ export function useAssistant(
 ) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
-      spellCheckMode: !settings.spellCheck ? 'off' : settings.autoCorrect ? 'auto-correct' : 'underline',
+      spellCheckMode: !settings.withSpellCheck ? 'off' : settings.withAutoCorrect ? 'auto-correct' : 'underline',
       customWords: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
-      withCompletion: settings.completion,
+      withCompletion: settings.withCompletion,
       debounceMs: DEBOUNCE_MS,
       apiKey: settings.apiKey,
       llmContext: settings.llmContext,
