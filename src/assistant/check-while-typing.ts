@@ -129,7 +129,6 @@ async function askSpellCheck(context: AssistantContext, draft: string, caret: nu
       caretOffset: caret,
       llmContext: context.options.llmContext,
       customDictionary: [...context.customDictionary],
-      ignoredWords: context.ignoredWords,
     },
     signal,
   );

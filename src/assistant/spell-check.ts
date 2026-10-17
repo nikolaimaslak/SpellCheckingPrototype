@@ -102,7 +102,12 @@ function flash(context: AssistantContext, spans: TextSpan[]) {
 }
 
 function autoCorrectSureMistakes(context: AssistantContext) {
-  const placesToFix = finishedMistakePlaces(context).filter((place) => place.mistake.isSure);
+  const surePlaces = finishedMistakePlaces(context).filter((place) => place.mistake.isSure);
+  const ignoredPlaces = surePlaces.filter((place) => context.ignoredWords.includes(place.word));
+  if (ignoredPlaces.length) {
+    context.debug('spell-check', 'sure mistakes on ignored words: only underlined, never auto-corrected', ignoredPlaces.map((place) => place.word));
+  }
+  const placesToFix = surePlaces.filter((place) => !ignoredPlaces.includes(place));
   if (placesToFix.length) {
     context.debug('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }

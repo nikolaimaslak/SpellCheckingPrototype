@@ -9,7 +9,6 @@ export interface SpellCheckRequest {
   caretOffset: number | undefined;
   llmContext: string;
   customDictionary: string[];
-  ignoredWords: string[];
 }
 
 export interface AutoCompletionRequest {
@@ -66,7 +65,6 @@ export function buildSpellCheckMessage(request: SpellCheckRequest): string {
   return [
     request.llmContext,
     bulletList('Custom dictionary', request.customDictionary),
-    bulletList('Ignored words', request.ignoredWords),
     `Draft:\n${draftWithCaret(request.draft, request.caretOffset)}`,
   ]
     .filter(Boolean)

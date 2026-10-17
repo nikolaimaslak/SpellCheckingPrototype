@@ -7,7 +7,6 @@ test('the spell check message has the word lists and the caret, the auto-complet
     caretOffset: 9,
     llmContext: 'Agent:\n- Name: Daniel',
     customDictionary: ['Absher'],
-    ignoredWords: [],
   };
   expect(buildSpellCheckMessage(spellCheckRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom dictionary:\n- Absher\n\nDraft:\nHi Sasha,‸\nBest regards");
   expect(buildSpellCheckMessage({ ...spellCheckRequest, caretOffset: undefined })).not.toContain('‸');

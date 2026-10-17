@@ -35,7 +35,7 @@ function createTextEditorControl(text: string) {
   return { editorControl, memory };
 }
 
-function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
+function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer, ignoredWords: string[] = []) {
   const llmClient: LLMClient = {
     ask: async () => ({ answer: JSON.stringify(answer) }),
   };
@@ -46,7 +46,7 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
     isMac: false,
     debounceMs: 10,
     customDictionary: [],
-    ignoredWords: [],
+    ignoredWords,
     onIgnoredWordsChange: () => {},
     onCustomDictionaryChange: () => {},
     llmContext: '',
@@ -71,6 +71,29 @@ test('without a DOM, a sure mistake is auto-corrected through the editor control
   assistant.handleInput({ inputType: 'insertText', data: 'm' });
   await expect.poll(() => memory.text).toBe('I will send the form');
   expect(memory.caret).toBe('I will send the form'.length);
+  assistant.release();
+});
+
+test('a sure mistake on an ignored word is underlined but never auto-corrected', async () => {
+  const { editorControl, memory } = createTextEditorControl('I will sen the form');
+  const assistant = startAssistant(
+    editorControl,
+    {
+      mistakes: [
+        {
+          word: 'sen',
+          context: 'will sen the',
+          fixes: ['send'],
+          sure: true,
+        },
+      ],
+      nextSentence: '',
+    },
+    ['sen'],
+  );
+  assistant.handleInput({ inputType: 'insertText', data: 'm' });
+  await expect.poll(() => memory.underlines).toEqual([{ start: 7, end: 10 }]);
+  expect(memory.text).toBe('I will sen the form');
   assistant.release();
 });
 
