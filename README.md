@@ -1,6 +1,6 @@
-# Auto-completion and auto-correct demo
+# Auto-completion and auto-correction demo
 
-Demo of LLM spell checking, auto-correct, and inline auto-completion, in English and Arabic.
+Demo of LLM spell checking, auto-correction, and inline auto-completion, in English and Arabic.
 
 **Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
 

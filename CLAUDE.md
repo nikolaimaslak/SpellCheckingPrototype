@@ -1,6 +1,6 @@
 # SpellCheckingPrototype
 
-Demo of **auto-completion and auto-correct** in Bright Pattern Agent Desktop, in English and Arabic: LLM spell check and auto-correct (PER #60254), and Smart Compose-style inline auto-completion (PER #60145).
+Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop, in English and Arabic: LLM spell check and auto-correction (PER #60254), and Smart Compose-style inline auto-completion (PER #60145).
 
 ## Commands
 
@@ -21,7 +21,7 @@ GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `ma
   - `words.ts`: finding whole words, text direction. `mistake-places.ts`: where the model's mistakes are in the text.
   - `llm.ts`: the two requests, sent in parallel after the same pause in typing (spell check: mistakes with fixes and how sure; auto-completion: the next sentence at the caret), the call to the `LLMClient` with its timeout, building the user messages, answer parsing. `spell-check-prompt.ts` and `auto-completion-prompt.ts`: each request's system message and examples.
   - `check-while-typing.ts`: `handleInput`, `handleKeyDown` and the other handlers the host calls; the debounced request (sent after a pause in typing); handing the answers on.
-  - `spell-check.ts`: underlines, popover, auto-correct with each fixed word as one undo step, keeping the caret and flashing the auto-corrected words, undo and redo of an auto-correction.
+  - `spell-check.ts`: underlines, popover, auto-correction with each fixed word as one undo step, keeping the caret and flashing the auto-corrected words, undo and redo of an auto-correction.
   - `auto-completion.ts`: the auto-completion shown after the caret and its keys; the host draws it.
 - Tests sit next to the file they test, as `<file>.spec.ts`. In `src/assistant/` they run in Node, so with no DOM: the pure functions, and `index.spec.ts` drives the assistant through an in-memory `EditorControl`. `src/app/lib/field-text.spec.ts` reads a real contenteditable in the browser. `src/app/App*.spec.ts` open the whole page with a fake LLM (`src/app/demo-page.ts`): the page, spell check, auto-completion.
 - Code has no comments: names say what things are.

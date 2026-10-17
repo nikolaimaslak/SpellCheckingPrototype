@@ -30,7 +30,7 @@ export function LLMContextField() {
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      <p className="text-xs text-slate-500">Context for auto-completion and auto-correct: agent data, customer data, the conversation, case fields, canned responses and related knowledge base articles.</p>
+      <p className="text-xs text-slate-500">Context for auto-completion and auto-correction: agent data, customer data, the conversation, case fields, canned responses and related knowledge base articles.</p>
     </section>
   );
 }

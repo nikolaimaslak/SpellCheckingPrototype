@@ -2,7 +2,7 @@ import { CONTEXT_PRESETS } from './context-presets';
 
 export interface AppSettings {
   withSpellCheck: boolean;
-  withAutoCorrect: boolean;
+  withAutoCorrection: boolean;
   customDictionary: string;
   ignoredWords: string;
   withAutoCompletion: boolean;
@@ -12,7 +12,7 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   withSpellCheck: true,
-  withAutoCorrect: true,
+  withAutoCorrection: true,
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   ignoredWords: '',
   withAutoCompletion: true,

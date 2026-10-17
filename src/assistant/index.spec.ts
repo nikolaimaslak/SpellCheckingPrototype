@@ -41,7 +41,7 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
   };
   const options: AssistantOptions = {
     llmClient,
-    spellCheckMode: 'auto-correct',
+    spellCheckMode: 'auto-correction',
     withAutoCompletion: true,
     isMac: false,
     debounceMs: 10,

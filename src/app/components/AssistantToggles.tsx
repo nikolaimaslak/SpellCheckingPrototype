@@ -7,10 +7,10 @@ export function AssistantToggles() {
     <>
       <Checkbox label="Spell check" isChecked={settings.withSpellCheck} isDisabled={!settings.apiKey} onChange={(withSpellCheck) => updateSettings({ withSpellCheck })} />
       <Checkbox
-        label="Auto-correct"
-        isChecked={settings.withAutoCorrect}
+        label="Auto-correction"
+        isChecked={settings.withAutoCorrection}
         isDisabled={!settings.apiKey || !settings.withSpellCheck}
-        onChange={(withAutoCorrect) => updateSettings({ withAutoCorrect })}
+        onChange={(withAutoCorrection) => updateSettings({ withAutoCorrection })}
       />
       <Checkbox label="Auto-completion" isChecked={settings.withAutoCompletion} isDisabled={!settings.apiKey} onChange={(withAutoCompletion) => updateSettings({ withAutoCompletion })} />
     </>

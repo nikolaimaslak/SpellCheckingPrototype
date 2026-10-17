@@ -20,8 +20,8 @@ export function useAssistant(fieldRef: RefObject<HTMLElement | null>) {
     const assistantOptions: AssistantOptions = {
       spellCheckMode: !settings.withSpellCheck
         ? 'off'
-        : settings.withAutoCorrect
-          ? 'auto-correct'
+        : settings.withAutoCorrection
+          ? 'auto-correction'
           : 'underline',
       customDictionary: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),

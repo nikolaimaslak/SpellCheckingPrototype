@@ -29,10 +29,10 @@ export function displayAndAutoCorrectMistakes(context: AssistantContext, newMist
   if (notFound.length) {
     context.debug('spell-check', 'not placed in the text (the text changed, the model did not copy the surrounding text exactly, or the word is in it more than once): ignored', notFound);
   }
-  if (context.options.spellCheckMode === 'auto-correct') {
+  if (context.options.spellCheckMode === 'auto-correction') {
     autoCorrectSureMistakes(context);
   } else {
-    context.debug('spell-check', 'auto-correct is off: mistakes are only underlined');
+    context.debug('spell-check', 'auto-correction is off: mistakes are only underlined');
   }
   redrawUnderlines(context);
 }
@@ -69,10 +69,10 @@ function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordF
   for (const wordFix of lastFirst) {
     const { place } = wordFix;
     if (context.editorControl.getText().slice(place.start, place.end) !== place.word) {
-      context.debug('auto-correct', `skipped "${place.word}" @${place.start}: the text there changed`);
+      context.debug('auto-correction', `skipped "${place.word}" @${place.start}: the text there changed`);
       continue;
     }
-    context.debug('auto-correct', `"${place.word}" @${place.start} → "${wordFix.fix}" (native edit: one Ctrl/Cmd+Z)`);
+    context.debug('auto-correction', `"${place.word}" @${place.start} → "${wordFix.fix}" (native edit: one Ctrl/Cmd+Z)`);
 
     context.editorControl.replaceText(place.start, place.end, wordFix.fix);
     const lengthChange = wordFix.fix.length - place.word.length;
@@ -88,7 +88,7 @@ function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordF
   }
 
   if (caretBefore !== undefined) {
-    context.debug('auto-correct', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
+    context.debug('auto-correction', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     context.editorControl.setCaret(caretBefore + caretShift);
   }
   flash(context, autoCorrectedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));

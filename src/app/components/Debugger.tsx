@@ -8,7 +8,7 @@ const AREA_COLORS: Record<DebugArea, string> = {
   typing: 'text-sky-300',
   llm: 'text-violet-300',
   'spell-check': 'text-rose-300',
-  'auto-correct': 'text-amber-300',
+  'auto-correction': 'text-amber-300',
   'auto-completion': 'text-emerald-300',
 };
 

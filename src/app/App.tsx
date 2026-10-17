@@ -12,7 +12,7 @@ export function App() {
       <DebuggerProvider>
         <div className="mx-auto max-w-6xl space-y-4 p-4">
           <header className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="text-xl font-semibold">Auto-completion and auto-correct demo</h1>
+            <h1 className="text-xl font-semibold">Auto-completion and auto-correction demo</h1>
             <ApiKeyField />
           </header>
           <main className="space-y-4">

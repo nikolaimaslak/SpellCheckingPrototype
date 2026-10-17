@@ -3,7 +3,7 @@ import type { PlacedMistake } from './mistake-places';
 
 export type TextDirection = 'ltr' | 'rtl';
 
-export type DebugArea = 'assistant' | 'typing' | 'llm' | 'spell-check' | 'auto-correct' | 'auto-completion';
+export type DebugArea = 'assistant' | 'typing' | 'llm' | 'spell-check' | 'auto-correction' | 'auto-completion';
 
 export interface TextSpan {
   start: number;
@@ -81,7 +81,7 @@ export interface AssistantEvent {
 
 export interface AssistantOptions {
   llmClient: LLMClient;
-  spellCheckMode: 'off' | 'underline' | 'auto-correct';
+  spellCheckMode: 'off' | 'underline' | 'auto-correction';
   withAutoCompletion: boolean;
   isMac: boolean;
   debounceMs: number;

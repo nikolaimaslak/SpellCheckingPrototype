@@ -194,7 +194,7 @@ export function handleInput(context: AssistantContext, event: TextInput) {
   }
   redrawUnderlines(context);
   if (context.isAutoCorrecting) {
-    context.debug('typing', 'auto-correct changed the text, not the user: no new request');
+    context.debug('typing', 'auto-correction changed the text, not the user: no new request');
     return;
   }
   if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {
