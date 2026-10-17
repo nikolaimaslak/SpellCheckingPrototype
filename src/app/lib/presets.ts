@@ -1,5 +1,12 @@
-export const CONTEXT_PRESETS: Record<string, string> = {
-  English: `Agent:
+export interface Preset {
+  llmContext: string;
+  customDictionary: string[];
+  ignoredWords: string[];
+}
+
+export const PRESETS: Record<string, Preset> = {
+  English: {
+    llmContext: `Agent:
 - Name: Daniel Haddad
 - Team: Pension Services, Tier 1
 - Languages: English, Arabic
@@ -25,11 +32,11 @@ Case fields:
 - Queue: Pension Services
 
 Canned responses:
-- Your contribution records are up to date, and the latest payment has been registered on your account.
+- Your contribution records are up to date, and the latest payment from your employer's Mudad payroll has been registered on your account.
 - Your request has been received and will be processed within 3 working days; you will be notified by SMS once it is complete.
 - To complete your request, please upload a copy of your national ID and the employer's salary certificate through the online portal.
 - Pension eligibility depends on your total contribution period and age; I can check your current eligibility if you share your registration number.
-- You can update your bank account details from your profile page; changes take effect from the next payment cycle.
+- You can update your bank account details from your profile page or through Absher; changes take effect from the next payment cycle.
 - Thank you for contacting us; is there anything else I can help you with today?
 
 Knowledge base:
@@ -39,7 +46,11 @@ Knowledge base:
 - Unemployment insurance claims: Members who lose their job involuntarily can claim unemployment insurance within 90 days. The benefit is paid monthly for up to 12 months. Claimants must keep their job-seeker profile active.
 - Registering a new employee: Employers register new employees within 15 days of their start date. Registration requires the national ID and the employment contract. Contributions start from the first month of employment.
 - Requesting a contribution certificate: Members can download a contribution certificate from the online portal at any time. The certificate lists all registered employers and contribution periods. It is accepted by banks and government agencies.`,
-  Arabic: `Agent:
+    customDictionary: ['Absher', 'Mudad'],
+    ignoredWords: ['pls'],
+  },
+  Arabic: {
+    llmContext: `Agent:
 - الاسم: خالد الحربي
 - الفريق: خدمات المعاشات، المستوى الأول
 - اللغات: العربية، الإنجليزية
@@ -71,11 +82,11 @@ Case fields:
 - القسم: خدمات المعاشات
 
 Canned responses:
-- سجل الاشتراكات الخاص بك محدث، وتم تسجيل آخر دفعة في حسابك.
+- سجل الاشتراكات الخاص بك محدث، وتم تسجيل آخر دفعة من رواتب جهة عملك عبر منصة مدد.
 - تم استلام طلبك وسيتم معالجته خلال ثلاثة أيام عمل، وستصلك رسالة نصية عند الانتهاء.
 - لإكمال طلبك، يرجى رفع صورة من الهوية الوطنية وتعريف الراتب من جهة العمل عبر البوابة الإلكترونية.
 - تعتمد أهلية المعاش على مدة الإشتراك الإجمالية والعمر، ويمكنني التحقق من أهليتك إذا زودتني برقم التسجيل.
-- يمكنك تحديث بيانات الحساب البنكي من صفحة الملف الشخصي، وتسري التغييرات من دورة الصرف القادمة.
+- يمكنك تحديث بيانات الحساب البنكي من صفحة الملف الشخصي أو عبر أبشر، وتسري التغييرات من دورة الصرف القادمة.
 - شكراً لتواصلك معنا، هل هناك أي شيء آخر يمكنني مساعدتك به اليوم؟
 
 Knowledge base:
@@ -85,7 +96,11 @@ Knowledge base:
 - التأمين ضد التعطل عن العمل: يحق للمشترك الذي فقد عمله بغير إرادته التقدم بطلب التعويض خلال 90 يوماً. يصرف التعويض شهرياً لمدة تصل إلى 12 شهراً. يجب على المتقدم إبقاء ملفه كباحث عن عمل نشطاً.
 - تسجيل موظف جديد: يسجل صاحب العمل الموظفين الجدد خلال 15 يوماً من تاريخ مباشرتهم. يتطلب التسجيل الهوية الوطنية وعقد العمل. تبدأ الاشتراكات من الشهر الأول للعمل.
 - طلب شهادة الاشتراك: يمكن للمشترك تحميل شهادة الاشتراك من البوابة الإلكترونية في أي وقت. توضح الشهادة جميع أصحاب العمل المسجلين وفترات الاشتراك. تقبل الشهادة لدى البنوك والجهات الحكومية.`,
-  Russian: `Agent:
+    customDictionary: ['أبشر', 'مدد'],
+    ignoredWords: ['انشالله'],
+  },
+  Russian: {
+    llmContext: `Agent:
 - Имя: Дмитрий Соколов
 - Команда: Пенсионное обслуживание, первая линия
 - Языки: русский, английский
@@ -121,7 +136,7 @@ Canned responses:
 - Ваша заявка принята и будет обработана в течение 3 рабочих дней; по завершении вы получите SMS.
 - Чтобы завершить заявку, загрузите через личный кабинет копию паспорта и справку о зарплате от работодателя.
 - Право на пенсию зависит от общего стажа взносов и возраста; я могу проверить его, если вы сообщите регистрационный номер.
-- Реквизиты банковского счёта можно изменить в профиле; изменения вступят в силу со следующего платёжного периода.
+- Реквизиты банковского счёта можно изменить в профиле или через Госуслуги; изменения вступят в силу со следующего платёжного периода.
 - Спасибо за обращение! Могу ли я ещё чем-нибудь помочь?
 
 Knowledge base:
@@ -131,4 +146,7 @@ Knowledge base:
 - Страхование по безработице: участник, потерявший работу не по своей воле, может подать заявление в течение 90 дней. Пособие выплачивается ежемесячно до 12 месяцев. Профиль соискателя должен оставаться активным.
 - Регистрация нового сотрудника: работодатель регистрирует нового сотрудника в течение 15 дней с начала работы. Для регистрации нужны паспорт и трудовой договор. Взносы начисляются с первого месяца работы.
 - Справка о взносах: участник может в любой момент скачать справку о взносах в личном кабинете. В справке указаны все работодатели и периоды взносов. Справку принимают банки и государственные органы.`,
+    customDictionary: ['Госуслуги'],
+    ignoredWords: ['щас'],
+  },
 };

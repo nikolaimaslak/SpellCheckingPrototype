@@ -1,4 +1,4 @@
-import { CONTEXT_PRESETS } from './context-presets';
+import { PRESETS, type Preset } from './presets';
 
 export interface AppSettings {
   withSpellCheck: boolean;
@@ -10,14 +10,20 @@ export interface AppSettings {
   llmContext: string;
 }
 
+export function presetSettings(preset: Preset): Pick<AppSettings, 'llmContext' | 'customDictionary' | 'ignoredWords'> {
+  return {
+    llmContext: preset.llmContext,
+    customDictionary: preset.customDictionary.join('\n'),
+    ignoredWords: preset.ignoredWords.join('\n'),
+  };
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   withSpellCheck: true,
   withAutoCorrection: true,
-  customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
-  ignoredWords: '',
   withAutoCompletion: true,
   apiKey: '',
-  llmContext: CONTEXT_PRESETS.English,
+  ...presetSettings(PRESETS.English),
 };
 
 export const lines = (text: string) => text.split('\n').map((line) => line.trim()).filter(Boolean);

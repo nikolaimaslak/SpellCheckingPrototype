@@ -31,6 +31,8 @@ test('a settings change reaches the next request and keeps the typed text', asyn
   expect(demo.spellCheckMessages[0]).toContain('Daniel Haddad');
 
   await page.getByRole('button', { name: 'Arabic' }).click();
+  await expect(page.getByLabel('Custom dictionary')).toHaveValue('أبشر\nمدد');
+  await expect(page.getByLabel('Ignored words')).toHaveValue('انشالله');
   await page.waitForTimeout(700);
   await demo.field.click();
   await page.keyboard.press('End');
