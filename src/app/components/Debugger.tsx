@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AssistantEvent, DebugArea } from '../../assistant';
-import type { DebuggerEvent } from '../hooks/useDebugger';
+import { useDebugger } from '../providers/DebuggerProvider';
 import { DebuggerEventText } from './DebuggerEventText';
 
 const AREA_COLORS: Record<DebugArea, string> = {
@@ -17,7 +17,8 @@ function describe(event: AssistantEvent): string {
   return `[${event.area}] ${event.message}${details}`;
 }
 
-export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: DebuggerEvent[]; onClear: () => void }) {
+export function Debugger() {
+  const { debuggerEvents, clearDebugger } = useDebugger();
   const pre = useRef<HTMLPreElement>(null);
   const scrollToEnd = () => {
     if (pre.current) {
@@ -58,7 +59,7 @@ export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: Debugger
             <button type="button" onClick={copyAll}>
               {isCopied ? 'Copied' : 'Copy'}
             </button>
-            <button type="button" onClick={onClear}>
+            <button type="button" onClick={clearDebugger}>
               Clear
             </button>
           </div>

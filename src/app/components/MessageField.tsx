@@ -1,26 +1,19 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { AssistantEvent } from '../../assistant';
+import { useEffect, useRef, useState } from 'react';
 import { isMac } from '../lib/browser';
 import { useAssistant } from '../hooks/useAssistant';
-import type { AppSettings } from '../lib/settings';
+import { useSettings } from '../providers/SettingsProvider';
+import { AssistantToggles } from './AssistantToggles';
 import { AutoCompletionText } from './AutoCompletionText';
 import { DebounceRing } from './DebounceRing';
 import { FixesPopover } from './FixesPopover';
 
-interface Props {
-  settings: AppSettings;
-  toolbar: ReactNode;
-  onEvent: (event: AssistantEvent) => void;
-  onIgnoredWordsChange: (text: string) => void;
-  onCustomDictionaryChange: (text: string) => void;
-}
-
-export function MessageField({ settings, toolbar, onEvent, onIgnoredWordsChange, onCustomDictionaryChange }: Props) {
+export function MessageField() {
+  const { appliedSettings: settings } = useSettings();
   const fieldRef = useRef<HTMLDivElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isEmpty, setIsEmpty] = useState(true);
   const hasApiKey = !!settings.apiKey;
-  const { assistant, state } = useAssistant(fieldRef, settings, onEvent, onIgnoredWordsChange, onCustomDictionaryChange);
+  const { assistant, state } = useAssistant(fieldRef);
 
   useEffect(() => {
     if (!assistant) {
@@ -61,7 +54,7 @@ export function MessageField({ settings, toolbar, onEvent, onIgnoredWordsChange,
             ) : null}
           </span>
         </div>
-        {toolbar}
+        <AssistantToggles />
       </div>
       <div className="relative">
         <div

@@ -1,9 +1,8 @@
-interface Props {
-  value: string;
-  onChange: (value: string) => void;
-}
+import { useSettings } from '../providers/SettingsProvider';
 
-export function ApiKeyField({ value, onChange }: Props) {
+export function ApiKeyField() {
+  const { settings, updateSettings } = useSettings();
+  const value = settings.apiKey;
   return (
     <label className="block w-80 max-w-full text-sm">
       OpenAI API key
@@ -13,7 +12,7 @@ export function ApiKeyField({ value, onChange }: Props) {
         placeholder={value ? undefined : 'Paste your API key to turn the assistant on'}
         autoComplete="off"
         value={value}
-        onChange={(e) => onChange(e.target.value.trim())}
+        onChange={(e) => updateSettings({ apiKey: e.target.value.trim() })}
       />
       <span className="mt-1 block text-xs text-slate-500">Kept in memory only, never saved.</span>
     </label>

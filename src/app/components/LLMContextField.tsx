@@ -1,11 +1,10 @@
+import { useSettings } from '../providers/SettingsProvider';
 import { CONTEXT_PRESETS } from '../lib/context-presets';
 
-interface Props {
-  value: string;
-  onChange: (value: string) => void;
-}
-
-export function LLMContextField({ value, onChange }: Props) {
+export function LLMContextField() {
+  const { settings, updateSettings } = useSettings();
+  const value = settings.llmContext;
+  const onChange = (llmContext: string) => updateSettings({ llmContext });
   return (
     <section className="flex min-w-0 flex-col gap-1 lg:row-span-3 lg:grid lg:grid-rows-subgrid">
       <div className="flex h-6 items-center justify-between">
