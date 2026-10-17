@@ -9,7 +9,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 | `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1). Spell check and auto-completion need an OpenAI API key typed on the page |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` |
-| `npm test` | Playwright tests in Chrome with a fake LLM (`tests/`), no key or network needed; also run in GitHub Actions |
+| `npm test` | Playwright tests (`src/**/*.spec.ts`) in Chrome with a fake LLM, no key or network needed; also run in GitHub Actions |
 
 ## Layout
 
@@ -21,7 +21,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
   - `check-while-typing.ts`: `handleInput`, `handleKeyDown` and the other handlers the host calls; the throttled request; handing the answers on.
   - `spell-check.ts`: underlines, popover, auto-correct with each replaced word as one undo step, keeping the caret and flashing the replaced words, Undo as revert.
   - `ghost-text.ts`: the auto-completion shown after the caret and its keys; the host draws it.
-- `tests/`: Playwright tests. `demo-page.ts` opens the page with a fake LLM; `*.spec.ts` cover ghost text, spell check, the page, reading the field's text (in the browser), the pure text functions and the assistant driven through an in-memory `EditorControl` (in Node, so with no DOM).
+- Tests sit next to the file they test, as `<file>.spec.ts`. In `src/assistant/` they run in Node, so with no DOM: the pure functions, and `index.spec.ts` drives the assistant through an in-memory `EditorControl`. `src/app/lib/field-text.spec.ts` reads a real contenteditable in the browser. `src/app/App*.spec.ts` open the whole page with a fake LLM (`src/app/demo-page.ts`): the page, spell check, auto-completion.
 - Code has no comments: names say what things are.
 
 ## Hard constraints

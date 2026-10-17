@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createAssistant, type AssistantOptions, type AssistEvent, type EditorControl, type KeyPress, type TextSpan } from '../src/assistant';
+import { createAssistant, type AssistantOptions, type AssistEvent, type EditorControl, type KeyPress, type TextSpan } from '.';
 
 interface FakeLLMAnswer {
   mistakes: {

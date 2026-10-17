@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test';
-import type { Mistake } from '../src/assistant/llm';
+import type { Mistake } from '../assistant/llm';
 
 export interface FakeAnswer {
   mistakes?: Mistake[];

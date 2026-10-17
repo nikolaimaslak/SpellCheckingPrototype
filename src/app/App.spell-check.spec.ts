@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Mistake } from '../src/assistant/llm';
+import type { Mistake } from '../assistant/llm';
 import { openDemoPage } from './demo-page';
 
 const sureSen: Mistake = {

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-type FieldTextModule = typeof import('../src/app/lib/field-text');
+type FieldTextModule = typeof import('./field-text');
 
 const FIELD_TEXT_MODULE = '/src/app/lib/field-text.ts';
 

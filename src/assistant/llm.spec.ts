@@ -1,37 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buildAutoCompletionMessage, buildSpellCheckMessage, parseAutoCompletion, parseMistakes, type AutoCompletionRequest, type Mistake, type SpellCheckRequest } from '../src/assistant/llm';
-import { findMistakesInText } from '../src/assistant/mistake-places';
-import { directionOfLastWord } from '../src/assistant/words';
-
-test('findMistakesInText places a mistake by its context, also in Arabic', () => {
-  const you: Mistake = {
-    word: 'you',
-    context: 'you details',
-    fixes: ['your'],
-    isSure: true,
-  };
-  const places = findMistakesInText('to you and you details', [you]);
-  expect(places.map((place) => [place.word, place.start, place.end])).toEqual([['you', 11, 14]]);
-
-  const thanks: Mistake = {
-    word: 'شكرا',
-    context: 'شكرا لتواصلك',
-    fixes: ['شكراً'],
-    isSure: true,
-  };
-  const arabic = findMistakesInText('شكرا لتواصلك معنا', [thanks]);
-  expect(arabic.map((place) => place.start)).toEqual([0]);
-});
-
-test('findMistakesInText drops a mistake whose word is twice in its context', () => {
-  const the: Mistake = {
-    word: 'the',
-    context: 'the the form',
-    fixes: ['the'],
-    isSure: true,
-  };
-  expect(findMistakesInText('the the form', [the])).toEqual([]);
-});
+import { buildAutoCompletionMessage, buildSpellCheckMessage, parseAutoCompletion, parseMistakes, type AutoCompletionRequest, type Mistake, type SpellCheckRequest } from './llm';
 
 test('the spell check message has the word lists and the caret, the auto-completion message asks to complete at the caret', () => {
   const spellCheckRequest: SpellCheckRequest = {
@@ -83,9 +51,4 @@ test('parseMistakes keeps well-formed mistakes, parseAutoCompletion reads the ne
   expect(parseAutoCompletion('{"nextSentence": " to you."}')).toBe(' to you.');
   expect(parseAutoCompletion('{}')).toBe('');
   expect(parseAutoCompletion('not json')).toBeNull();
-});
-
-test('text direction follows the letters', () => {
-  expect(directionOfLastWord('Hello سارة')).toBe('rtl');
-  expect(directionOfLastWord('مرحبا Sasha')).toBe('ltr');
 });
