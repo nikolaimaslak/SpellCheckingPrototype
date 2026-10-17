@@ -39,3 +39,15 @@ test('a settings change reaches the next request and keeps the typed text', asyn
   expect(demo.userMessages[1]).toContain('خالد الحربي');
   await expect(demo.field).toHaveText('Hi there');
 });
+
+test('clearing the field stops the loader and sends no request', async ({ page }) => {
+  const demo = await openDemoPage(page, () => ({}));
+  await demo.field.click();
+  await page.keyboard.type('Hi');
+  await expect(page.getByRole('status')).toHaveText('Waiting for you to stop typing…');
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.keyboard.press('Backspace');
+  await expect(page.getByRole('status')).toHaveText('');
+  await demo.waitPastDebounce();
+  expect(demo.userMessages).toHaveLength(0);
+});

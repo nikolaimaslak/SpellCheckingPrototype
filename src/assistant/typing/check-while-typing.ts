@@ -52,6 +52,14 @@ function scheduleLLMRequest(context: AssistantContext) {
     trace('typing', 'spelling and completion are off: no request');
     return;
   }
+  if (!readFieldText(context.field).text.trim()) {
+    trace('typing', 'the field is empty: no request');
+    clearTimeout(typing.requestTimer);
+    typing.requestTimer = undefined;
+    typing.lastSentText = '';
+    updateLoader(context);
+    return;
+  }
   trace('typing', typing.requestTimer ? `typing continues: debounce timer restarted (${options.debounceMs} ms)` : `debounce timer started: request in ${options.debounceMs} ms unless typing continues`);
   clearTimeout(typing.requestTimer);
   typing.requestTimer = setTimeout(() => void sendLLMRequest(context), options.debounceMs);
