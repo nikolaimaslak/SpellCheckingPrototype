@@ -69,7 +69,7 @@ function acceptAll(context: AssistantContext, ghost: GhostState) {
   trace('ghost', `accepted ${JSON.stringify(ghost.text)} (one undo step)`);
   hideGhost(context);
   replaceText(context.field, caret, ghost.text);
-  context.log({ type: 'completion-accepted', text: ghost.text });
+  context.log({ type: 'auto-completion-accepted', text: ghost.text });
 }
 
 function acceptNextWord(context: AssistantContext, ghost: GhostState) {

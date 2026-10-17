@@ -9,13 +9,18 @@ export interface FakeAnswer {
 export const ACCEPT_WORD_KEY = process.platform === 'darwin' ? 'Alt+ArrowRight' : 'Control+ArrowRight';
 export const DEBOUNCE_MS = 1000;
 
+const draftOf = (userMessage: string) => userMessage.split("Draft:\n")[1].split('\n\nComplete the draft')[0];
+
 export async function openDemoPage(page: Page, answerFor: (draft: string) => FakeAnswer) {
   const userMessages: string[] = [];
+  const spellingMessages: string[] = [];
+  const completionMessages: string[] = [];
   await page.route('https://api.openai.com/**', async (route) => {
     const body = JSON.parse(route.request().postData() ?? '{}') as { messages: { content: string }[] };
     const userMessage = body.messages.at(-1)!.content;
     userMessages.push(userMessage);
-    const draft = userMessage.split("Agent's draft:\n")[1].split('\n\nComplete the draft')[0];
+    (userMessage.includes('Complete the draft at ‸') ? completionMessages : spellingMessages).push(userMessage);
+    const draft = draftOf(userMessage);
     const answer: FakeAnswer = {
       mistakes: [],
       nextSentence: '',
@@ -36,7 +41,10 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     field,
     userMessages,
     ghostText: () => ghost.textContent({ timeout: 1000 }).catch(() => null),
-    sentDrafts: () => userMessages.map((message) => message.split("Agent's draft:\n")[1].split('\n\nComplete the draft')[0]),
+    spellingMessages,
+    completionMessages,
+    spellingDrafts: () => spellingMessages.map(draftOf),
+    completionDrafts: () => completionMessages.map(draftOf),
     waitPastDebounce: () => page.waitForTimeout(DEBOUNCE_MS * 1.5),
   };
 }

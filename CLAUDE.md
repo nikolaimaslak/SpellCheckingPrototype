@@ -18,7 +18,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
   - `types.ts`: options, state and event types.
   - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.
   - `text/`: `field-text.ts` (the field's text as one string, mapped back to DOM ranges and the caret), `words.ts` (finding whole words, text direction).
-  - `llm.ts`: the one prompt (mistakes with fixes and how sure, plus the completion), the one fetch to the LLM, `MODEL`, answer parsing.
+  - `llm.ts`: the two requests, sent in parallel after the same pause in typing (spelling: mistakes with fixes and how sure; completion: the next sentence at the caret), the fetch to the LLM, `MODEL`, building the user messages, answer parsing. `spelling-prompt.ts` and `completion-prompt.ts`: each request's system message and examples.
   - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct with each replaced word as one undo step, keeping the caret and flashing the replaced words, Undo as revert), `ghost-text.ts` (the completion shown after the caret and its keys; React draws it).
 - `tests/`: Playwright tests. `demo-page.ts` opens the page with a fake LLM; `*.spec.ts` cover ghost text, spelling, the page, reading the field's text (in the browser) and the pure text functions (in Node).
 - Code has no comments: names say what things are.
@@ -26,7 +26,7 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
 ## Hard constraints
 
 - **No browser extensions.** Everything is page code.
-- **The only network calls are to OpenAI**, with the key from the page's password field (kept in memory only, never saved): the spelling and completion check.
+- **The only network calls are to OpenAI**, with the key from the page's password field (kept in memory only, never saved): the spelling check and the completion.
 - **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for ghost text. Programmatic text changes go through `replaceText` in `browser.ts`, so each one is one native undo step.
 - **Licensing.** No GPL/LGPL terms. Any new dependency needs its license checked first.
 - **English first, Arabic first-class.** Every text-processing behavior must work in English, Arabic and mixed text. Use `dir="auto"` / `unicode-bidi: plaintext` for direction.

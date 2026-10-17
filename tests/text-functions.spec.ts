@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buildUserMessage, parseAnswer, type CheckRequest, type Mistake } from '../src/assistant/llm';
+import { buildCompletionMessage, buildSpellingMessage, parseCompletion, parseMistakes, type CompletionRequest, type Mistake, type SpellingRequest } from '../src/assistant/llm';
 import { findMistakesInText } from '../src/assistant/text/mistake-places';
 import { directionOfLastWord } from '../src/assistant/text/words';
 
@@ -33,23 +33,29 @@ test('findMistakesInText drops a mistake whose word is twice in its context', ()
   expect(findMistakesInText('the the form', [the])).toEqual([]);
 });
 
-test('buildUserMessage puts ‸ at the caret only when a completion is asked for', () => {
-  const request: CheckRequest = {
+test('the spelling message has the word lists and the caret, the completion message asks to complete at the caret', () => {
+  const spellingRequest: SpellingRequest = {
     draft: 'Hi Sasha,\nBest regards',
-    shouldAskCompletion: true,
     caretOffset: 9,
-    isCaretOnNewLine: false,
     llmContext: 'Agent:\n- Name: Daniel',
     customWords: ['GOSI'],
     ignoredWords: [],
   };
-  expect(buildUserMessage(request)).toBe(
-    "Agent:\n- Name: Daniel\n\nCustom words:\n- GOSI\n\nAgent's draft:\nHi Sasha,‸\nBest regards\n\nComplete the draft at ‸ with one short sentence.",
+  expect(buildSpellingMessage(spellingRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom words:\n- GOSI\n\nDraft:\nHi Sasha,‸\nBest regards");
+  expect(buildSpellingMessage({ ...spellingRequest, caretOffset: undefined })).not.toContain('‸');
+
+  const completionRequest: CompletionRequest = {
+    draft: 'Hi Sasha,\nBest regards',
+    caretOffset: 9,
+    isCaretOnNewLine: false,
+    llmContext: 'Agent:\n- Name: Daniel',
+  };
+  expect(buildCompletionMessage(completionRequest)).toBe(
+    "Agent:\n- Name: Daniel\n\nDraft:\nHi Sasha,‸\nBest regards\n\nComplete the draft at ‸ with one short sentence.",
   );
-  expect(buildUserMessage({ ...request, shouldAskCompletion: false })).not.toContain('‸');
 });
 
-test('parseAnswer keeps well-formed mistakes and reads the next sentence', () => {
+test('parseMistakes keeps well-formed mistakes, parseCompletion reads the next sentence', () => {
   const reply = JSON.stringify({
     mistakes: [
       {
@@ -65,7 +71,6 @@ test('parseAnswer keeps well-formed mistakes and reads the next sentence', () =>
         fixes: [],
       },
     ],
-    nextSentence: ' to you.',
   });
   const sen: Mistake = {
     word: 'sen',
@@ -73,8 +78,11 @@ test('parseAnswer keeps well-formed mistakes and reads the next sentence', () =>
     fixes: ['send'],
     isSure: true,
   };
-  expect(parseAnswer(reply)).toEqual({ mistakes: [sen], completion: ' to you.' });
-  expect(parseAnswer('not json')).toBeNull();
+  expect(parseMistakes(reply)).toEqual([sen]);
+  expect(parseMistakes('not json')).toBeNull();
+  expect(parseCompletion('{"nextSentence": " to you."}')).toBe(' to you.');
+  expect(parseCompletion('{}')).toBe('');
+  expect(parseCompletion('not json')).toBeNull();
 });
 
 test('text direction follows the letters', () => {

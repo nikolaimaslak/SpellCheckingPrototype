@@ -1,4 +1,4 @@
-import { checkDraftWithLLM } from '../llm';
+import { checkSpellingWithLLM, completeDraftWithLLM, type Mistake } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
@@ -78,8 +78,14 @@ async function sendLLMRequest(context: AssistantContext) {
     return;
   }
 
+  const shouldCheckSpelling = context.options.spellCheckMode !== 'off';
   const shouldAskCompletion = canAskCompletion(context, sentText.text, caret);
-  trace('typing', `debounce over: sending the draft${shouldAskCompletion ? ' (spelling + completion after the caret)' : ' (spelling only)'}`, {
+  if (!shouldCheckSpelling && !shouldAskCompletion) {
+    trace('typing', 'debounce over, but spelling is off and no completion can be asked for here: nothing to send');
+    updateLoader(context);
+    return;
+  }
+  trace('typing', `debounce over: sending the draft (${[shouldCheckSpelling && 'spelling', shouldAskCompletion && 'completion'].filter(Boolean).join(' + ')})`, {
     draft: sentText.text,
     caret,
   });
@@ -87,52 +93,82 @@ async function sendLLMRequest(context: AssistantContext) {
   const request = new AbortController();
   context.typing.runningRequest = request;
   updateLoader(context);
-  context.log({
-    type: 'send-to-llm',
-    text: sentText.text,
-    withCompletion: shouldAskCompletion,
-  });
-  const answer = await checkDraftWithLLM(
-    context.options.apiKey,
-    {
-      draft: sentText.text,
-      shouldAskCompletion,
-      caretOffset: caret,
-      isCaretOnNewLine: sentText.text.slice(0, caret).endsWith('\n'),
-      llmContext: context.options.llmContext,
-      customWords: [...context.customWords],
-      ignoredWords: context.ignoredWords,
-    },
-    request.signal,
-  );
+  const [mistakes, completion] = await Promise.all([
+    shouldCheckSpelling ? askSpelling(context, sentText.text, caret, request.signal) : [],
+    shouldAskCompletion ? askCompletion(context, sentText.text, caret!, request.signal) : '',
+  ]);
   if (request.signal.aborted) {
-    trace('typing', 'answer dropped: the request was aborted');
+    trace('typing', 'answers dropped: the request was aborted');
     return;
   }
   context.typing.runningRequest = undefined;
-  context.log({ type: 'llm-answer', reply: answer });
 
-  if (answer) {
-    const currentText = readFieldText(context.field);
-    const hasNothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
-    trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${hasNothingMoved ? 'unchanged' : 'changed'} since sending`);
-    if (context.options.spellCheckMode !== 'off') {
-      displayAndAutocorrectMistakes(context, answer.mistakes);
-    }
-    if (!shouldAskCompletion) {
-      trace('typing', 'no completion was asked for');
-    } else if (!hasNothingMoved) {
-      trace('typing', 'completion dropped: the text or the caret moved while waiting');
-    } else {
-      showGhost(context, answer.completion, caret!);
-    }
+  const currentText = readFieldText(context.field);
+  const hasNothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
+  if (shouldCheckSpelling && mistakes) {
+    displayAndAutocorrectMistakes(context, mistakes);
+  }
+  if (!shouldAskCompletion || completion === null) {
+    trace('typing', 'no completion to show');
+  } else if (!hasNothingMoved) {
+    trace('typing', 'completion dropped: the text or the caret moved while waiting');
   } else {
-    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
+    showGhost(context, completion, caret!);
+  }
+  if (mistakes === null || completion === null) {
+    trace('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
     context.setState({ loader: { kind: 'failed' } });
     setTimeout(() => updateLoader(context), 2000);
     return;
   }
   updateLoader(context);
+}
+
+async function askSpelling(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
+  context.log({ type: 'spell-check-request', text: draft });
+  const result = await checkSpellingWithLLM(
+    context.options.apiKey,
+    {
+      draft,
+      caretOffset: caret,
+      llmContext: context.options.llmContext,
+      customWords: [...context.customWords],
+      ignoredWords: context.ignoredWords,
+    },
+    signal,
+  );
+  if (signal.aborted) {
+    return null;
+  }
+  if ('error' in result) {
+    context.log({ type: 'spell-check-error', error: result.error });
+    return null;
+  }
+  context.log({ type: 'spell-check-answer', reply: result.answer });
+  return result.answer;
+}
+
+async function askCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
+  context.log({ type: 'auto-completion-request', text: draft });
+  const result = await completeDraftWithLLM(
+    context.options.apiKey,
+    {
+      draft,
+      caretOffset: caret,
+      isCaretOnNewLine: draft.slice(0, caret).endsWith('\n'),
+      llmContext: context.options.llmContext,
+    },
+    signal,
+  );
+  if (signal.aborted) {
+    return null;
+  }
+  if ('error' in result) {
+    context.log({ type: 'auto-completion-error', error: result.error });
+    return null;
+  }
+  context.log({ type: 'auto-completion-answer', reply: result.answer });
+  return result.answer;
 }
 
 function canAskCompletion(context: AssistantContext, text: string, caret: number | undefined): boolean {

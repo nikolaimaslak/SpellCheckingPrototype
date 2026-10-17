@@ -32,7 +32,7 @@ test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored 
   await expect(demo.field).toHaveText('I will send the form');
   await expect(page.getByLabel('Ignored words')).toHaveValue('');
   await demo.waitPastDebounce();
-  expect(demo.userMessages).toHaveLength(1);
+  expect(demo.spellingMessages).toHaveLength(1);
 });
 
 test('after typing, redo is gone and an undone auto-correction stays ignored', async ({ page }) => {

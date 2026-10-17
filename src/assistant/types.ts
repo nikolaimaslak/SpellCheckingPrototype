@@ -41,19 +41,16 @@ export interface AssistantState {
 export const INITIAL_STATE: AssistantState = {};
 
 export type AssistEvent =
-  | {
-      type: 'send-to-llm';
-      text: string;
-      withCompletion: boolean;
-    }
-  | { type: 'llm-answer'; reply: unknown }
+  | { type: 'spell-check-request' | 'auto-completion-request'; text: string }
+  | { type: 'spell-check-answer' | 'auto-completion-answer'; reply: unknown }
+  | { type: 'spell-check-error' | 'auto-completion-error'; error: string }
   | {
       type: 'autocorrect' | 'revert' | 'pick';
       original: string;
       replacement: string;
     }
   | { type: 'ignore'; word: string }
-  | { type: 'completion-accepted'; text: string };
+  | { type: 'auto-completion-accepted'; text: string };
 
 export interface AssistantOptions {
   apiKey: string;
