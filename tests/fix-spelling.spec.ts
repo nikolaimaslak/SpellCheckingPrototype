@@ -1,10 +1,18 @@
 import { expect, test } from '@playwright/test';
+import type { Mistake } from '../src/assistant/llm';
 import { openDemoPage } from './demo-page';
+
+const teh: Mistake = {
+  word: 'teh',
+  context: 'send teh form',
+  fixes: ['the'],
+  sure: false,
+};
 
 test.skip(true, 'the Fix spelling button is hidden');
 
 test.beforeEach(async ({ page }) => {
-  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'teh', context: 'send teh form', fixes: ['the'], sure: false }] }));
+  const demo = await openDemoPage(page, () => ({ mistakes: [teh] }));
   await page.getByRole('checkbox', { name: 'Auto-correct' }).uncheck();
   await demo.field.click();
   await page.keyboard.type('I will send teh form');

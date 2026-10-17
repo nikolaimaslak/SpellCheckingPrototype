@@ -1,11 +1,26 @@
 import { expect, test } from '@playwright/test';
+import type { Mistake } from '../src/assistant/llm';
 import { openDemoPage } from './demo-page';
+
+const sureSen: Mistake = {
+  word: 'sen',
+  context: 'will sen the',
+  fixes: ['send'],
+  sure: true,
+};
+
+const unsureSen: Mistake = {
+  word: 'sen',
+  context: 'will sen the',
+  fixes: ['send', 'see'],
+  sure: false,
+};
 
 const underlinedCount = (page: import('@playwright/test').Page) =>
   page.evaluate(() => CSS.highlights.get('bp-spelling-error')?.size ?? 0);
 
 test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, redo un-ignores it, and neither asks again', async ({ page }) => {
-  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }));
+  const demo = await openDemoPage(page, () => ({ mistakes: [sureSen] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
   await expect(demo.field).toHaveText('I will send the form');
@@ -21,7 +36,7 @@ test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored 
 });
 
 test('after typing, redo is gone and an undone auto-correction stays ignored', async ({ page }) => {
-  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }));
+  const demo = await openDemoPage(page, () => ({ mistakes: [sureSen] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
   await expect(demo.field).toHaveText('I will send the form');
@@ -35,7 +50,7 @@ test('after typing, redo is gone and an undone auto-correction stays ignored', a
 });
 
 test('an unsure mistake is underlined and fixed from the popover', async ({ page }) => {
-  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send', 'see'], sure: false }] }));
+  const demo = await openDemoPage(page, () => ({ mistakes: [unsureSen] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
   await expect.poll(() => underlinedCount(page)).toBe(1);
@@ -52,8 +67,13 @@ test('an unsure mistake is underlined and fixed from the popover', async ({ page
 test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({
     mistakes: [
-      { word: 'sen', context: 'will sen the', fixes: ['send'], sure: false },
-      { word: 'fomr', context: 'the fomr', fixes: ['form'], sure: false },
+      unsureSen,
+      {
+        word: 'fomr',
+        context: 'the fomr',
+        fixes: ['form'],
+        sure: false,
+      },
     ],
   }));
   await demo.field.click();
@@ -75,7 +95,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
 });
 
 test('turning spell check off removes the underlines', async ({ page }) => {
-  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: false }] }));
+  const demo = await openDemoPage(page, () => ({ mistakes: [unsureSen] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
   await expect.poll(() => underlinedCount(page)).toBe(1);
@@ -86,9 +106,24 @@ test('turning spell check off removes the underlines', async ({ page }) => {
 test('a fix that adds or merges words is underlined and picked as a whole', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({
     mistakes: [
-      { word: 'documents', context: 'and documents ready', fixes: ['documents are'], sure: false },
-      { word: 'portal', context: 'from portal when', fixes: ['the portal'], sure: false },
-      { word: 'will be', context: 'it will be convenient', fixes: ['is'], sure: true },
+      {
+        word: 'documents',
+        context: 'and documents ready',
+        fixes: ['documents are'],
+        sure: false,
+      },
+      {
+        word: 'portal',
+        context: 'from portal when',
+        fixes: ['the portal'],
+        sure: false,
+      },
+      {
+        word: 'will be',
+        context: 'it will be convenient',
+        fixes: ['is'],
+        sure: true,
+      },
     ],
   }));
   await demo.field.click();

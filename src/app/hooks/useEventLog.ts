@@ -10,5 +10,9 @@ export function useEventLog() {
     setLogLines((lines) => [...lines.slice(-(MAX_LINES - 1)), line]);
   }, []);
   const clearLog = useCallback(() => setLogLines([]), []);
-  return { logLines, logEvent, clearLog };
+  return {
+    logLines,
+    logEvent,
+    clearLog,
+  };
 }

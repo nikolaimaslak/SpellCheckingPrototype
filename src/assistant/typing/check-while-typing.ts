@@ -12,7 +12,11 @@ function updateLoader(context: AssistantContext) {
   const loader: AssistantState['loader'] = typing.runningRequest
     ? { kind: 'request' }
     : typing.requestTimer
-      ? { kind: 'debounce', startedAt: typing.debounceStartedAt, durationMs: context.options.debounceMs }
+      ? {
+          kind: 'debounce',
+          startedAt: typing.debounceStartedAt,
+          durationMs: context.options.debounceMs,
+        }
       : undefined;
   if (JSON.stringify(context.getState().loader) === JSON.stringify(loader)) {
     return;
@@ -76,7 +80,11 @@ async function sendLLMRequest(context: AssistantContext) {
   const request = new AbortController();
   typing.runningRequest = request;
   updateLoader(context);
-  context.log({ type: 'send-to-llm', text: sentText.text, withCompletion: shouldAskCompletion });
+  context.log({
+    type: 'send-to-llm',
+    text: sentText.text,
+    withCompletion: shouldAskCompletion,
+  });
   const answer = await checkDraftWithLLM(
     options.apiKey,
     {

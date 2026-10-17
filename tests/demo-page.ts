@@ -16,7 +16,11 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     const userMessage = body.messages.at(-1)!.content;
     userMessages.push(userMessage);
     const draft = userMessage.split("Agent's draft:\n")[1].split('\n\nComplete the draft')[0];
-    const answer: FakeAnswer = { mistakes: [], nextSentence: '', ...answerFor(draft) };
+    const answer: FakeAnswer = {
+      mistakes: [],
+      nextSentence: '',
+      ...answerFor(draft),
+    };
     await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(answer) } }] } });
   });
   await page.goto('/');

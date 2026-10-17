@@ -1,4 +1,9 @@
-export function TextArea(props: { label: string; hint?: string; value: string; onChange: (value: string) => void }) {
+export function TextArea(props: {
+  label: string;
+  hint?: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
   return (
     <label className="flex flex-col gap-1 lg:row-span-3 lg:grid lg:grid-rows-subgrid">
       <span className="flex h-6 items-center text-sm font-semibold">{props.label}</span>

@@ -305,10 +305,19 @@ export function parseAnswer(reply: string): CheckAnswer | null {
   }
 }
 
-function toMistake(raw: { word?: unknown; context?: unknown; fixes?: unknown; sure?: unknown } | null): Mistake[] {
+function toMistake(raw: Partial<Record<keyof Mistake, unknown>> | null): Mistake[] {
   if (typeof raw?.word !== 'string' || typeof raw.context !== 'string' || !Array.isArray(raw.fixes)) {
     return [];
   }
   const fixes = raw.fixes.filter((fix): fix is string => typeof fix === 'string');
-  return fixes.length ? [{ word: raw.word, context: raw.context, fixes, sure: raw.sure === true }] : [];
+  if (!fixes.length) {
+    return [];
+  }
+  const mistake: Mistake = {
+    word: raw.word,
+    context: raw.context,
+    fixes,
+    sure: raw.sure === true,
+  };
+  return [mistake];
 }

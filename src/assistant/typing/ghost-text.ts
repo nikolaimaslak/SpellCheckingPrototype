@@ -93,7 +93,13 @@ function followDeletedSpaces(context: AssistantContext, ghost: GhostState): bool
     return false;
   }
   trace('ghost', 'backspace removed only spaces: the ghost text moves to the caret');
-  context.setState({ ghost: { ...ghost, caretOffset: caret, fieldText: now.text } });
+  context.setState({
+    ghost: {
+      ...ghost,
+      caretOffset: caret,
+      fieldText: now.text,
+    },
+  });
   return true;
 }
 
@@ -117,7 +123,12 @@ function followNewLine(context: AssistantContext, ghost: GhostState): boolean {
   }
   trace('ghost', `new line: the ghost text moves to it as ${JSON.stringify(ghostTextWithoutLeadingSpacesAndCommas)}`);
   context.setState({
-    ghost: { ...ghost, text: ghostTextWithoutLeadingSpacesAndCommas, caretOffset: caretNow, fieldText: textNow.text },
+    ghost: {
+      ...ghost,
+      text: ghostTextWithoutLeadingSpacesAndCommas,
+      caretOffset: caretNow,
+      fieldText: textNow.text,
+    },
   });
   return true;
 }
@@ -148,7 +159,14 @@ export function ghostFollowsTyping(context: AssistantContext, event: InputEvent)
   const remainingText = ghost.text.slice(event.data.length);
   trace('ghost', `typed what the ghost text said: ${JSON.stringify(remainingText)} left`);
   if (remainingText) {
-    context.setState({ ghost: { ...ghost, text: remainingText, caretOffset: caretAfterTyping, fieldText: fieldText.text } });
+    context.setState({
+      ghost: {
+        ...ghost,
+        text: remainingText,
+        caretOffset: caretAfterTyping,
+        fieldText: fieldText.text,
+      },
+    });
   } else {
     hideGhost(context);
   }

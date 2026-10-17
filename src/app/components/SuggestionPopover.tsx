@@ -17,9 +17,21 @@ const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
 
 export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
   const items = [
-    ...popover.suggestions.map((s) => ({ label: s, run: () => onPick(s), strong: true })),
-    { label: 'Ignore', run: onIgnore, strong: false },
-    { label: 'Add to dictionary', run: () => onAddToDictionary(popover.word), strong: false },
+    ...popover.suggestions.map((s) => ({
+      label: s,
+      run: () => onPick(s),
+      strong: true,
+    })),
+    {
+      label: 'Ignore',
+      run: onIgnore,
+      strong: false,
+    },
+    {
+      label: 'Add to dictionary',
+      run: () => onAddToDictionary(popover.word),
+      strong: false,
+    },
   ];
   const [focused, setFocused] = useState(0);
   const box = useRef<HTMLDivElement>(null);
@@ -77,7 +89,11 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
       aria-label="Spelling suggestions"
       dir={popover.dir}
       className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-sm text-slate-800 shadow"
-      style={position ?? { top: 0, left: 0, visibility: 'hidden' }}
+      style={position ?? {
+        top: 0,
+        left: 0,
+        visibility: 'hidden',
+      }}
       onMouseDown={(e) => e.preventDefault()}
     >
       {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500">No suggestions</div>}

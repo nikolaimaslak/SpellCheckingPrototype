@@ -23,7 +23,12 @@ export function caretRange(): Range | undefined {
   return range;
 }
 
-const toRect = (box: DOMRect): Rect => ({ left: box.left, right: box.right, top: box.top, bottom: box.bottom });
+const toRect = (box: DOMRect): Rect => ({
+  left: box.left,
+  right: box.right,
+  top: box.top,
+  bottom: box.bottom,
+});
 
 export function rectOfRange(range: Range): Rect {
   return toRect(range.getClientRects()[0] ?? range.getBoundingClientRect());
@@ -50,7 +55,12 @@ export function caretRect(field: HTMLElement): Rect | null {
   const emptyLineBreak = node.childNodes[selection.anchorOffset];
   if (emptyLineBreak instanceof HTMLBRElement) {
     const lineBox = emptyLineBreak.getBoundingClientRect();
-    return { left: lineBox.left, right: lineBox.left, top: lineBox.top, bottom: lineBox.bottom };
+    return {
+      left: lineBox.left,
+      right: lineBox.left,
+      top: lineBox.top,
+      bottom: lineBox.bottom,
+    };
   }
   return null;
 }

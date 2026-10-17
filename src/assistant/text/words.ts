@@ -13,7 +13,13 @@ export function findWordPlaces(text: string, words: Iterable<string>): WordPlace
   const places: WordPlace[] = [];
   for (const word of words) {
     const wholeWord = new RegExp(`(?<![\\p{L}\\p{M}\\p{N}])${escapeForRegExp(word)}(?![\\p{L}\\p{M}\\p{N}])`, 'gu');
-    for (const match of text.matchAll(wholeWord)) places.push({ word, start: match.index, end: match.index + word.length });
+    for (const match of text.matchAll(wholeWord)) {
+      places.push({
+        word,
+        start: match.index,
+        end: match.index + word.length,
+      });
+    }
   }
   return places.sort((first, second) => first.start - second.start);
 }

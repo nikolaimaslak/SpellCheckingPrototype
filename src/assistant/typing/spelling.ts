@@ -58,7 +58,11 @@ function autoCorrectSureMistakes(context: AssistantContext) {
   const replacements = placesToFix.map((place) => ({ place, replacement: place.mistake.fixes[0] }));
   for (const { place, replacement } of replaceWords(context, replacements)) {
     context.spelling.replacementByOriginal.set(place.word, replacement);
-    context.log({ type: 'autocorrect', original: place.word, replacement });
+    context.log({
+      type: 'autocorrect',
+      original: place.word,
+      replacement,
+    });
   }
 }
 
@@ -72,7 +76,11 @@ export function noticeUndo(context: AssistantContext) {
     context.spelling.replacementByOriginal.delete(original);
     context.spelling.undoneAutoCorrections.push({ original, replacement });
     addIgnoredWord(context, original);
-    context.log({ type: 'revert', original, replacement });
+    context.log({
+      type: 'revert',
+      original,
+      replacement,
+    });
   }
 }
 
@@ -84,7 +92,11 @@ export function noticeRedo(context: AssistantContext) {
     trace('spelling', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
     spelling.replacementByOriginal.set(original, replacement);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
-    context.log({ type: 'autocorrect', original, replacement });
+    context.log({
+      type: 'autocorrect',
+      original,
+      replacement,
+    });
   }
   if (redone.length) {
     spelling.undoneAutoCorrections = spelling.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
@@ -142,7 +154,11 @@ export function pickSuggestion(context: AssistantContext, suggestion: string) {
   }
   trace('spelling', `picked "${suggestion}" for "${place.word}"`);
   replaceText(context.field, rangeOf(fieldText, place.start, place.end), suggestion);
-  context.log({ type: 'pick', original: place.word, replacement: suggestion });
+  context.log({
+    type: 'pick',
+    original: place.word,
+    replacement: suggestion,
+  });
   redrawUnderlines(context);
 }
 

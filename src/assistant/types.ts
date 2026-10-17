@@ -28,7 +28,11 @@ export interface GhostState {
 
 export interface FixSpellingState {
   busy: boolean;
-  preview?: { dir: TextDirection; segments: DiffSegment[]; message?: string };
+  preview?: {
+    dir: TextDirection;
+    segments: DiffSegment[];
+    message?: string;
+  };
 }
 
 export interface AssistantState {
@@ -36,7 +40,11 @@ export interface AssistantState {
   ghost?: GhostState;
   fixSpelling: FixSpellingState;
   loader?:
-    | { kind: 'debounce'; startedAt: number; durationMs: number }
+    | {
+        kind: 'debounce';
+        startedAt: number;
+        durationMs: number;
+      }
     | { kind: 'request' }
     | { kind: 'failed' };
 }
@@ -44,10 +52,18 @@ export interface AssistantState {
 export const INITIAL_STATE: AssistantState = { fixSpelling: { busy: false } };
 
 export type AssistEvent =
-  | { type: 'send-to-llm'; text: string; withCompletion: boolean }
+  | {
+      type: 'send-to-llm';
+      text: string;
+      withCompletion: boolean;
+    }
   | { type: 'llm-answer' | 'fix-spelling-reply'; reply: unknown }
   | { type: 'fix-spelling-request'; text: string }
-  | { type: 'autocorrect' | 'revert' | 'pick'; original: string; replacement: string }
+  | {
+      type: 'autocorrect' | 'revert' | 'pick';
+      original: string;
+      replacement: string;
+    }
   | { type: 'fix-spelling'; text: string }
   | { type: 'ignore'; word: string }
   | { type: 'completion-accepted'; text: string };

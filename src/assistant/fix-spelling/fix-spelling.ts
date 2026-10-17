@@ -17,7 +17,13 @@ function applyToText(text: string, replacements: WordReplacement[]): string {
 
 const updateState = (context: AssistantContext, patch: Partial<FixSpellingState>) => context.setState({ fixSpelling: { ...context.getState().fixSpelling, ...patch } });
 const showMessage = (context: AssistantContext, message: string) =>
-  updateState(context, { preview: { dir: directionOfText(readFieldText(context.field).text), segments: [], message } });
+  updateState(context, {
+    preview: {
+      dir: directionOfText(readFieldText(context.field).text),
+      segments: [],
+      message,
+    },
+  });
 
 export async function fixSpellingNow(context: AssistantContext) {
   const { fixSpelling, options } = context;

@@ -67,7 +67,11 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     dismissSpellingFixes: () => dismissSpellingFixes(context),
 
     updateOptions(newOptions: AssistantOptions) {
-      trace('assistant', 'settings changed', { spellCheckMode: newOptions.spellCheckMode, withCompletion: newOptions.withCompletion, hasApiKey: !!newOptions.apiKey });
+      trace('assistant', 'settings changed', {
+        spellCheckMode: newOptions.spellCheckMode,
+        withCompletion: newOptions.withCompletion,
+        hasApiKey: !!newOptions.apiKey,
+      });
       context.options = newOptions;
       context.ignoredWords = newOptions.ignoredWords;
       context.customWords = new Set(newOptions.customWords);

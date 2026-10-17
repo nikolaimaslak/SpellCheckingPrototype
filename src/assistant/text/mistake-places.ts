@@ -21,7 +21,12 @@ export function findMistakesInText(fieldText: string, mistakes: Mistake[]): Plac
     const wordInContext = wordsInContext[0];
     for (let contextStart = text.indexOf(context); contextStart !== -1; contextStart = text.indexOf(context, contextStart + 1)) {
       const start = contextStart + wordInContext.start;
-      placesByStart.set(start, { word: mistake.word, start, end: start + mistake.word.length, mistake });
+      placesByStart.set(start, {
+        word: mistake.word,
+        start,
+        end: start + mistake.word.length,
+        mistake,
+      });
     }
   }
   return [...placesByStart.values()].sort((first, second) => first.start - second.start);

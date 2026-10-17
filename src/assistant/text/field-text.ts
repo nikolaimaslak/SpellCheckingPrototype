@@ -42,7 +42,11 @@ export function readFieldText(field: HTMLElement): FieldText {
       const data = (node as Text).data;
       if (data) {
         write('');
-        pieces.push({ node: node as Text, start: text.length, length: data.length });
+        pieces.push({
+          node: node as Text,
+          start: text.length,
+          length: data.length,
+        });
         text += data;
       }
       return;
@@ -78,7 +82,12 @@ export function readFieldText(field: HTMLElement): FieldText {
   };
 
   field.childNodes.forEach(visit);
-  return { field, text, pieces, emptyLines };
+  return {
+    field,
+    text,
+    pieces,
+    emptyLines,
+  };
 }
 
 export function caretOffset(fieldText: FieldText): number | undefined {
