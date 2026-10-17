@@ -112,7 +112,10 @@ async function sendLLMRequest(context: AssistantContext) {
       showGhost(context, answer.completion, caret!);
     }
   } else {
-    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): nothing changes');
+    trace('typing', 'no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
+    context.setState({ loader: { kind: 'failed' } });
+    setTimeout(() => updateLoader(context), 2000);
+    return;
   }
   updateLoader(context);
 }

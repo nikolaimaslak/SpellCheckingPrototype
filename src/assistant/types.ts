@@ -35,7 +35,10 @@ export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
   fixSpelling: FixSpellingState;
-  loader?: { kind: 'debounce'; startedAt: number; durationMs: number } | { kind: 'request' };
+  loader?:
+    | { kind: 'debounce'; startedAt: number; durationMs: number }
+    | { kind: 'request' }
+    | { kind: 'failed' };
 }
 
 export const INITIAL_STATE: AssistantState = { fixSpelling: { busy: false } };

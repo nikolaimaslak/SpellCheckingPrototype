@@ -36,7 +36,31 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
   return (
     <section className="space-y-2">
       <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-        <h2 className="mr-auto text-lg font-semibold">Message field</h2>
+        <div className="mr-auto flex items-center gap-2">
+          <h2 className="text-lg font-semibold">Message field</h2>
+          <span role="status" className="flex items-center gap-1.5 text-sm text-slate-500">
+            {state.fixSpelling.busy ? (
+              <>
+                <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                Fixing spelling…
+              </>
+            ) : state.loader?.kind === 'debounce' ? (
+              <>
+                <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />
+                Waiting for you to stop typing…
+              </>
+            ) : state.loader?.kind === 'request' ? (
+              <>
+                <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                Checking with the LLM…
+              </>
+            ) : state.loader?.kind === 'failed' ? (
+              <span className="text-red-600">
+                <span aria-hidden="true" className="font-bold">✕</span> LLM request failed
+              </span>
+            ) : null}
+          </span>
+        </div>
         {toolbar}
       </div>
       <div className="relative">
@@ -63,35 +87,28 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
         />
-        {state.loader?.kind === 'debounce' && <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />}
-        {(state.loader?.kind === 'request' || state.fixSpelling.busy) && (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute top-2 right-2 size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent"
-          />
-        )}
       </div>
       <dl className="grid grid-cols-[auto_auto] justify-start items-center gap-x-3 gap-y-1 text-sm text-slate-600 [&_dt]:flex [&_dt]:justify-end [&_dt]:gap-1 [&_kbd]:rounded [&_kbd]:border [&_kbd]:border-b-2 [&_kbd]:border-slate-300 [&_kbd]:bg-slate-50 [&_kbd]:px-1.5 [&_kbd]:font-mono [&_kbd]:text-xs">
         <dt>
           <kbd>Tab</kbd>
         </dt>
-        <dd>accept the auto-completion</dd>
+        <dd>accept auto-completion</dd>
         <dt>
           <kbd>{isMac ? 'Option' : 'Ctrl'}</kbd>+<kbd>→</kbd>
         </dt>
-        <dd>accept one word of it</dd>
+        <dd>accept one word of auto-completion</dd>
         <dt>
           <kbd>Esc</kbd>
         </dt>
-        <dd>hide the auto-completion / close the suggestions popup / cancel the LLM request</dd>
+        <dd>hide auto-completion / close suggestions popup / cancel LLM request</dd>
         <dt>
           <kbd>↑</kbd>/<kbd>↓</kbd>,<kbd>Enter</kbd>
         </dt>
-        <dd>pick a fix in the popup</dd>
+        <dd>pick a fix in suggestions popup</dd>
         <dt>
           <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>+<kbd>Z</kbd>
         </dt>
-        <dd>undo an auto-correction</dd>
+        <dd>undo auto-correction</dd>
       </dl>
       {assistant && (
         <>
