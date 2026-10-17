@@ -4,7 +4,7 @@ import { openDemoPage } from './demo-page';
 const underlinedCount = (page: import('@playwright/test').Page) =>
   page.evaluate(() => CSS.highlights.get('bp-spelling-error')?.size ?? 0);
 
-test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, and neither undo nor redo asks again', async ({ page }) => {
+test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, redo un-ignores it, and neither asks again', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }));
   await demo.field.click();
   await page.keyboard.type('I will sen the form');
@@ -15,8 +15,23 @@ test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored 
   await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
   await page.keyboard.press('ControlOrMeta+Shift+z');
   await expect(demo.field).toHaveText('I will send the form');
+  await expect(page.getByLabel('Ignored words')).toHaveValue('');
   await demo.waitPastDebounce();
   expect(demo.userMessages).toHaveLength(1);
+});
+
+test('after typing, redo is gone and an undone auto-correction stays ignored', async ({ page }) => {
+  const demo = await openDemoPage(page, () => ({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }));
+  await demo.field.click();
+  await page.keyboard.type('I will sen the form');
+  await expect(demo.field).toHaveText('I will send the form');
+
+  await page.keyboard.press('ControlOrMeta+z');
+  await page.keyboard.press('End');
+  await page.keyboard.type('s');
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(demo.field).toHaveText('I will sen the forms');
+  await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
 });
 
 test('an unsure mistake is underlined and fixed from the popover', async ({ page }) => {

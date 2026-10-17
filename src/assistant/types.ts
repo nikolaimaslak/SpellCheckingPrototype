@@ -67,6 +67,7 @@ export interface AssistantOptions {
 export interface SpellingData {
   mistakes: Mistake[];
   replacementByOriginal: Map<string, string>;
+  undoneAutoCorrections: { original: string; replacement: string }[];
   openPopover?: { place: PlacedMistake; selectionBefore?: Range };
 }
 

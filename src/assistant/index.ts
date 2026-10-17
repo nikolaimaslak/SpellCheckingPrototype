@@ -24,12 +24,24 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     isReplacingWords: false,
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
-    spelling: { mistakes: [], replacementByOriginal: new Map() },
-    typing: { debounceStartedAt: 0, lastSentText: '', isComposing: false },
+    spelling: {
+      mistakes: [],
+      replacementByOriginal: new Map(),
+      undoneAutoCorrections: [],
+    },
+    typing: {
+      debounceStartedAt: 0,
+      lastSentText: '',
+      isComposing: false,
+    },
     fixSpelling: {},
   };
 
-  trace('assistant', 'attached to the field', { spellCheckMode: options.spellCheckMode, withCompletion: options.withCompletion, hasApiKey: !!options.apiKey });
+  trace('assistant', 'attached to the field', {
+    spellCheckMode: options.spellCheckMode,
+    withCompletion: options.withCompletion,
+    hasApiKey: !!options.apiKey,
+  });
 
   return {
     getState: () => state,

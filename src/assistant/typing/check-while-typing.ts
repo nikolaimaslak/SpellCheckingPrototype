@@ -2,7 +2,7 @@ import { checkDraftWithLLM } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
-import { displayAndAutocorrectMistakes, closePopover, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
+import { displayAndAutocorrectMistakes, closePopover, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
@@ -144,6 +144,10 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
   if (event.inputType === 'historyUndo') {
     noticeUndo(context);
+  } else if (event.inputType === 'historyRedo') {
+    noticeRedo(context);
+  } else {
+    context.spelling.undoneAutoCorrections = [];
   }
   const isFollowingGhost = ghostFollowsTyping(context, event);
   if (!isFollowingGhost) {

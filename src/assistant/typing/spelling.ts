@@ -70,8 +70,25 @@ export function noticeUndo(context: AssistantContext) {
     }
     trace('spelling', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
     context.spelling.replacementByOriginal.delete(original);
+    context.spelling.undoneAutoCorrections.push({ original, replacement });
     addIgnoredWord(context, original);
     context.log({ type: 'revert', original, replacement });
+  }
+}
+
+export function noticeRedo(context: AssistantContext) {
+  const fieldText = readFieldText(context.field).text;
+  const { spelling } = context;
+  const redone = spelling.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
+  for (const { original, replacement } of redone) {
+    trace('spelling', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
+    spelling.replacementByOriginal.set(original, replacement);
+    context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
+    context.log({ type: 'autocorrect', original, replacement });
+  }
+  if (redone.length) {
+    spelling.undoneAutoCorrections = spelling.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
+    context.options.onIgnoredWordsChange(context.ignoredWords);
   }
 }
 
