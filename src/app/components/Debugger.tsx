@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { AssistantEvent, DebugArea } from '../../assistant';
 import type { DebuggerEvent } from '../hooks/useDebugger';
 import { DebuggerEventText } from './DebuggerEventText';
@@ -26,6 +26,13 @@ export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: Debugger
   };
   useEffect(scrollToEnd, [debuggerEvents]);
 
+  const [isCopied, setIsCopied] = useState(false);
+  const copyAll = async () => {
+    await navigator.clipboard.writeText(debuggerEvents.map((debuggerEvent) => `${debuggerEvent.time} ${describe(debuggerEvent.event)}`).join('\n'));
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 1500);
+  };
+
   return (
     <details className="group space-y-1" onToggle={scrollToEnd}>
       <summary className="cursor-pointer list-none">
@@ -35,7 +42,7 @@ export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: Debugger
         </h2>
       </summary>
       <div className="relative">
-        <pre ref={pre} className="h-64 min-h-16 resize-y space-y-1.5 overflow-auto rounded bg-slate-900 p-2 pr-16 text-xs leading-5 whitespace-pre-wrap break-all">
+        <pre ref={pre} className="h-64 min-h-16 resize-y space-y-1.5 overflow-auto rounded bg-slate-900 p-2 pr-36 text-xs leading-5 whitespace-pre-wrap break-all">
           {debuggerEvents.length ? (
             debuggerEvents.map((debuggerEvent) => (
               <div key={debuggerEvent.id} className={AREA_COLORS[debuggerEvent.event.area]}>
@@ -47,9 +54,14 @@ export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: Debugger
           )}
         </pre>
         {!!debuggerEvents.length && (
-          <button type="button" className="absolute top-2 right-5 rounded bg-slate-700 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-600" onClick={onClear}>
-            Clear
-          </button>
+          <div className="absolute top-2 right-5 flex gap-1.5 [&_button]:rounded [&_button]:bg-slate-700 [&_button]:px-2 [&_button]:py-0.5 [&_button]:text-xs [&_button]:text-slate-200 [&_button:hover]:bg-slate-600">
+            <button type="button" onClick={copyAll}>
+              {isCopied ? 'Copied' : 'Copy'}
+            </button>
+            <button type="button" onClick={onClear}>
+              Clear
+            </button>
+          </div>
         )}
       </div>
     </details>
