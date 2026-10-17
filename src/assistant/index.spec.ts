@@ -30,7 +30,7 @@ function createTextEditorControl(text: string) {
     showUnderlines: (spans) => {
       memory.underlines = spans;
     },
-    showReplacedWords: () => {},
+    showAutoCorrectedWords: () => {},
   };
   return { editorControl, memory };
 }
@@ -44,7 +44,7 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
     withAutoCompletion: true,
     isMac: false,
     debounceMs: 10,
-    customWords: [],
+    customDictionary: [],
     ignoredWords: [],
     onIgnoredWordsChange: () => {},
     llmContext: '',
@@ -72,7 +72,7 @@ test('without a DOM, a sure mistake is auto-corrected through the editor control
     nextSentence: '',
   });
   assistant.handleInput({ inputType: 'insertText', data: 'm' });
-  await expect.poll(() => events.some((event) => event.type === 'autocorrect')).toBe(true);
+  await expect.poll(() => events.some((event) => event.type === 'auto-correct')).toBe(true);
   expect(memory.text).toBe('I will send the form');
   expect(memory.caret).toBe('I will send the form'.length);
   assistant.release();

@@ -3,7 +3,7 @@ const AREA_COLORS = {
   typing: '#2563eb',
   llm: '#9333ea',
   'spell-check': '#dc2626',
-  replace: '#ea580c',
+  'auto-correct': '#ea580c',
   'auto-completion': '#64748b',
 };
 

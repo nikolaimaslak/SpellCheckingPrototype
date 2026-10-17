@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import type { PopoverState } from '../../assistant';
+import type { PopoverState, TextDirection } from '../../assistant';
 import { rectOfRange, type Rect } from '../lib/browser';
 import { rangeOf, readFieldText } from '../lib/field-text';
 
 interface Props {
   popover: PopoverState;
   fieldRef: RefObject<HTMLElement | null>;
-  onPick: (suggestion: string) => void;
+  onPick: (fix: string) => void;
   onIgnore: () => void;
   onAddToDictionary: (word: string) => void;
   onClose: (shouldRestoreFocus: boolean) => void;
@@ -15,11 +15,11 @@ interface Props {
 const GAP = 4;
 const MODIFIERS = ['Shift', 'Control', 'Alt', 'Meta'];
 
-export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
+export function FixesPopover({ popover, fieldRef, onPick, onIgnore, onAddToDictionary, onClose }: Props) {
   const items = [
-    ...popover.suggestions.map((s) => ({
-      label: s,
-      run: () => onPick(s),
+    ...popover.fixes.map((fix) => ({
+      label: fix,
+      run: () => onPick(fix),
       isStrong: true,
     })),
     {
@@ -40,7 +40,7 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
   useLayoutEffect(() => {
     const field = fieldRef.current;
     if (box.current && field) {
-      setPosition(place(rectOfRange(rangeOf(readFieldText(field), popover.wordStartOffset, popover.wordEndOffset)), box.current.getBoundingClientRect(), popover.dir));
+      setPosition(place(rectOfRange(rangeOf(readFieldText(field), popover.start, popover.end)), box.current.getBoundingClientRect(), popover.direction));
     }
   }, [popover, fieldRef]);
 
@@ -86,8 +86,8 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
     <div
       ref={box}
       role="listbox"
-      aria-label="Spell check suggestions"
-      dir={popover.dir}
+      aria-label="Spell check fixes"
+      dir={popover.direction}
       className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-sm text-slate-800 shadow"
       style={position ?? {
         top: 0,
@@ -96,7 +96,7 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
       }}
       onMouseDown={(e) => e.preventDefault()}
     >
-      {!popover.suggestions.length && <div className="px-3 py-1 text-slate-500">No suggestions</div>}
+      {!popover.fixes.length && <div className="px-3 py-1 text-slate-500">No fixes</div>}
       {items.map((item, i) => (
         <div key={item.label} role="option" aria-selected={i === focused}>
           {item.label === 'Ignore' && <div role="separator" className="my-1 border-t border-slate-200" />}
@@ -113,11 +113,11 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
   );
 }
 
-function place(anchor: Rect, size: { width: number; height: number }, dir: 'ltr' | 'rtl') {
+function place(anchor: Rect, size: { width: number; height: number }, direction: TextDirection) {
   let top = anchor.bottom + GAP;
   if (top + size.height > window.innerHeight && anchor.top - GAP - size.height >= 0) {
     top = anchor.top - GAP - size.height;
   }
-  const left = dir === 'rtl' ? anchor.right - size.width : anchor.left;
+  const left = direction === 'rtl' ? anchor.right - size.width : anchor.left;
   return { top: Math.round(top), left: Math.round(Math.max(GAP, Math.min(left, window.innerWidth - size.width - GAP))) };
 }

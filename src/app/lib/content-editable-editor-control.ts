@@ -3,7 +3,7 @@ import { caretRange, replaceText, showHighlight } from './browser';
 import { caretOffset, placeCaret, rangeOf, readFieldText } from './field-text';
 
 const SPELL_CHECK_ERROR_HIGHLIGHT = 'bp-spell-check-error';
-const REPLACED_HIGHLIGHT = 'bp-autocorrected';
+const AUTO_CORRECTED_HIGHLIGHT = 'bp-auto-corrected';
 
 export function createContentEditableEditorControl(field: HTMLElement): EditorControl {
   const highlight = (name: string, spans: TextSpan[]) => {
@@ -33,7 +33,7 @@ export function createContentEditableEditorControl(field: HTMLElement): EditorCo
       }
     },
     showUnderlines: (spans) => highlight(SPELL_CHECK_ERROR_HIGHLIGHT, spans),
-    showReplacedWords: (spans) => highlight(REPLACED_HIGHLIGHT, spans),
+    showAutoCorrectedWords: (spans) => highlight(AUTO_CORRECTED_HIGHLIGHT, spans),
   };
   return editorControl;
 }

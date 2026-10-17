@@ -4,7 +4,7 @@ import { directionOfLastWord, findWordPlaces, type WordPlace } from './words';
 import type { AssistantContext, TextSpan } from './types';
 import { trace } from './trace';
 
-const REPLACED_FLASH_MS = 2000;
+const AUTO_CORRECTED_FLASH_MS = 2000;
 
 export function stopSpellCheck(context: AssistantContext) {
   closePopover(context);
@@ -12,7 +12,7 @@ export function stopSpellCheck(context: AssistantContext) {
 }
 
 function mistakePlaces(context: AssistantContext, text: string): PlacedMistake[] {
-  return findMistakesInText(text, context.spellCheck.mistakes).filter((place) => !context.customWords.has(place.word));
+  return findMistakesInText(text, context.spellCheck.mistakes).filter((place) => !context.customDictionary.has(place.word));
 }
 
 function finishedMistakePlaces(context: AssistantContext): PlacedMistake[] {
@@ -22,7 +22,7 @@ function finishedMistakePlaces(context: AssistantContext): PlacedMistake[] {
   return mistakePlaces(context, text).filter((place) => place.end !== caret && isFollowedByBoundary(place));
 }
 
-export function displayAndAutocorrectMistakes(context: AssistantContext, newMistakes: Mistake[]) {
+export function displayAndAutoCorrectMistakes(context: AssistantContext, newMistakes: Mistake[]) {
   context.spellCheck.mistakes = newMistakes;
   const placed = findMistakesInText(context.editorControl.getText(), newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
@@ -46,60 +46,60 @@ export function redrawUnderlines(context: AssistantContext) {
   context.editorControl.showUnderlines(mistakePlaces(context, text).map((place) => ({ start: place.start, end: place.end })));
 }
 
-interface WordReplacement {
+interface WordFix {
   place: WordPlace;
-  replacement: string;
+  fix: string;
 }
 
-function replaceWords(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
-  context.isReplacingWords = true;
+function replaceWords(context: AssistantContext, wordFixes: WordFix[]): WordFix[] {
+  context.isAutoCorrecting = true;
   try {
-    return replaceWordsNow(context, replacements);
+    return replaceWordsNow(context, wordFixes);
   } finally {
-    context.isReplacingWords = false;
+    context.isAutoCorrecting = false;
   }
 }
 
-function replaceWordsNow(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
+function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordFix[] {
   const caretBefore = context.editorControl.getCaret();
-  const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
-  const applied: WordReplacement[] = [];
-  const replacedSpans: { start: number; length: number }[] = [];
+  const lastFirst = [...wordFixes].sort((first, second) => second.place.start - first.place.start);
+  const applied: WordFix[] = [];
+  const autoCorrectedSpans: { start: number; length: number }[] = [];
   let caretShift = 0;
 
-  for (const replacement of lastFirst) {
-    const { place } = replacement;
+  for (const wordFix of lastFirst) {
+    const { place } = wordFix;
     if (context.editorControl.getText().slice(place.start, place.end) !== place.word) {
-      trace('replace', `skipped "${place.word}" @${place.start}: the text there changed`);
+      trace('auto-correct', `skipped "${place.word}" @${place.start}: the text there changed`);
       continue;
     }
-    trace('replace', `"${place.word}" @${place.start} → "${replacement.replacement}" (native edit: one Ctrl/Cmd+Z)`);
+    trace('auto-correct', `"${place.word}" @${place.start} → "${wordFix.fix}" (native edit: one Ctrl/Cmd+Z)`);
 
-    context.editorControl.replaceText(place.start, place.end, replacement.replacement);
-    const lengthChange = replacement.replacement.length - place.word.length;
+    context.editorControl.replaceText(place.start, place.end, wordFix.fix);
+    const lengthChange = wordFix.fix.length - place.word.length;
     if (caretBefore !== undefined && place.end <= caretBefore) {
       caretShift += lengthChange;
     }
-    replacedSpans.forEach((span) => (span.start += lengthChange));
-    replacedSpans.push({ start: place.start, length: replacement.replacement.length });
-    applied.push(replacement);
+    autoCorrectedSpans.forEach((span) => (span.start += lengthChange));
+    autoCorrectedSpans.push({ start: place.start, length: wordFix.fix.length });
+    applied.push(wordFix);
   }
   if (!applied.length) {
     return applied;
   }
 
   if (caretBefore !== undefined) {
-    trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
+    trace('auto-correct', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     context.editorControl.setCaret(caretBefore + caretShift);
   }
-  flash(context, replacedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));
+  flash(context, autoCorrectedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));
   return applied.reverse();
 }
 
 function flash(context: AssistantContext, spans: TextSpan[]) {
-  context.editorControl.showReplacedWords(spans);
-  clearTimeout(context.replacedFlashTimer);
-  context.replacedFlashTimer = setTimeout(() => context.editorControl.showReplacedWords([]), REPLACED_FLASH_MS);
+  context.editorControl.showAutoCorrectedWords(spans);
+  clearTimeout(context.autoCorrectedFlashTimer);
+  context.autoCorrectedFlashTimer = setTimeout(() => context.editorControl.showAutoCorrectedWords([]), AUTO_CORRECTED_FLASH_MS);
 }
 
 function autoCorrectSureMistakes(context: AssistantContext) {
@@ -107,31 +107,31 @@ function autoCorrectSureMistakes(context: AssistantContext) {
   if (placesToFix.length) {
     trace('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }
-  const replacements = placesToFix.map((place) => ({ place, replacement: place.mistake.fixes[0] }));
-  for (const { place, replacement } of replaceWords(context, replacements)) {
-    context.spellCheck.replacementByOriginal.set(place.word, replacement);
+  const wordFixes = placesToFix.map((place) => ({ place, fix: place.mistake.fixes[0] }));
+  for (const { place, fix } of replaceWords(context, wordFixes)) {
+    context.spellCheck.fixByOriginal.set(place.word, fix);
     context.log({
-      type: 'autocorrect',
+      type: 'auto-correct',
       original: place.word,
-      replacement,
+      fix,
     });
   }
 }
 
 export function noticeUndo(context: AssistantContext) {
   const fieldText = context.editorControl.getText();
-  for (const [original, replacement] of context.spellCheck.replacementByOriginal) {
+  for (const [original, fix] of context.spellCheck.fixByOriginal) {
     if (!findWordPlaces(fieldText, [original]).length) {
       continue;
     }
     trace('spell-check', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
-    context.spellCheck.replacementByOriginal.delete(original);
-    context.spellCheck.undoneAutoCorrections.push({ original, replacement });
+    context.spellCheck.fixByOriginal.delete(original);
+    context.spellCheck.undoneAutoCorrections.push({ original, fix });
     addIgnoredWord(context, original);
     context.log({
-      type: 'revert',
+      type: 'auto-correct-undo',
       original,
-      replacement,
+      fix,
     });
   }
 }
@@ -139,14 +139,14 @@ export function noticeUndo(context: AssistantContext) {
 export function noticeRedo(context: AssistantContext) {
   const fieldText = context.editorControl.getText();
   const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
-  for (const { original, replacement } of redone) {
-    trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
-    context.spellCheck.replacementByOriginal.set(original, replacement);
+  for (const { original, fix } of redone) {
+    trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
+    context.spellCheck.fixByOriginal.set(original, fix);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
     context.log({
-      type: 'autocorrect',
+      type: 'auto-correct-redo',
       original,
-      replacement,
+      fix,
     });
   }
   if (redone.length) {
@@ -170,10 +170,10 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
   context.setState({
     popover: {
       word: place.word,
-      wordStartOffset: place.start,
-      wordEndOffset: place.end,
-      dir: directionOfLastWord(place.word),
-      suggestions: place.mistake.fixes,
+      start: place.start,
+      end: place.end,
+      direction: directionOfLastWord(place.word),
+      fixes: place.mistake.fixes,
     },
   });
   return true;
@@ -191,19 +191,19 @@ export function closePopover(context: AssistantContext, shouldReturnCaret = fals
   }
 }
 
-export function pickSuggestion(context: AssistantContext, suggestion: string) {
+export function pickFix(context: AssistantContext, fix: string) {
   const place = context.spellCheck.openPopover?.place;
   closePopover(context, true);
   if (!place || context.editorControl.getText().slice(place.start, place.end) !== place.word) {
     trace('spell-check', 'pick ignored: the word changed while the popover was open');
     return;
   }
-  trace('spell-check', `picked "${suggestion}" for "${place.word}"`);
-  context.editorControl.replaceText(place.start, place.end, suggestion);
+  trace('spell-check', `picked "${fix}" for "${place.word}"`);
+  context.editorControl.replaceText(place.start, place.end, fix);
   context.log({
     type: 'pick',
     original: place.word,
-    replacement: suggestion,
+    fix,
   });
   redrawUnderlines(context);
 }
@@ -214,7 +214,7 @@ function addIgnoredWord(context: AssistantContext, word: string) {
 }
 
 export function addToDictionary(context: AssistantContext, word: string) {
-  context.customWords.add(word);
+  context.customDictionary.add(word);
   trace('spell-check', `"${word}" added to the custom dictionary`);
   closePopover(context, true);
   redrawUnderlines(context);

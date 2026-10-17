@@ -21,12 +21,12 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
       state = { ...state, ...patch };
       listeners.forEach((listener) => listener());
     },
-    isReplacingWords: false,
+    isAutoCorrecting: false,
     ignoredWords: options.ignoredWords,
-    customWords: new Set(options.customWords),
+    customDictionary: new Set(options.customDictionary),
     spellCheck: {
       mistakes: [],
-      replacementByOriginal: new Map(),
+      fixByOriginal: new Map(),
       undoneAutoCorrections: [],
     },
     typing: {
@@ -57,7 +57,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     handleCompositionEnd: () => checkWhileTyping.handleCompositionEnd(context),
     handleKeyUp: (event: KeyPress) => checkWhileTyping.handleKeyUp(context, event),
 
-    pickSuggestion: (suggestion: string) => spellCheck.pickSuggestion(context, suggestion),
+    pickFix: (fix: string) => spellCheck.pickFix(context, fix),
     ignoreWord: () => spellCheck.ignoreWord(context),
     addToDictionary: (word: string) => spellCheck.addToDictionary(context, word),
     closePopover: (shouldReturnCaret: boolean) => spellCheck.closePopover(context, shouldReturnCaret),
@@ -70,7 +70,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
       });
       context.options = newOptions;
       context.ignoredWords = newOptions.ignoredWords;
-      context.customWords = new Set(newOptions.customWords);
+      context.customDictionary = new Set(newOptions.customDictionary);
       if (newOptions.spellCheckMode === 'off') {
         context.spellCheck.mistakes = [];
         spellCheck.stopSpellCheck(context);

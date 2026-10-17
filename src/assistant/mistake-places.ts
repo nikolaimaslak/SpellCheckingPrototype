@@ -12,15 +12,15 @@ export function findMistakesInText(fieldText: string, mistakes: Mistake[]): Plac
   const text = withPlainSpaces(fieldText);
   const placesByStart = new Map<number, PlacedMistake>();
   for (const mistake of mistakes) {
-    const context = withPlainSpaces(mistake.context);
-    const wordsInContext = findWordPlaces(context, [mistake.word]);
-    if (wordsInContext.length !== 1) {
-      trace('spell-check', `mistake dropped: "${mistake.word}" is in its context ${wordsInContext.length} times, so its place is unclear`, mistake);
+    const surroundingText = withPlainSpaces(mistake.surroundingText);
+    const wordsInSurroundingText = findWordPlaces(surroundingText, [mistake.word]);
+    if (wordsInSurroundingText.length !== 1) {
+      trace('spell-check', `mistake dropped: "${mistake.word}" is in its surrounding text ${wordsInSurroundingText.length} times, so its place is unclear`, mistake);
       continue;
     }
-    const wordInContext = wordsInContext[0];
-    for (let contextStart = text.indexOf(context); contextStart !== -1; contextStart = text.indexOf(context, contextStart + 1)) {
-      const start = contextStart + wordInContext.start;
+    const wordInSurroundingText = wordsInSurroundingText[0];
+    for (let surroundingTextStart = text.indexOf(surroundingText); surroundingTextStart !== -1; surroundingTextStart = text.indexOf(surroundingText, surroundingTextStart + 1)) {
+      const start = surroundingTextStart + wordInSurroundingText.start;
       placesByStart.set(start, {
         word: mistake.word,
         start,

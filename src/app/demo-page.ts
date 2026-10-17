@@ -27,7 +27,12 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
       ...answerFor(draft),
     };
     const llmReply = {
-      mistakes: answer.mistakes?.map(({ isSure, ...mistake }) => ({ ...mistake, sure: isSure })),
+      mistakes: answer.mistakes?.map((mistake) => ({
+        word: mistake.word,
+        context: mistake.surroundingText,
+        fixes: mistake.fixes,
+        sure: mistake.isSure,
+      })),
       nextSentence: answer.nextSentence,
     };
     await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(llmReply) } }] } });

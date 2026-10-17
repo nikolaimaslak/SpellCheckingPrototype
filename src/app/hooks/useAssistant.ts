@@ -18,7 +18,7 @@ export function useAssistant(
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
       spellCheckMode: !settings.withSpellCheck ? 'off' : settings.withAutoCorrect ? 'auto-correct' : 'underline',
-      customWords: lines(settings.customDictionary),
+      customDictionary: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
       withAutoCompletion: settings.withAutoCompletion,

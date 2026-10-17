@@ -5,7 +5,7 @@ import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
 import { AutoCompletionText } from './AutoCompletionText';
 import { DebounceRing } from './DebounceRing';
-import { SuggestionPopover } from './SuggestionPopover';
+import { FixesPopover } from './FixesPopover';
 
 interface Props {
   settings: AppSettings;
@@ -44,17 +44,17 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <div className="mr-auto flex items-center gap-2">
           <h2 className="text-lg font-semibold">Message field</h2>
           <span role="status" className="flex items-center gap-1.5 text-sm text-slate-500">
-            {state.loader?.kind === 'debounce' ? (
+            {state.requestStatus?.kind === 'debounce' ? (
               <>
-                <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />
+                <DebounceRing key={state.requestStatus.startedAt} durationMs={state.requestStatus.durationMs} />
                 Waiting for you to stop typing…
               </>
-            ) : state.loader?.kind === 'request' ? (
+            ) : state.requestStatus?.kind === 'request' ? (
               <>
                 <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
                 Checking with the LLM…
               </>
-            ) : state.loader?.kind === 'failed' ? (
+            ) : state.requestStatus?.kind === 'failed' ? (
               <span className="text-red-600">
                 <span aria-hidden="true" className="font-bold">✕</span> LLM request failed
               </span>
@@ -105,11 +105,11 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <dt>
           <kbd>Esc</kbd>
         </dt>
-        <dd>hide auto-completion / close suggestions popup / cancel LLM request</dd>
+        <dd>hide auto-completion / close fixes popup / cancel LLM request</dd>
         <dt>
           <kbd>↑</kbd>/<kbd>↓</kbd>,<kbd>Enter</kbd>
         </dt>
-        <dd>pick a fix in suggestions popup</dd>
+        <dd>pick a fix in fixes popup</dd>
         <dt>
           <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>+<kbd>Z</kbd>
         </dt>
@@ -119,11 +119,11 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <>
           {state.autoCompletion && isFocused && <AutoCompletionText autoCompletion={state.autoCompletion} fieldRef={fieldRef} />}
           {state.popover && (
-            <SuggestionPopover
-              key={`${state.popover.wordStartOffset}:${state.popover.wordEndOffset}`}
+            <FixesPopover
+              key={`${state.popover.start}:${state.popover.end}`}
               popover={state.popover}
               fieldRef={fieldRef}
-              onPick={assistant.pickSuggestion}
+              onPick={assistant.pickFix}
               onIgnore={assistant.ignoreWord}
               onAddToDictionary={(word) => {
                 assistant.addToDictionary(word);

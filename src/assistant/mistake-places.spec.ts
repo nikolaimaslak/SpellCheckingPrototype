@@ -5,7 +5,7 @@ import { findMistakesInText } from './mistake-places';
 test('findMistakesInText places a mistake by its context, also in Arabic', () => {
   const you: Mistake = {
     word: 'you',
-    context: 'you details',
+    surroundingText: 'you details',
     fixes: ['your'],
     isSure: true,
   };
@@ -14,7 +14,7 @@ test('findMistakesInText places a mistake by its context, also in Arabic', () =>
 
   const thanks: Mistake = {
     word: 'شكرا',
-    context: 'شكرا لتواصلك',
+    surroundingText: 'شكرا لتواصلك',
     fixes: ['شكراً'],
     isSure: true,
   };
@@ -25,7 +25,7 @@ test('findMistakesInText places a mistake by its context, also in Arabic', () =>
 test('findMistakesInText drops a mistake whose word is twice in its context', () => {
   const the: Mistake = {
     word: 'the',
-    context: 'the the form',
+    surroundingText: 'the the form',
     fixes: ['the'],
     isSure: true,
   };

@@ -16,7 +16,7 @@ Rules:
 - Fixes contain no punctuation.
 - Set "sure" to true only when there is exactly one clearly correct fix and the fix is obvious from the letters of "word" itself: a typo one or two letters away, swapped letters, a wrong word form, or a repeated word. A true value causes immediate automatic replacement; otherwise, use false.
 - When the fix is only a guess from the context, such as a garbled word that could mean several things, use "sure": false even if the context makes one meaning likely.
-- Never report names, text quoted from others, codes, URLs, email addresses, numbers, ALL CAPS tokens, or words listed under "Custom words".
+- Never report names, text quoted from others, codes, URLs, email addresses, numbers, ALL CAPS tokens, or words listed under "Custom dictionary".
 - If an unknown word has no plausible spelling correction, treat it as a name and leave it unchanged.
 - Words listed under "Ignored words" may still be reported when incorrect, but always with "sure": false. Being listed does not itself make a word incorrect.
 - Exclusions take priority: an ignored word that also belongs to an excluded category must not be reported.

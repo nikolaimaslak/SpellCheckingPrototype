@@ -5,7 +5,7 @@
   text-decoration-skip-ink: none;
   text-underline-offset: 2px;
 }
-::highlight(bp-autocorrected) {
+::highlight(bp-auto-corrected) {
   background-color: rgba(43, 108, 176, 0.18);
 }
 

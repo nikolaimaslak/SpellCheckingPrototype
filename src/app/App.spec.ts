@@ -40,7 +40,7 @@ test('a settings change reaches the next request and keeps the typed text', asyn
   await expect(demo.field).toHaveText('Hi there');
 });
 
-test('clearing the field stops the loader and sends no request', async ({ page }) => {
+test('clearing the field clears the request status and sends no request', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({}));
   await demo.field.click();
   await page.keyboard.type('Hi');

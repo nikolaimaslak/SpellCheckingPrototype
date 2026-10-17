@@ -6,10 +6,10 @@ test('the spell check message has the word lists and the caret, the auto-complet
     draft: 'Hi Sasha,\nBest regards',
     caretOffset: 9,
     llmContext: 'Agent:\n- Name: Daniel',
-    customWords: ['GOSI'],
+    customDictionary: ['GOSI'],
     ignoredWords: [],
   };
-  expect(buildSpellCheckMessage(spellCheckRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom words:\n- GOSI\n\nDraft:\nHi Sasha,‸\nBest regards");
+  expect(buildSpellCheckMessage(spellCheckRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom dictionary:\n- GOSI\n\nDraft:\nHi Sasha,‸\nBest regards");
   expect(buildSpellCheckMessage({ ...spellCheckRequest, caretOffset: undefined })).not.toContain('‸');
 
   const autoCompletionRequest: AutoCompletionRequest = {
@@ -42,7 +42,7 @@ test('parseMistakes keeps well-formed mistakes, parseAutoCompletion reads the ne
   });
   const sen: Mistake = {
     word: 'sen',
-    context: 'will sen',
+    surroundingText: 'will sen',
     fixes: ['send'],
     isSure: true,
   };

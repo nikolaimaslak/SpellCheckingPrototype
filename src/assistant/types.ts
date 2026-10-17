@@ -14,7 +14,7 @@ export interface EditorControl {
   setCaret(offset: number): void;
   replaceText(start: number, end: number, text: string): void;
   showUnderlines(spans: TextSpan[]): void;
-  showReplacedWords(spans: TextSpan[]): void;
+  showAutoCorrectedWords(spans: TextSpan[]): void;
 }
 
 export interface KeyPress {
@@ -32,10 +32,10 @@ export interface TextInput {
 
 export interface PopoverState {
   word: string;
-  wordStartOffset: number;
-  wordEndOffset: number;
-  dir: TextDirection;
-  suggestions: string[];
+  start: number;
+  end: number;
+  direction: TextDirection;
+  fixes: string[];
 }
 
 export interface AutoCompletionState {
@@ -48,7 +48,7 @@ export interface AutoCompletionState {
 export interface AssistantState {
   popover?: PopoverState;
   autoCompletion?: AutoCompletionState;
-  loader?:
+  requestStatus?:
     | {
         kind: 'debounce';
         startedAt: number;
@@ -62,12 +62,12 @@ export const INITIAL_STATE: AssistantState = {};
 
 export type AssistEvent =
   | { type: 'spell-check-request' | 'auto-completion-request'; text: string }
-  | { type: 'spell-check-answer' | 'auto-completion-answer'; reply: unknown }
+  | { type: 'spell-check-answer' | 'auto-completion-answer'; answer: unknown }
   | { type: 'spell-check-error' | 'auto-completion-error'; error: string }
   | {
-      type: 'autocorrect' | 'revert' | 'pick';
+      type: 'auto-correct' | 'auto-correct-undo' | 'auto-correct-redo' | 'pick';
       original: string;
-      replacement: string;
+      fix: string;
     }
   | { type: 'ignore'; word: string }
   | { type: 'auto-completion-accepted'; text: string };
@@ -78,7 +78,7 @@ export interface AssistantOptions {
   withAutoCompletion: boolean;
   isMac: boolean;
   debounceMs: number;
-  customWords: string[];
+  customDictionary: string[];
   ignoredWords: string[];
   onIgnoredWordsChange: (words: string[]) => void;
   llmContext: string;
@@ -87,8 +87,8 @@ export interface AssistantOptions {
 
 export interface SpellCheckData {
   mistakes: Mistake[];
-  replacementByOriginal: Map<string, string>;
-  undoneAutoCorrections: { original: string; replacement: string }[];
+  fixByOriginal: Map<string, string>;
+  undoneAutoCorrections: { original: string; fix: string }[];
   openPopover?: { place: PlacedMistake; caretBefore?: number };
 }
 
@@ -106,10 +106,10 @@ export interface AssistantContext {
   log(event: AssistEvent): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;
-  isReplacingWords: boolean;
-  replacedFlashTimer?: ReturnType<typeof setTimeout>;
+  isAutoCorrecting: boolean;
+  autoCorrectedFlashTimer?: ReturnType<typeof setTimeout>;
   ignoredWords: string[];
-  customWords: Set<string>;
+  customDictionary: Set<string>;
   spellCheck: SpellCheckData;
   typing: TypingData;
 }

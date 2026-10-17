@@ -4,14 +4,14 @@ import { openDemoPage } from './demo-page';
 
 const sureSen: Mistake = {
   word: 'sen',
-  context: 'will sen the',
+  surroundingText: 'will sen the',
   fixes: ['send'],
   isSure: true,
 };
 
 const unsureSen: Mistake = {
   word: 'sen',
-  context: 'will sen the',
+  surroundingText: 'will sen the',
   fixes: ['send', 'see'],
   isSure: false,
 };
@@ -59,7 +59,7 @@ test('an unsure mistake is underlined and fixed from the popover', async ({ page
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('ArrowRight');
   }
-  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check fixes' })).toBeVisible();
   await page.getByRole('option', { name: 'see' }).click();
   await expect(demo.field).toHaveText('I will see the form');
 });
@@ -70,7 +70,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
       unsureSen,
       {
         word: 'fomr',
-        context: 'the fomr',
+        surroundingText: 'the fomr',
         fixes: ['form'],
         isSure: false,
       },
@@ -81,7 +81,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
   await expect.poll(() => underlinedCount(page)).toBe(2);
 
   await page.keyboard.press('ArrowLeft');
-  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check fixes' })).toBeVisible();
   await page.getByRole('option', { name: 'Add to dictionary' }).click();
   await expect(page.getByLabel('Custom dictionary')).toHaveValue(/\nfomr$/);
   await expect.poll(() => underlinedCount(page)).toBe(1);
@@ -89,7 +89,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
   for (let i = 0; i < 9; i++) {
     await page.keyboard.press('ArrowLeft');
   }
-  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check fixes' })).toBeVisible();
   await page.getByRole('option', { name: 'Ignore' }).click();
   await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
 });
@@ -108,19 +108,19 @@ test('a fix that adds or merges words is underlined and picked as a whole', asyn
     mistakes: [
       {
         word: 'documents',
-        context: 'and documents ready',
+        surroundingText: 'and documents ready',
         fixes: ['documents are'],
         isSure: false,
       },
       {
         word: 'portal',
-        context: 'from portal when',
+        surroundingText: 'from portal when',
         fixes: ['the portal'],
         isSure: false,
       },
       {
         word: 'will be',
-        context: 'it will be convenient',
+        surroundingText: 'it will be convenient',
         fixes: ['is'],
         isSure: true,
       },
@@ -135,7 +135,7 @@ test('a fix that adds or merges words is underlined and picked as a whole', asyn
   for (let i = 0; i < 'I checked your file and docu'.length; i++) {
     await page.keyboard.press('ArrowRight');
   }
-  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check fixes' })).toBeVisible();
   await page.getByRole('option', { name: 'documents are' }).click();
   await expect(demo.field).toHaveText('I checked your file and documents are ready you can download them from portal when it is convenient for you');
 });

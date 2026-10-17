@@ -8,7 +8,7 @@ export interface SpellCheckRequest {
   draft: string;
   caretOffset: number | undefined;
   llmContext: string;
-  customWords: string[];
+  customDictionary: string[];
   ignoredWords: string[];
 }
 
@@ -21,7 +21,7 @@ export interface AutoCompletionRequest {
 
 export interface Mistake {
   word: string;
-  context: string;
+  surroundingText: string;
   fixes: string[];
   isSure: boolean;
 }
@@ -99,7 +99,7 @@ async function askLLM(apiKey: string, messages: ChatMessage[], signal: AbortSign
 export function buildSpellCheckMessage(request: SpellCheckRequest): string {
   return [
     request.llmContext,
-    bulletList('Custom words', request.customWords),
+    bulletList('Custom dictionary', request.customDictionary),
     bulletList('Ignored words', request.ignoredWords),
     `Draft:\n${draftWithCaret(request.draft, request.caretOffset)}`,
   ]
@@ -156,7 +156,7 @@ function toMistake(raw: Partial<Record<'word' | 'context' | 'fixes' | 'sure', un
   }
   const mistake: Mistake = {
     word: raw.word,
-    context: raw.context,
+    surroundingText: raw.context,
     fixes,
     isSure: raw.sure === true,
   };
