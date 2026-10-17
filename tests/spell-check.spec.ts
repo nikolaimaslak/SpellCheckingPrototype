@@ -17,7 +17,7 @@ const unsureSen: Mistake = {
 };
 
 const underlinedCount = (page: import('@playwright/test').Page) =>
-  page.evaluate(() => CSS.highlights.get('bp-spelling-error')?.size ?? 0);
+  page.evaluate(() => CSS.highlights.get('bp-spell-check-error')?.size ?? 0);
 
 test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, redo un-ignores it, and neither asks again', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ mistakes: [sureSen] }));
@@ -32,7 +32,7 @@ test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored 
   await expect(demo.field).toHaveText('I will send the form');
   await expect(page.getByLabel('Ignored words')).toHaveValue('');
   await demo.waitPastDebounce();
-  expect(demo.spellingMessages).toHaveLength(1);
+  expect(demo.spellCheckMessages).toHaveLength(1);
 });
 
 test('after typing, redo is gone and an undone auto-correction stays ignored', async ({ page }) => {
@@ -59,7 +59,7 @@ test('an unsure mistake is underlined and fixed from the popover', async ({ page
   for (let i = 0; i < 8; i++) {
     await page.keyboard.press('ArrowRight');
   }
-  await expect(page.getByRole('listbox', { name: 'Spelling suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
   await page.getByRole('option', { name: 'see' }).click();
   await expect(demo.field).toHaveText('I will see the form');
 });
@@ -81,7 +81,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
   await expect.poll(() => underlinedCount(page)).toBe(2);
 
   await page.keyboard.press('ArrowLeft');
-  await expect(page.getByRole('listbox', { name: 'Spelling suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
   await page.getByRole('option', { name: 'Add to dictionary' }).click();
   await expect(page.getByLabel('Custom dictionary')).toHaveValue(/\nfomr$/);
   await expect.poll(() => underlinedCount(page)).toBe(1);
@@ -89,7 +89,7 @@ test('Ignore and Add to dictionary update the word lists', async ({ page }) => {
   for (let i = 0; i < 9; i++) {
     await page.keyboard.press('ArrowLeft');
   }
-  await expect(page.getByRole('listbox', { name: 'Spelling suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
   await page.getByRole('option', { name: 'Ignore' }).click();
   await expect(page.getByLabel('Ignored words')).toHaveValue('sen');
 });
@@ -135,7 +135,7 @@ test('a fix that adds or merges words is underlined and picked as a whole', asyn
   for (let i = 0; i < 'I checked your file and docu'.length; i++) {
     await page.keyboard.press('ArrowRight');
   }
-  await expect(page.getByRole('listbox', { name: 'Spelling suggestions' })).toBeVisible();
+  await expect(page.getByRole('listbox', { name: 'Spell check suggestions' })).toBeVisible();
   await page.getByRole('option', { name: 'documents are' }).click();
   await expect(demo.field).toHaveText('I checked your file and documents are ready you can download them from portal when it is convenient for you');
 });

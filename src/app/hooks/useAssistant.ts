@@ -20,7 +20,7 @@ export function useAssistant(
       customWords: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
-      withCompletion: settings.withCompletion,
+      withAutoCompletion: settings.withAutoCompletion,
       debounceMs: DEBOUNCE_MS,
       apiKey: settings.apiKey,
       llmContext: settings.llmContext,

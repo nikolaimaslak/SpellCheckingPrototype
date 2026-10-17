@@ -27,16 +27,16 @@ test('a settings change reaches the next request and keeps the typed text', asyn
   const demo = await openDemoPage(page, () => ({}));
   await demo.field.click();
   await page.keyboard.type('Hi');
-  await expect.poll(() => demo.spellingMessages.length).toBe(1);
-  expect(demo.spellingMessages[0]).toContain('Daniel Haddad');
+  await expect.poll(() => demo.spellCheckMessages.length).toBe(1);
+  expect(demo.spellCheckMessages[0]).toContain('Daniel Haddad');
 
   await page.getByRole('button', { name: 'Arabic' }).click();
   await page.waitForTimeout(700);
   await demo.field.click();
   await page.keyboard.press('End');
   await page.keyboard.type(' there');
-  await expect.poll(() => demo.spellingMessages.length).toBe(2);
-  expect(demo.spellingMessages[1]).toContain('خالد الحربي');
+  await expect.poll(() => demo.spellCheckMessages.length).toBe(2);
+  expect(demo.spellCheckMessages[1]).toContain('خالد الحربي');
   await expect(demo.field).toHaveText('Hi there');
 });
 

@@ -5,7 +5,7 @@ export interface AppSettings {
   withAutoCorrect: boolean;
   customDictionary: string;
   ignoredWords: string;
-  withCompletion: boolean;
+  withAutoCompletion: boolean;
   apiKey: string;
   llmContext: string;
 }
@@ -15,7 +15,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   withAutoCorrect: true,
   customDictionary: ['GOSI', 'Absher', 'Musaned'].join('\n'),
   ignoredWords: '',
-  withCompletion: true,
+  withAutoCompletion: true,
   apiKey: '',
   llmContext: CONTEXT_PRESETS.English,
 };

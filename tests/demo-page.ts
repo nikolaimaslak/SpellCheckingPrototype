@@ -13,13 +13,13 @@ const draftOf = (userMessage: string) => userMessage.split("Draft:\n")[1].split(
 
 export async function openDemoPage(page: Page, answerFor: (draft: string) => FakeAnswer) {
   const userMessages: string[] = [];
-  const spellingMessages: string[] = [];
-  const completionMessages: string[] = [];
+  const spellCheckMessages: string[] = [];
+  const autoCompletionMessages: string[] = [];
   await page.route('https://api.openai.com/**', async (route) => {
     const body = JSON.parse(route.request().postData() ?? '{}') as { messages: { content: string }[] };
     const userMessage = body.messages.at(-1)!.content;
     userMessages.push(userMessage);
-    (userMessage.includes('Complete the draft at ‸') ? completionMessages : spellingMessages).push(userMessage);
+    (userMessage.includes('Complete the draft at ‸') ? autoCompletionMessages : spellCheckMessages).push(userMessage);
     const draft = draftOf(userMessage);
     const answer: FakeAnswer = {
       mistakes: [],
@@ -41,10 +41,10 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     field,
     userMessages,
     ghostText: () => ghost.textContent({ timeout: 1000 }).catch(() => null),
-    spellingMessages,
-    completionMessages,
-    spellingDrafts: () => spellingMessages.map(draftOf),
-    completionDrafts: () => completionMessages.map(draftOf),
+    spellCheckMessages,
+    autoCompletionMessages,
+    spellCheckDrafts: () => spellCheckMessages.map(draftOf),
+    autoCompletionDrafts: () => autoCompletionMessages.map(draftOf),
     waitPastDebounce: () => page.waitForTimeout(DEBOUNCE_MS * 1.5),
   };
 }

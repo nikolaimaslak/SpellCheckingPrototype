@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { buildCompletionMessage, buildSpellingMessage, parseCompletion, parseMistakes, type CompletionRequest, type Mistake, type SpellingRequest } from '../src/assistant/llm';
+import { buildAutoCompletionMessage, buildSpellCheckMessage, parseAutoCompletion, parseMistakes, type AutoCompletionRequest, type Mistake, type SpellCheckRequest } from '../src/assistant/llm';
 import { findMistakesInText } from '../src/assistant/text/mistake-places';
 import { directionOfLastWord } from '../src/assistant/text/words';
 
@@ -33,29 +33,29 @@ test('findMistakesInText drops a mistake whose word is twice in its context', ()
   expect(findMistakesInText('the the form', [the])).toEqual([]);
 });
 
-test('the spelling message has the word lists and the caret, the completion message asks to complete at the caret', () => {
-  const spellingRequest: SpellingRequest = {
+test('the spell check message has the word lists and the caret, the auto-completion message asks to complete at the caret', () => {
+  const spellCheckRequest: SpellCheckRequest = {
     draft: 'Hi Sasha,\nBest regards',
     caretOffset: 9,
     llmContext: 'Agent:\n- Name: Daniel',
     customWords: ['GOSI'],
     ignoredWords: [],
   };
-  expect(buildSpellingMessage(spellingRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom words:\n- GOSI\n\nDraft:\nHi Sasha,‸\nBest regards");
-  expect(buildSpellingMessage({ ...spellingRequest, caretOffset: undefined })).not.toContain('‸');
+  expect(buildSpellCheckMessage(spellCheckRequest)).toBe("Agent:\n- Name: Daniel\n\nCustom words:\n- GOSI\n\nDraft:\nHi Sasha,‸\nBest regards");
+  expect(buildSpellCheckMessage({ ...spellCheckRequest, caretOffset: undefined })).not.toContain('‸');
 
-  const completionRequest: CompletionRequest = {
+  const autoCompletionRequest: AutoCompletionRequest = {
     draft: 'Hi Sasha,\nBest regards',
     caretOffset: 9,
     isCaretOnNewLine: false,
     llmContext: 'Agent:\n- Name: Daniel',
   };
-  expect(buildCompletionMessage(completionRequest)).toBe(
+  expect(buildAutoCompletionMessage(autoCompletionRequest)).toBe(
     "Agent:\n- Name: Daniel\n\nDraft:\nHi Sasha,‸\nBest regards\n\nComplete the draft at ‸ with one short sentence.",
   );
 });
 
-test('parseMistakes keeps well-formed mistakes, parseCompletion reads the next sentence', () => {
+test('parseMistakes keeps well-formed mistakes, parseAutoCompletion reads the next sentence', () => {
   const reply = JSON.stringify({
     mistakes: [
       {
@@ -80,9 +80,9 @@ test('parseMistakes keeps well-formed mistakes, parseCompletion reads the next s
   };
   expect(parseMistakes(reply)).toEqual([sen]);
   expect(parseMistakes('not json')).toBeNull();
-  expect(parseCompletion('{"nextSentence": " to you."}')).toBe(' to you.');
-  expect(parseCompletion('{}')).toBe('');
-  expect(parseCompletion('not json')).toBeNull();
+  expect(parseAutoCompletion('{"nextSentence": " to you."}')).toBe(' to you.');
+  expect(parseAutoCompletion('{}')).toBe('');
+  expect(parseAutoCompletion('not json')).toBeNull();
 });
 
 test('text direction follows the letters', () => {

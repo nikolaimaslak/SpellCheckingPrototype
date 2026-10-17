@@ -1,6 +1,6 @@
 import type { ChatMessage } from './llm';
 
-export const COMPLETION_SYSTEM_MESSAGE = `
+export const AUTO_COMPLETION_SYSTEM_MESSAGE = `
 You help the writer write a message by continuing it at the caret. The context before the draft, when given, says who the writer is and who they write to.
 
 Return valid JSON only, with exactly this structure:
@@ -18,7 +18,7 @@ Rules:
 - Return "nextSentence": "" when you cannot confidently determine a suitable continuation.
 `;
 
-export const COMPLETION_EXAMPLES: ChatMessage[] = [
+export const AUTO_COMPLETION_EXAMPLES: ChatMessage[] = [
   {
     role: 'user',
     content: `Draft:

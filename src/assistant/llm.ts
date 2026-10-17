@@ -1,10 +1,10 @@
-import { COMPLETION_EXAMPLES, COMPLETION_SYSTEM_MESSAGE } from './completion-prompt';
-import { SPELLING_EXAMPLES, SPELLING_SYSTEM_MESSAGE } from './spelling-prompt';
+import { AUTO_COMPLETION_EXAMPLES, AUTO_COMPLETION_SYSTEM_MESSAGE } from './auto-completion-prompt';
+import { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } from './spell-check-prompt';
 import { trace } from './trace';
 
 const MODEL = 'gpt-4.1-mini';
 
-export interface SpellingRequest {
+export interface SpellCheckRequest {
   draft: string;
   caretOffset: number | undefined;
   llmContext: string;
@@ -12,7 +12,7 @@ export interface SpellingRequest {
   ignoredWords: string[];
 }
 
-export interface CompletionRequest {
+export interface AutoCompletionRequest {
   draft: string;
   caretOffset: number;
   isCaretOnNewLine: boolean;
@@ -33,11 +33,11 @@ export interface ChatMessage {
 
 export type LLMResult<T> = { answer: T } | { error: string };
 
-export async function checkSpellingWithLLM(apiKey: string, request: SpellingRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
-  const userMessage = buildSpellingMessage(request);
-  trace('llm', 'spelling: user message', userMessage);
-  const reply = await askLLM(apiKey, [{ role: 'system', content: SPELLING_SYSTEM_MESSAGE }, ...SPELLING_EXAMPLES, { role: 'user', content: userMessage }], signal);
-  trace('llm', 'spelling: raw reply', reply);
+export async function spellCheckWithLLM(apiKey: string, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
+  const userMessage = buildSpellCheckMessage(request);
+  trace('llm', 'spell check: user message', userMessage);
+  const reply = await askLLM(apiKey, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  trace('llm', 'spell check: raw reply', reply);
   if ('error' in reply) {
     return reply;
   }
@@ -45,16 +45,16 @@ export async function checkSpellingWithLLM(apiKey: string, request: SpellingRequ
   return mistakes === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: mistakes };
 }
 
-export async function completeDraftWithLLM(apiKey: string, request: CompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
-  const userMessage = buildCompletionMessage(request);
-  trace('llm', 'completion: user message', userMessage);
-  const reply = await askLLM(apiKey, [{ role: 'system', content: COMPLETION_SYSTEM_MESSAGE }, ...COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
-  trace('llm', 'completion: raw reply', reply);
+export async function autoCompleteWithLLM(apiKey: string, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
+  const userMessage = buildAutoCompletionMessage(request);
+  trace('llm', 'auto-completion: user message', userMessage);
+  const reply = await askLLM(apiKey, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  trace('llm', 'auto-completion: raw reply', reply);
   if ('error' in reply) {
     return reply;
   }
-  const completion = parseCompletion(reply.answer);
-  return completion === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: completion };
+  const autoCompletion = parseAutoCompletion(reply.answer);
+  return autoCompletion === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: autoCompletion };
 }
 
 interface ChatCompletion {
@@ -86,9 +86,9 @@ async function askLLM(apiKey: string, messages: ChatMessage[], signal: AbortSign
       trace('llm', `${error} after ${Math.round(performance.now() - startedAt)} ms`);
       return { error };
     }
-    const completion = (await response.json()) as ChatCompletion;
+    const chatCompletion = (await response.json()) as ChatCompletion;
     trace('llm', `answered in ${Math.round(performance.now() - startedAt)} ms`);
-    const content = completion.choices?.[0]?.message?.content;
+    const content = chatCompletion.choices?.[0]?.message?.content;
     return content ? { answer: content } : { error: 'empty answer' };
   } catch (error) {
     trace('llm', `failed after ${Math.round(performance.now() - startedAt)} ms (aborted, timeout or network)`, error);
@@ -96,7 +96,7 @@ async function askLLM(apiKey: string, messages: ChatMessage[], signal: AbortSign
   }
 }
 
-export function buildSpellingMessage(request: SpellingRequest): string {
+export function buildSpellCheckMessage(request: SpellCheckRequest): string {
   return [
     request.llmContext,
     bulletList('Custom words', request.customWords),
@@ -111,7 +111,7 @@ export function buildSpellingMessage(request: SpellingRequest): string {
   }
 }
 
-export function buildCompletionMessage(request: CompletionRequest): string {
+export function buildAutoCompletionMessage(request: AutoCompletionRequest): string {
   return [
     request.llmContext,
     `Draft:\n${draftWithCaret(request.draft, request.caretOffset)}`,
@@ -137,7 +137,7 @@ export function parseMistakes(reply: string): Mistake[] | null {
   }
 }
 
-export function parseCompletion(reply: string): string | null {
+export function parseAutoCompletion(reply: string): string | null {
   try {
     const parsed = JSON.parse(reply) as { nextSentence?: unknown };
     return typeof parsed.nextSentence === 'string' ? parsed.nextSentence : '';

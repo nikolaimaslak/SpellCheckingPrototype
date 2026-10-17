@@ -86,7 +86,7 @@ export function SuggestionPopover({ popover, fieldRef, onPick, onIgnore, onAddTo
     <div
       ref={box}
       role="listbox"
-      aria-label="Spelling suggestions"
+      aria-label="Spell check suggestions"
       dir={popover.dir}
       className="fixed z-50 min-w-36 rounded-md border border-slate-300 bg-white py-1 text-start text-sm text-slate-800 shadow"
       style={position ?? {

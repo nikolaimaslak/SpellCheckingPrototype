@@ -1,8 +1,8 @@
-import { checkSpellingWithLLM, completeDraftWithLLM, type Mistake } from '../llm';
+import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
-import { displayAndAutocorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
+import { displayAndAutocorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spell-check';
 import { trace } from '../trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
@@ -44,8 +44,8 @@ export function cancelPendingRequest(context: AssistantContext) {
 
 function scheduleLLMRequest(context: AssistantContext) {
   abortRunningRequest(context, 'text changed');
-  if (context.options.spellCheckMode === 'off' && !context.options.withCompletion) {
-    trace('typing', 'spelling and completion are off: no request');
+  if (context.options.spellCheckMode === 'off' && !context.options.withAutoCompletion) {
+    trace('typing', 'spell check and auto-completion are off: no request');
     return;
   }
   if (!readFieldText(context.field).text.trim()) {
@@ -78,14 +78,14 @@ async function sendLLMRequest(context: AssistantContext) {
     return;
   }
 
-  const shouldCheckSpelling = context.options.spellCheckMode !== 'off';
-  const shouldAskCompletion = canAskCompletion(context, sentText.text, caret);
-  if (!shouldCheckSpelling && !shouldAskCompletion) {
-    trace('typing', 'debounce over, but spelling is off and no completion can be asked for here: nothing to send');
+  const shouldSpellCheck = context.options.spellCheckMode !== 'off';
+  const shouldAskAutoCompletion = canAskAutoCompletion(context, sentText.text, caret);
+  if (!shouldSpellCheck && !shouldAskAutoCompletion) {
+    trace('typing', 'debounce over, but spell check is off and no auto-completion can be asked for here: nothing to send');
     updateLoader(context);
     return;
   }
-  trace('typing', `debounce over: sending the draft (${[shouldCheckSpelling && 'spelling', shouldAskCompletion && 'completion'].filter(Boolean).join(' + ')})`, {
+  trace('typing', `debounce over: sending the draft (${[shouldSpellCheck && 'spell check', shouldAskAutoCompletion && 'auto-completion'].filter(Boolean).join(' + ')})`, {
     draft: sentText.text,
     caret,
   });
@@ -93,9 +93,9 @@ async function sendLLMRequest(context: AssistantContext) {
   const request = new AbortController();
   context.typing.runningRequest = request;
   updateLoader(context);
-  const [mistakes, completion] = await Promise.all([
-    shouldCheckSpelling ? askSpelling(context, sentText.text, caret, request.signal) : [],
-    shouldAskCompletion ? askCompletion(context, sentText.text, caret!, request.signal) : '',
+  const [mistakes, autoCompletion] = await Promise.all([
+    shouldSpellCheck ? askSpellCheck(context, sentText.text, caret, request.signal) : [],
+    shouldAskAutoCompletion ? askAutoCompletion(context, sentText.text, caret!, request.signal) : '',
   ]);
   if (request.signal.aborted) {
     trace('typing', 'answers dropped: the request was aborted');
@@ -105,17 +105,17 @@ async function sendLLMRequest(context: AssistantContext) {
 
   const currentText = readFieldText(context.field);
   const hasNothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
-  if (shouldCheckSpelling && mistakes) {
+  if (shouldSpellCheck && mistakes) {
     displayAndAutocorrectMistakes(context, mistakes);
   }
-  if (!shouldAskCompletion || completion === null) {
-    trace('typing', 'no completion to show');
+  if (!shouldAskAutoCompletion || autoCompletion === null) {
+    trace('typing', 'no auto-completion to show');
   } else if (!hasNothingMoved) {
-    trace('typing', 'completion dropped: the text or the caret moved while waiting');
+    trace('typing', 'auto-completion dropped: the text or the caret moved while waiting');
   } else {
-    showGhost(context, completion, caret!);
+    showGhost(context, autoCompletion, caret!);
   }
-  if (mistakes === null || completion === null) {
+  if (mistakes === null || autoCompletion === null) {
     trace('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
     context.setState({ loader: { kind: 'failed' } });
     setTimeout(() => updateLoader(context), 2000);
@@ -124,9 +124,9 @@ async function sendLLMRequest(context: AssistantContext) {
   updateLoader(context);
 }
 
-async function askSpelling(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
+async function askSpellCheck(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
   context.log({ type: 'spell-check-request', text: draft });
-  const result = await checkSpellingWithLLM(
+  const result = await spellCheckWithLLM(
     context.options.apiKey,
     {
       draft,
@@ -148,9 +148,9 @@ async function askSpelling(context: AssistantContext, draft: string, caret: numb
   return result.answer;
 }
 
-async function askCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
+async function askAutoCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
   context.log({ type: 'auto-completion-request', text: draft });
-  const result = await completeDraftWithLLM(
+  const result = await autoCompleteWithLLM(
     context.options.apiKey,
     {
       draft,
@@ -171,9 +171,9 @@ async function askCompletion(context: AssistantContext, draft: string, caret: nu
   return result.answer;
 }
 
-function canAskCompletion(context: AssistantContext, text: string, caret: number | undefined): boolean {
+function canAskAutoCompletion(context: AssistantContext, text: string, caret: number | undefined): boolean {
   // isComposing: an input method (Japanese, Chinese, accent keys) is still building the last word.
-  if (!context.options.withCompletion || caret === undefined || context.typing.isComposing) {
+  if (!context.options.withAutoCompletion || caret === undefined || context.typing.isComposing) {
     return false;
   }
   const restOfCaretLine = text.slice(caret).split('\n')[0];
@@ -193,7 +193,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   } else if (event.inputType === 'historyRedo') {
     noticeRedo(context);
   } else {
-    context.spelling.undoneAutoCorrections = [];
+    context.spellCheck.undoneAutoCorrections = [];
   }
   const isFollowingGhost = ghostFollowsTyping(context, event);
   if (!isFollowingGhost) {
@@ -230,7 +230,7 @@ export function handleKeyDown(context: AssistantContext, event: KeyboardEvent) {
 }
 
 export function handleKeyUp(context: AssistantContext, event: KeyboardEvent) {
-  if (CARET_KEYS.has(event.key) && !event.shiftKey && !context.spelling.openPopover) {
+  if (CARET_KEYS.has(event.key) && !event.shiftKey && !context.spellCheck.openPopover) {
     openPopover(context);
   }
 }

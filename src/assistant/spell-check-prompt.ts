@@ -1,6 +1,6 @@
 import type { ChatMessage } from './llm';
 
-export const SPELLING_SYSTEM_MESSAGE = `
+export const SPELL_CHECK_SYSTEM_MESSAGE = `
 You help the writer proofread a message they are writing. The context before the draft, when given, says who the writer is and who they write to.
 
 Return valid JSON only, with exactly this structure:
@@ -26,7 +26,7 @@ Rules:
 - Return "mistakes": [] when there are no reportable mistakes.
 `;
 
-export const SPELLING_EXAMPLES: ChatMessage[] = [
+export const SPELL_CHECK_EXAMPLES: ChatMessage[] = [
   {
     role: 'user',
     content: `Draft:

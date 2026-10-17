@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-::highlight(bp-spelling-error) {
+::highlight(bp-spell-check-error) {
   text-decoration: underline wavy #d93025;
   text-decoration-skip-ink: none;
   text-underline-offset: 2px;

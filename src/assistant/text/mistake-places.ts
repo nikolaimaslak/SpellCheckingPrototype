@@ -15,7 +15,7 @@ export function findMistakesInText(fieldText: string, mistakes: Mistake[]): Plac
     const context = withPlainSpaces(mistake.context);
     const wordsInContext = findWordPlaces(context, [mistake.word]);
     if (wordsInContext.length !== 1) {
-      trace('spelling', `mistake dropped: "${mistake.word}" is in its context ${wordsInContext.length} times, so its place is unclear`, mistake);
+      trace('spell-check', `mistake dropped: "${mistake.word}" is in its context ${wordsInContext.length} times, so its place is unclear`, mistake);
       continue;
     }
     const wordInContext = wordsInContext[0];

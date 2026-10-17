@@ -6,17 +6,17 @@ import { directionOfLastWord, findWordPlaces, type WordPlace } from '../text/wor
 import type { AssistantContext } from '../types';
 import { trace } from '../trace';
 
-const SPELLING_ERROR_HIGHLIGHT = 'bp-spelling-error';
+const SPELL_CHECK_ERROR_HIGHLIGHT = 'bp-spell-check-error';
 const REPLACED_HIGHLIGHT = 'bp-autocorrected';
 const REPLACED_FLASH_MS = 2000;
 
-export function stopSpelling(context: AssistantContext) {
+export function stopSpellCheck(context: AssistantContext) {
   closePopover(context);
-  removeHighlight(SPELLING_ERROR_HIGHLIGHT);
+  removeHighlight(SPELL_CHECK_ERROR_HIGHLIGHT);
 }
 
 function mistakePlaces(context: AssistantContext, text: string): PlacedMistake[] {
-  return findMistakesInText(text, context.spelling.mistakes).filter((place) => !context.customWords.has(place.word));
+  return findMistakesInText(text, context.spellCheck.mistakes).filter((place) => !context.customWords.has(place.word));
 }
 
 function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText): PlacedMistake[] {
@@ -26,18 +26,18 @@ function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText):
 }
 
 export function displayAndAutocorrectMistakes(context: AssistantContext, newMistakes: Mistake[]) {
-  context.spelling.mistakes = newMistakes;
+  context.spellCheck.mistakes = newMistakes;
   const fieldText = readFieldText(context.field);
   const placed = findMistakesInText(fieldText.text, newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
-  trace('spelling', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
+  trace('spell-check', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
   if (notFound.length) {
-    trace('spelling', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
+    trace('spell-check', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
   }
   if (context.options.spellCheckMode === 'auto-correct') {
     autoCorrectSureMistakes(context);
   } else {
-    trace('spelling', 'auto-correct is off: mistakes are only underlined');
+    trace('spell-check', 'auto-correct is off: mistakes are only underlined');
   }
   redrawUnderlines(context);
 }
@@ -45,10 +45,10 @@ export function displayAndAutocorrectMistakes(context: AssistantContext, newMist
 export function redrawUnderlines(context: AssistantContext) {
   const fieldText = readFieldText(context.field);
   if (!fieldText.text.trim()) {
-    context.spelling.mistakes = [];
+    context.spellCheck.mistakes = [];
   }
   const underlined = mistakePlaces(context, fieldText.text);
-  showHighlight(SPELLING_ERROR_HIGHLIGHT, underlined.map((place) => rangeOf(fieldText, place.start, place.end)));
+  showHighlight(SPELL_CHECK_ERROR_HIGHLIGHT, underlined.map((place) => rangeOf(fieldText, place.start, place.end)));
 }
 
 interface WordReplacement {
@@ -117,11 +117,11 @@ function flash(context: AssistantContext, ranges: Range[]) {
 function autoCorrectSureMistakes(context: AssistantContext) {
   const placesToFix = finishedMistakePlaces(context, readFieldText(context.field)).filter((place) => place.mistake.isSure);
   if (placesToFix.length) {
-    trace('spelling', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
+    trace('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }
   const replacements = placesToFix.map((place) => ({ place, replacement: place.mistake.fixes[0] }));
   for (const { place, replacement } of replaceWords(context, replacements)) {
-    context.spelling.replacementByOriginal.set(place.word, replacement);
+    context.spellCheck.replacementByOriginal.set(place.word, replacement);
     context.log({
       type: 'autocorrect',
       original: place.word,
@@ -132,13 +132,13 @@ function autoCorrectSureMistakes(context: AssistantContext) {
 
 export function noticeUndo(context: AssistantContext) {
   const fieldText = readFieldText(context.field).text;
-  for (const [original, replacement] of context.spelling.replacementByOriginal) {
+  for (const [original, replacement] of context.spellCheck.replacementByOriginal) {
     if (!findWordPlaces(fieldText, [original]).length) {
       continue;
     }
-    trace('spelling', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
-    context.spelling.replacementByOriginal.delete(original);
-    context.spelling.undoneAutoCorrections.push({ original, replacement });
+    trace('spell-check', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
+    context.spellCheck.replacementByOriginal.delete(original);
+    context.spellCheck.undoneAutoCorrections.push({ original, replacement });
     addIgnoredWord(context, original);
     context.log({
       type: 'revert',
@@ -150,10 +150,10 @@ export function noticeUndo(context: AssistantContext) {
 
 export function noticeRedo(context: AssistantContext) {
   const fieldText = readFieldText(context.field).text;
-  const redone = context.spelling.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
+  const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
   for (const { original, replacement } of redone) {
-    trace('spelling', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
-    context.spelling.replacementByOriginal.set(original, replacement);
+    trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
+    context.spellCheck.replacementByOriginal.set(original, replacement);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
     context.log({
       type: 'autocorrect',
@@ -162,7 +162,7 @@ export function noticeRedo(context: AssistantContext) {
     });
   }
   if (redone.length) {
-    context.spelling.undoneAutoCorrections = context.spelling.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
+    context.spellCheck.undoneAutoCorrections = context.spellCheck.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
     context.options.onIgnoredWordsChange(context.ignoredWords);
   }
 }
@@ -178,8 +178,8 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
     return false;
   }
 
-  trace('spelling', `popover opened for "${place.word}"`, place.mistake.fixes);
-  context.spelling.openPopover = { place, selectionBefore: selectedRange() };
+  trace('spell-check', `popover opened for "${place.word}"`, place.mistake.fixes);
+  context.spellCheck.openPopover = { place, selectionBefore: selectedRange() };
   context.setState({
     popover: {
       word: place.word,
@@ -193,11 +193,11 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
 }
 
 export function closePopover(context: AssistantContext, shouldReturnCaret = false) {
-  const closing = context.spelling.openPopover;
+  const closing = context.spellCheck.openPopover;
   if (!closing) {
     return;
   }
-  context.spelling.openPopover = undefined;
+  context.spellCheck.openPopover = undefined;
   context.setState({ popover: undefined });
   if (shouldReturnCaret && closing.selectionBefore) {
     restoreSelection(context.field, closing.selectionBefore);
@@ -205,14 +205,14 @@ export function closePopover(context: AssistantContext, shouldReturnCaret = fals
 }
 
 export function pickSuggestion(context: AssistantContext, suggestion: string) {
-  const place = context.spelling.openPopover?.place;
+  const place = context.spellCheck.openPopover?.place;
   closePopover(context, true);
   const fieldText = readFieldText(context.field);
   if (!place || fieldText.text.slice(place.start, place.end) !== place.word) {
-    trace('spelling', 'pick ignored: the word changed while the popover was open');
+    trace('spell-check', 'pick ignored: the word changed while the popover was open');
     return;
   }
-  trace('spelling', `picked "${suggestion}" for "${place.word}"`);
+  trace('spell-check', `picked "${suggestion}" for "${place.word}"`);
   replaceText(context.field, rangeOf(fieldText, place.start, place.end), suggestion);
   context.log({
     type: 'pick',
@@ -229,18 +229,18 @@ function addIgnoredWord(context: AssistantContext, word: string) {
 
 export function addToDictionary(context: AssistantContext, word: string) {
   context.customWords.add(word);
-  trace('spelling', `"${word}" added to the custom dictionary`);
+  trace('spell-check', `"${word}" added to the custom dictionary`);
   closePopover(context, true);
   redrawUnderlines(context);
 }
 
 export function ignoreWord(context: AssistantContext) {
-  const place = context.spelling.openPopover?.place;
+  const place = context.spellCheck.openPopover?.place;
   closePopover(context, true);
   if (!place) {
     return;
   }
   addIgnoredWord(context, place.word);
-  trace('spelling', `"${place.word}" added to the ignored words: never auto-corrected`);
+  trace('spell-check', `"${place.word}" added to the ignored words: never auto-corrected`);
   context.log({ type: 'ignore', word: place.word });
 }

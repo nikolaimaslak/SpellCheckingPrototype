@@ -1,7 +1,7 @@
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
 import { hideGhost } from './typing/ghost-text';
-import * as spelling from './typing/spelling';
+import * as spellCheck from './typing/spell-check';
 import { trace } from './trace';
 
 export type { AssistantOptions, AssistantState, AssistEvent } from './types';
@@ -23,7 +23,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     isReplacingWords: false,
     ignoredWords: options.ignoredWords,
     customWords: new Set(options.customWords),
-    spelling: {
+    spellCheck: {
       mistakes: [],
       replacementByOriginal: new Map(),
       undoneAutoCorrections: [],
@@ -37,7 +37,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
 
   trace('assistant', 'attached to the field', {
     spellCheckMode: options.spellCheckMode,
-    withCompletion: options.withCompletion,
+    withAutoCompletion: options.withAutoCompletion,
     hasApiKey: !!options.apiKey,
   });
 
@@ -56,27 +56,27 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     handleCompositionEnd: () => checkWhileTyping.handleCompositionEnd(context),
     handleKeyUp: (event: KeyboardEvent) => checkWhileTyping.handleKeyUp(context, event),
 
-    pickSuggestion: (suggestion: string) => spelling.pickSuggestion(context, suggestion),
-    ignoreWord: () => spelling.ignoreWord(context),
-    addToDictionary: (word: string) => spelling.addToDictionary(context, word),
-    closePopover: (shouldReturnCaret: boolean) => spelling.closePopover(context, shouldReturnCaret),
+    pickSuggestion: (suggestion: string) => spellCheck.pickSuggestion(context, suggestion),
+    ignoreWord: () => spellCheck.ignoreWord(context),
+    addToDictionary: (word: string) => spellCheck.addToDictionary(context, word),
+    closePopover: (shouldReturnCaret: boolean) => spellCheck.closePopover(context, shouldReturnCaret),
 
     updateOptions(newOptions: AssistantOptions) {
       trace('assistant', 'settings changed', {
         spellCheckMode: newOptions.spellCheckMode,
-        withCompletion: newOptions.withCompletion,
+        withAutoCompletion: newOptions.withAutoCompletion,
         hasApiKey: !!newOptions.apiKey,
       });
       context.options = newOptions;
       context.ignoredWords = newOptions.ignoredWords;
       context.customWords = new Set(newOptions.customWords);
       if (newOptions.spellCheckMode === 'off') {
-        context.spelling.mistakes = [];
-        spelling.stopSpelling(context);
+        context.spellCheck.mistakes = [];
+        spellCheck.stopSpellCheck(context);
       } else {
-        spelling.redrawUnderlines(context);
+        spellCheck.redrawUnderlines(context);
       }
-      if (!newOptions.withCompletion) {
+      if (!newOptions.withAutoCompletion) {
         hideGhost(context);
       }
     },
@@ -84,7 +84,7 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     release() {
       trace('assistant', 'released (the page is closing)');
       checkWhileTyping.stopCheckWhileTyping(context);
-      spelling.stopSpelling(context);
+      spellCheck.stopSpellCheck(context);
       listeners.clear();
     },
   };

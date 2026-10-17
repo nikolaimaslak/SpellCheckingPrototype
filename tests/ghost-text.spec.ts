@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { ACCEPT_WORD_KEY, openDemoPage } from './demo-page';
 
-const completionAfterReceived = (draft: string) => ({ nextSentence: draft.endsWith('received‸') ? ' and will be done.' : '' });
+const autoCompletionAfterReceived = (draft: string) => ({ nextSentence: draft.endsWith('received‸') ? ' and will be done.' : '' });
 
-test('Tab accepts the completion as one insert', async ({ page }) => {
-  const demo = await openDemoPage(page, completionAfterReceived);
+test('Tab accepts the auto-completion as one insert', async ({ page }) => {
+  const demo = await openDemoPage(page, autoCompletionAfterReceived);
   await demo.field.click();
   await page.keyboard.type('Your request was received');
   await expect.poll(demo.ghostText).toBe(' and will be done.');
@@ -24,11 +24,11 @@ test('typing what the ghost says or accepting one word keeps the rest, with no n
   await page.keyboard.type(' will');
   await expect.poll(demo.ghostText).toBe(' be done.');
   await demo.waitPastDebounce();
-  expect(demo.completionMessages).toHaveLength(1);
+  expect(demo.autoCompletionMessages).toHaveLength(1);
 });
 
 test('typing something else or Escape hides the ghost', async ({ page }) => {
-  const demo = await openDemoPage(page, completionAfterReceived);
+  const demo = await openDemoPage(page, autoCompletionAfterReceived);
   await demo.field.click();
   await page.keyboard.type('Your request was received');
   await expect.poll(demo.ghostText).toBe(' and will be done.');
@@ -54,7 +54,7 @@ test('Enter moves the ghost to the new line without its leading space, with no n
   await page.keyboard.press(ACCEPT_WORD_KEY);
   await expect.poll(demo.ghostText).toBe(' request has been received.');
   await demo.waitPastDebounce();
-  expect(demo.completionMessages).toHaveLength(1);
+  expect(demo.autoCompletionMessages).toHaveLength(1);
 });
 
 test('the ghost shows at the end of an earlier line, and the model sees the caret there', async ({ page }) => {
@@ -63,32 +63,32 @@ test('the ghost shows at the end of an earlier line, and the model sees the care
   await page.keyboard.type('Hi Sasha');
   await page.keyboard.press('Enter');
   await page.keyboard.type('Best regards, Daniel');
-  await expect.poll(() => demo.completionDrafts().at(-1)).toBe('Hi Sasha\nBest regards, Daniel‸');
+  await expect.poll(() => demo.autoCompletionDrafts().at(-1)).toBe('Hi Sasha\nBest regards, Daniel‸');
 
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('End');
   await page.keyboard.type(',');
   await expect.poll(demo.ghostText).toBe(' your request has been received.');
-  expect(demo.completionDrafts().at(-1)).toBe('Hi Sasha,‸\nBest regards, Daniel');
+  expect(demo.autoCompletionDrafts().at(-1)).toBe('Hi Sasha,‸\nBest regards, Daniel');
   await page.keyboard.press('Tab');
   await expect(demo.field).toHaveText(/^Hi Sasha, your request has been received\.\s*Best regards, Daniel$/);
 });
 
-test('no completion is asked for with text after the caret on its line', async ({ page }) => {
+test('no auto-completion is asked for with text after the caret on its line', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ nextSentence: ' never shown' }));
   await demo.field.click();
   await page.keyboard.type('Hi Sasha');
-  await expect.poll(() => demo.spellingMessages.length).toBe(1);
-  expect(demo.completionMessages).toHaveLength(1);
+  await expect.poll(() => demo.spellCheckMessages.length).toBe(1);
+  expect(demo.autoCompletionMessages).toHaveLength(1);
   await page.keyboard.press('Home');
   await page.keyboard.type('X');
-  await expect.poll(() => demo.spellingMessages.length).toBe(2);
-  expect(demo.spellingDrafts()[1]).toBe('X‸Hi Sasha');
-  expect(demo.completionMessages).toHaveLength(1);
+  await expect.poll(() => demo.spellCheckMessages.length).toBe(2);
+  expect(demo.spellCheckDrafts()[1]).toBe('X‸Hi Sasha');
+  expect(demo.autoCompletionMessages).toHaveLength(1);
 });
 
 test('Escape while the debounce runs cancels the request', async ({ page }) => {
-  const demo = await openDemoPage(page, completionAfterReceived);
+  const demo = await openDemoPage(page, autoCompletionAfterReceived);
   await demo.field.click();
   await page.keyboard.type('Your request was received');
   await page.keyboard.press('Escape');

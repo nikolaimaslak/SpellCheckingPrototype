@@ -55,7 +55,7 @@ export type AssistEvent =
 export interface AssistantOptions {
   apiKey: string;
   spellCheckMode: 'off' | 'underline' | 'auto-correct';
-  withCompletion: boolean;
+  withAutoCompletion: boolean;
   debounceMs: number;
   customWords: string[];
   ignoredWords: string[];
@@ -64,7 +64,7 @@ export interface AssistantOptions {
   log: (event: AssistEvent) => void;
 }
 
-export interface SpellingData {
+export interface SpellCheckData {
   mistakes: Mistake[];
   replacementByOriginal: Map<string, string>;
   undoneAutoCorrections: { original: string; replacement: string }[];
@@ -89,6 +89,6 @@ export interface AssistantContext {
   replacedFlashTimer?: ReturnType<typeof setTimeout>;
   ignoredWords: string[];
   customWords: Set<string>;
-  spelling: SpellingData;
+  spellCheck: SpellCheckData;
   typing: TypingData;
 }
