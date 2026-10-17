@@ -108,7 +108,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <dt>
           <kbd>{isMac ? 'Cmd' : 'Ctrl'}</kbd>+<kbd>Z</kbd>
         </dt>
-        <dd>undo auto-correction</dd>
+        <dd>undo auto-correction (the original word is added to ignored words)</dd>
       </dl>
       {assistant && (
         <>

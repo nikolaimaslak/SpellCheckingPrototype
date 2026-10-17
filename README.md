@@ -1,4 +1,4 @@
-# Auto-complete and auto-correct
+# Auto-complete and auto-correct demo
 
 Demo of LLM spell checking, auto-correct, inline auto-completion and a Fix spelling button, in English and Arabic.
 

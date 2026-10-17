@@ -35,28 +35,13 @@ export function App() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 p-4">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+      <header className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">
-          Auto-complete and auto-correct
+          Auto-complete and auto-correct demo
         </h1>
         <ApiKeyField value={settings.apiKey} onChange={(apiKey) => updateSettings({ apiKey })} />
       </header>
       <main className="space-y-4">
-        <div className="flex flex-col gap-3 lg:grid lg:h-48 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
-          <LLMContextField value={settings.llmContext} onChange={(llmContext) => updateSettings({ llmContext })} />
-          <TextArea
-            label="Custom dictionary"
-            hint="Never underlined."
-            value={settings.customDictionary}
-            onChange={(customDictionary) => updateSettings({ customDictionary })}
-          />
-          <TextArea
-            label="Ignored words"
-            hint="Never auto-corrected."
-            value={settings.ignoredWords}
-            onChange={(ignoredWords) => updateSettings({ ignoredWords })}
-          />
-        </div>
         <MessageField
           settings={appliedSettings}
           toolbar={
@@ -75,6 +60,21 @@ export function App() {
           onAddToDictionary={addToDictionary}
           onIgnoredWordsChange={changeIgnoredWords}
         />
+        <div className="flex flex-col gap-3 lg:grid lg:h-48 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
+          <LLMContextField value={settings.llmContext} onChange={(llmContext) => updateSettings({ llmContext })} />
+          <TextArea
+            label="Custom dictionary"
+            hint="Never underlined."
+            value={settings.customDictionary}
+            onChange={(customDictionary) => updateSettings({ customDictionary })}
+          />
+          <TextArea
+            label="Ignored words"
+            hint="Never auto-corrected."
+            value={settings.ignoredWords}
+            onChange={(ignoredWords) => updateSettings({ ignoredWords })}
+          />
+        </div>
         <EventLog lines={logLines} onClear={clearLog} />
       </main>
     </div>
