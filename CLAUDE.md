@@ -18,9 +18,8 @@ Demo of **auto-complete and auto-correct** in Bright Pattern Agent Desktop, in E
   - `types.ts`: options, state and event types.
   - `browser.ts`: everything that touches the browser: text replace as a native undo step (`execCommand('insertText')`), selection, rects, CSS highlights.
   - `text/`: `field-text.ts` (the field's text as one string, mapped back to DOM ranges and the caret), `words.ts` (finding whole words, text direction).
-  - `llm/check-request.ts`: the one prompt (mistakes with fixes and how sure, plus the completion), the one fetch to the LLM, `MODEL`, answer parsing.
-  - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct, Undo as revert), `ghost-text.ts` (the completion shown after the caret and its keys; React draws it).
-  - `replace-words.ts`: replaces words in the field (one undo step each), keeps the caret, flashes the replaced words. Used by auto-correct.
+  - `llm.ts`: the one prompt (mistakes with fixes and how sure, plus the completion), the one fetch to the LLM, `MODEL`, answer parsing.
+  - `typing/`: `check-while-typing.ts` (`handleInput`, `handleKeyDown` and the other handlers `MessageField` calls; the throttled request; handing the answer on), `spelling.ts` (underlines, popover, auto-correct with each replaced word as one undo step, keeping the caret and flashing the replaced words, Undo as revert), `ghost-text.ts` (the completion shown after the caret and its keys; React draws it).
 - `tests/`: Playwright tests. `demo-page.ts` opens the page with a fake LLM; `*.spec.ts` cover ghost text, spelling, the page, reading the field's text (in the browser) and the pure text functions (in Node).
 - Code has no comments: names say what things are.
 

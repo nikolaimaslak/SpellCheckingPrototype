@@ -38,6 +38,7 @@ test('buildUserMessage puts ‸ at the caret only when a completion is asked for
     draft: 'Hi Sasha,\nBest regards',
     shouldAskCompletion: true,
     caretOffset: 9,
+    isCaretOnNewLine: false,
     llmContext: 'Agent:\n- Name: Daniel',
     customWords: ['GOSI'],
     ignoredWords: [],

@@ -5,8 +5,8 @@ const MODEL = 'gpt-4.1-mini';
 export interface CheckRequest {
   draft: string;
   shouldAskCompletion: boolean;
-  caretOffset?: number;
-  isCaretOnNewLine?: boolean;
+  caretOffset: number | undefined;
+  isCaretOnNewLine: boolean;
   llmContext: string;
   customWords: string[];
   ignoredWords: string[];
