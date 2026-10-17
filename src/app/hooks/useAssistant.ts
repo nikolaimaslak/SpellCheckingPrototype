@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions, type AssistantEvent } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { createContentEditableEditorControl } from '../lib/content-editable-editor-control';
@@ -39,6 +39,7 @@ export function useAssistant(
   }, [settings, onEvent, onIgnoredWordsChange, onCustomDictionaryChange]);
 
   const [assistant, setAssistant] = useState<Assistant>();
+  const appliedOptions = useRef(options);
 
   useEffect(() => {
     const field = fieldRef.current;
@@ -46,6 +47,7 @@ export function useAssistant(
       return;
     }
     const created = createAssistant(createContentEditableEditorControl(field), options);
+    appliedOptions.current = options;
     setAssistant(created);
     return () => {
       created.release();
@@ -54,7 +56,11 @@ export function useAssistant(
   }, [fieldRef]);
 
   useEffect(() => {
-    assistant?.updateOptions(options);
+    if (!assistant || appliedOptions.current === options) {
+      return;
+    }
+    appliedOptions.current = options;
+    assistant.updateOptions(options);
   }, [assistant, options]);
 
   const state = useSyncExternalStore(assistant?.subscribe ?? noSubscription, assistant?.getState ?? initialState);
