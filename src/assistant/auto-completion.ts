@@ -1,6 +1,5 @@
 import { directionOfLastWord } from './words';
 import type { AssistantContext, AutoCompletionState, KeyPress, TextDirection, TextInput } from './types';
-import { trace } from './trace';
 
 type AutoCompletionKeyAction = 'accept-all' | 'accept-word' | 'escape' | 'none';
 
@@ -30,10 +29,10 @@ function nextWord(text: string): string {
 
 export function showAutoCompletion(context: AssistantContext, text: string, atCaretOffset: number) {
   if (!text) {
-    trace('auto-completion', 'the model has no auto-completion for this place');
+    context.debug('auto-completion', 'the model has no auto-completion for this place');
     return;
   }
-  trace('auto-completion', `showing ${JSON.stringify(text)} after the caret`);
+  context.debug('auto-completion', `showing ${JSON.stringify(text)} after the caret`);
   const textWhenShown = context.editorControl.getText();
   const autoCompletion: AutoCompletionState = {
     text,
@@ -48,7 +47,7 @@ export function hideAutoCompletion(context: AssistantContext) {
   if (!context.getState().autoCompletion) {
     return;
   }
-  trace('auto-completion', 'hidden');
+  context.debug('auto-completion', 'hidden');
   context.setState({ autoCompletion: undefined });
 }
 
@@ -64,7 +63,7 @@ function acceptAll(context: AssistantContext, autoCompletion: AutoCompletionStat
   if (caret === undefined) {
     return;
   }
-  trace('auto-completion', `accepted ${JSON.stringify(autoCompletion.text)} (one undo step)`);
+  context.debug('auto-completion', `accepted ${JSON.stringify(autoCompletion.text)} (one undo step)`);
   hideAutoCompletion(context);
   context.editorControl.replaceText(caret, caret, autoCompletion.text);
   context.log({ type: 'auto-completion-accept', text: autoCompletion.text });
@@ -75,7 +74,7 @@ function acceptNextWord(context: AssistantContext, autoCompletion: AutoCompletio
   if (caret === undefined) {
     return;
   }
-  trace('auto-completion', `accepting the next word ${JSON.stringify(nextWord(autoCompletion.text))}`);
+  context.debug('auto-completion', `accepting the next word ${JSON.stringify(nextWord(autoCompletion.text))}`);
   context.editorControl.replaceText(caret, caret, nextWord(autoCompletion.text));
 }
 
@@ -90,7 +89,7 @@ function followDeletedSpaces(context: AssistantContext, autoCompletion: AutoComp
   if (before.slice(0, caret) + before.slice(autoCompletion.caretOffset) !== textNow || deleted.trim()) {
     return false;
   }
-  trace('auto-completion', 'backspace removed only spaces: the auto-completion moves to the caret');
+  context.debug('auto-completion', 'backspace removed only spaces: the auto-completion moves to the caret');
   context.setState({
     autoCompletion: {
       ...autoCompletion,
@@ -119,7 +118,7 @@ function followNewLine(context: AssistantContext, autoCompletion: AutoCompletion
   if (!textWithoutLeadingSpacesAndCommas) {
     return false;
   }
-  trace('auto-completion', `new line: the auto-completion moves to it as ${JSON.stringify(textWithoutLeadingSpacesAndCommas)}`);
+  context.debug('auto-completion', `new line: the auto-completion moves to it as ${JSON.stringify(textWithoutLeadingSpacesAndCommas)}`);
   context.setState({
     autoCompletion: {
       ...autoCompletion,
@@ -148,14 +147,14 @@ export function autoCompletionFollowsTyping(context: AssistantContext, event: Te
   const textNow = context.editorControl.getText();
   const caretAfterTyping = context.editorControl.getCaret();
   if (caretAfterTyping !== autoCompletion.caretOffset + event.data.length) {
-    trace('auto-completion', `typed text matches the auto-completion, but the caret is at ${caretAfterTyping}, not ${autoCompletion.caretOffset} + ${event.data.length}: hidden`, {
+    context.debug('auto-completion', `typed text matches the auto-completion, but the caret is at ${caretAfterTyping}, not ${autoCompletion.caretOffset} + ${event.data.length}: hidden`, {
       textWhenShown: autoCompletion.textWhenShown,
       textNow,
     });
     return false;
   }
   const remainingText = autoCompletion.text.slice(event.data.length);
-  trace('auto-completion', `typed what the auto-completion said: ${JSON.stringify(remainingText)} left`);
+  context.debug('auto-completion', `typed what the auto-completion said: ${JSON.stringify(remainingText)} left`);
   if (remainingText) {
     context.setState({
       autoCompletion: {
@@ -180,7 +179,7 @@ export function handleAutoCompletionKey(context: AssistantContext, event: KeyPre
   if (action === 'none') {
     return false;
   }
-  trace('auto-completion', `key ${event.key}: ${action}`);
+  context.debug('auto-completion', `key ${event.key}: ${action}`);
   if (action === 'accept-all') {
     acceptAll(context, autoCompletion);
   } else if (action === 'accept-word') {

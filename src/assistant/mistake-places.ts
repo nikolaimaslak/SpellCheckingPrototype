@@ -1,6 +1,5 @@
 import type { Mistake } from './llm';
 import { findWordPlaces, type WordPlace } from './words';
-import { trace } from './trace';
 
 export interface PlacedMistake extends WordPlace {
   mistake: Mistake;
@@ -15,7 +14,6 @@ export function findMistakesInText(text: string, mistakes: Mistake[]): PlacedMis
     const surroundingText = withPlainSpaces(mistake.surroundingText);
     const wordsInSurroundingText = findWordPlaces(surroundingText, [mistake.word]);
     if (wordsInSurroundingText.length !== 1) {
-      trace('spell-check', `mistake dropped: "${mistake.word}" is in its surrounding text ${wordsInSurroundingText.length} times, so its place is unclear`, mistake);
       continue;
     }
     const wordInSurroundingText = wordsInSurroundingText[0];

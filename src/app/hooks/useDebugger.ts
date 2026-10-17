@@ -1,17 +1,28 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { AssistantEvent } from '../../assistant';
 
-const MAX_LINES = 300;
+const MAX_EVENTS = 300;
+
+export interface DebuggerEvent {
+  id: number;
+  time: string;
+  event: AssistantEvent;
+}
 
 export function useDebugger() {
-  const [debuggerLines, setDebuggerLines] = useState<string[]>([]);
+  const [debuggerEvents, setDebuggerEvents] = useState<DebuggerEvent[]>([]);
+  const nextId = useRef(0);
   const onEvent = useCallback((event: AssistantEvent) => {
-    const line = `${new Date().toISOString().slice(11, 23)} ${JSON.stringify(event)}`;
-    setDebuggerLines((lines) => [...lines.slice(-(MAX_LINES - 1)), line]);
+    const debuggerEvent: DebuggerEvent = {
+      id: nextId.current++,
+      time: new Date().toISOString().slice(11, 23),
+      event,
+    };
+    setDebuggerEvents((debuggerEvents) => [...debuggerEvents.slice(-(MAX_EVENTS - 1)), debuggerEvent]);
   }, []);
-  const clearDebugger = useCallback(() => setDebuggerLines([]), []);
+  const clearDebugger = useCallback(() => setDebuggerEvents([]), []);
   return {
-    debuggerLines,
+    debuggerEvents,
     onEvent,
     clearDebugger,
   };

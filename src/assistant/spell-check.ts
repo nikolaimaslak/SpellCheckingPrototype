@@ -2,7 +2,6 @@ import type { Mistake } from './llm';
 import { findMistakesInText, type PlacedMistake } from './mistake-places';
 import { directionOfLastWord, findWordPlaces, type WordPlace } from './words';
 import type { AssistantContext, TextSpan } from './types';
-import { trace } from './trace';
 
 const AUTO_CORRECTED_FLASH_MS = 2000;
 
@@ -26,14 +25,14 @@ export function displayAndAutoCorrectMistakes(context: AssistantContext, newMist
   context.spellCheck.mistakes = newMistakes;
   const placed = findMistakesInText(context.editorControl.getText(), newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
-  trace('spell-check', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
+  context.debug('spell-check', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
   if (notFound.length) {
-    trace('spell-check', 'context not found in the field (text changed, or the model did not copy it exactly): ignored', notFound);
+    context.debug('spell-check', 'not placed in the text (the text changed, the model did not copy the surrounding text exactly, or the word is in it more than once): ignored', notFound);
   }
   if (context.options.spellCheckMode === 'auto-correct') {
     autoCorrectSureMistakes(context);
   } else {
-    trace('spell-check', 'auto-correct is off: mistakes are only underlined');
+    context.debug('spell-check', 'auto-correct is off: mistakes are only underlined');
   }
   redrawUnderlines(context);
 }
@@ -70,10 +69,10 @@ function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordF
   for (const wordFix of lastFirst) {
     const { place } = wordFix;
     if (context.editorControl.getText().slice(place.start, place.end) !== place.word) {
-      trace('auto-correct', `skipped "${place.word}" @${place.start}: the text there changed`);
+      context.debug('auto-correct', `skipped "${place.word}" @${place.start}: the text there changed`);
       continue;
     }
-    trace('auto-correct', `"${place.word}" @${place.start} → "${wordFix.fix}" (native edit: one Ctrl/Cmd+Z)`);
+    context.debug('auto-correct', `"${place.word}" @${place.start} → "${wordFix.fix}" (native edit: one Ctrl/Cmd+Z)`);
 
     context.editorControl.replaceText(place.start, place.end, wordFix.fix);
     const lengthChange = wordFix.fix.length - place.word.length;
@@ -89,7 +88,7 @@ function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordF
   }
 
   if (caretBefore !== undefined) {
-    trace('auto-correct', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
+    context.debug('auto-correct', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     context.editorControl.setCaret(caretBefore + caretShift);
   }
   flash(context, autoCorrectedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));
@@ -105,7 +104,7 @@ function flash(context: AssistantContext, spans: TextSpan[]) {
 function autoCorrectSureMistakes(context: AssistantContext) {
   const placesToFix = finishedMistakePlaces(context).filter((place) => place.mistake.isSure);
   if (placesToFix.length) {
-    trace('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
+    context.debug('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }
   const wordFixes = placesToFix.map((place) => ({ place, fix: place.mistake.fixes[0] }));
   for (const { place, fix } of replaceWords(context, wordFixes)) {
@@ -124,7 +123,7 @@ export function noticeUndo(context: AssistantContext) {
     if (!findWordPlaces(text, [original]).length) {
       continue;
     }
-    trace('spell-check', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
+    context.debug('spell-check', `Ctrl/Cmd+Z brought back "${original}": it is now ignored and never auto-corrected again`);
     context.spellCheck.fixByOriginal.delete(original);
     context.spellCheck.undoneAutoCorrections.push({ original, fix });
     addIgnoredWord(context, original);
@@ -140,7 +139,7 @@ export function noticeRedo(context: AssistantContext) {
   const text = context.editorControl.getText();
   const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(text, [original]).length);
   for (const { original, fix } of redone) {
-    trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
+    context.debug('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
     context.spellCheck.fixByOriginal.set(original, fix);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
     context.log({
@@ -165,7 +164,7 @@ export function openPopoverAtCaret(context: AssistantContext): boolean {
     return false;
   }
 
-  trace('spell-check', `popover opened for "${place.word}"`, place.mistake.fixes);
+  context.debug('spell-check', `popover opened for "${place.word}"`, place.mistake.fixes);
   context.spellCheck.openPopover = { place, caretBefore: caret };
   context.setState({
     popover: {
@@ -195,10 +194,10 @@ export function pickFix(context: AssistantContext, fix: string) {
   const place = context.spellCheck.openPopover?.place;
   closePopover(context, true);
   if (!place || context.editorControl.getText().slice(place.start, place.end) !== place.word) {
-    trace('spell-check', 'pick ignored: the word changed while the popover was open');
+    context.debug('spell-check', 'pick ignored: the word changed while the popover was open');
     return;
   }
-  trace('spell-check', `picked "${fix}" for "${place.word}"`);
+  context.debug('spell-check', `picked "${fix}" for "${place.word}"`);
   context.editorControl.replaceText(place.start, place.end, fix);
   context.log({
     type: 'pick-fix',
@@ -216,7 +215,7 @@ function addIgnoredWord(context: AssistantContext, word: string) {
 export function addToDictionary(context: AssistantContext, word: string) {
   context.customDictionary.add(word);
   context.options.onCustomDictionaryChange([...context.customDictionary]);
-  trace('spell-check', `"${word}" added to the custom dictionary`);
+  context.debug('spell-check', `"${word}" added to the custom dictionary`);
   closePopover(context, true);
   redrawUnderlines(context);
 }
@@ -228,6 +227,6 @@ export function ignoreWord(context: AssistantContext) {
     return;
   }
   addIgnoredWord(context, place.word);
-  trace('spell-check', `"${place.word}" added to the ignored words: never auto-corrected`);
+  context.debug('spell-check', `"${place.word}" added to the ignored words: never auto-corrected`);
   context.log({ type: 'ignore-word', word: place.word });
 }

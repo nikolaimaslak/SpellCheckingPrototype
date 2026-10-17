@@ -2,7 +2,6 @@ import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from './llm';
 import type { AssistantContext, AssistantState, KeyPress, TextInput } from './types';
 import { autoCompletionFollowsTyping, handleAutoCompletionKey, hideAutoCompletion, hideAutoCompletionIfCaretMoved, showAutoCompletion } from './auto-completion';
 import { displayAndAutoCorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spell-check';
-import { trace } from './trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
@@ -19,13 +18,13 @@ function updateRequestStatus(context: AssistantContext) {
   if (JSON.stringify(context.getState().requestStatus) === JSON.stringify(requestStatus)) {
     return;
   }
-  trace('typing', `request status ${requestStatus?.kind ?? 'off'}`);
+  context.debug('typing', `request status ${requestStatus?.kind ?? 'off'}`);
   context.setState({ requestStatus });
 }
 
 function abortRunningRequest(context: AssistantContext, why: string) {
   if (context.typing.runningRequest) {
-    trace('typing', `${why}: the running request is aborted`);
+    context.debug('typing', `${why}: the running request is aborted`);
     context.typing.runningRequest.abort();
     context.typing.runningRequest = undefined;
   }
@@ -33,7 +32,7 @@ function abortRunningRequest(context: AssistantContext, why: string) {
 
 export function cancelPendingRequest(context: AssistantContext) {
   if (context.typing.requestTimer) {
-    trace('typing', 'Escape: the debounce timer is cleared');
+    context.debug('typing', 'Escape: the debounce timer is cleared');
     clearTimeout(context.typing.requestTimer);
     context.typing.requestTimer = undefined;
   }
@@ -44,18 +43,18 @@ export function cancelPendingRequest(context: AssistantContext) {
 function scheduleLLMRequest(context: AssistantContext) {
   abortRunningRequest(context, 'text changed');
   if (context.options.spellCheckMode === 'off' && !context.options.withAutoCompletion) {
-    trace('typing', 'spell check and auto-completion are off: no request');
+    context.debug('typing', 'spell check and auto-completion are off: no request');
     return;
   }
   if (!context.editorControl.getText().trim()) {
-    trace('typing', 'the field is empty: no request');
+    context.debug('typing', 'the field is empty: no request');
     clearTimeout(context.typing.requestTimer);
     context.typing.requestTimer = undefined;
     context.typing.lastSentText = '';
     updateRequestStatus(context);
     return;
   }
-  trace('typing', context.typing.requestTimer ? `typing continues: debounce timer restarted (${context.options.debounceMs} ms)` : `debounce timer started: request in ${context.options.debounceMs} ms unless typing continues`);
+  context.debug('typing', context.typing.requestTimer ? `typing continues: debounce timer restarted (${context.options.debounceMs} ms)` : `debounce timer started: request in ${context.options.debounceMs} ms unless typing continues`);
   clearTimeout(context.typing.requestTimer);
   context.typing.requestTimer = setTimeout(() => void sendLLMRequest(context), context.options.debounceMs);
   context.typing.debounceStartedAt = Date.now();
@@ -72,7 +71,7 @@ async function sendLLMRequest(context: AssistantContext) {
   context.typing.lastSentText = sentText;
 
   if (!sentText.trim()) {
-    trace('typing', 'debounce over, but the field is empty: nothing to send');
+    context.debug('typing', 'debounce over, but the field is empty: nothing to send');
     updateRequestStatus(context);
     return;
   }
@@ -80,11 +79,11 @@ async function sendLLMRequest(context: AssistantContext) {
   const shouldSpellCheck = context.options.spellCheckMode !== 'off';
   const shouldAskAutoCompletion = canAskAutoCompletion(context, sentText, caret);
   if (!shouldSpellCheck && !shouldAskAutoCompletion) {
-    trace('typing', 'debounce over, but spell check is off and no auto-completion can be asked for here: nothing to send');
+    context.debug('typing', 'debounce over, but spell check is off and no auto-completion can be asked for here: nothing to send');
     updateRequestStatus(context);
     return;
   }
-  trace('typing', `debounce over: sending the draft (${[shouldSpellCheck && 'spell check', shouldAskAutoCompletion && 'auto-completion'].filter(Boolean).join(' + ')})`, {
+  context.debug('typing', `debounce over: sending the draft (${[shouldSpellCheck && 'spell check', shouldAskAutoCompletion && 'auto-completion'].filter(Boolean).join(' + ')})`, {
     draft: sentText,
     caret,
   });
@@ -97,7 +96,7 @@ async function sendLLMRequest(context: AssistantContext) {
     shouldAskAutoCompletion ? askAutoCompletion(context, sentText, caret!, request.signal) : '',
   ]);
   if (request.signal.aborted) {
-    trace('typing', 'answers dropped: the request was aborted');
+    context.debug('typing', 'answers dropped: the request was aborted');
     return;
   }
   context.typing.runningRequest = undefined;
@@ -107,14 +106,14 @@ async function sendLLMRequest(context: AssistantContext) {
     displayAndAutoCorrectMistakes(context, mistakes);
   }
   if (!shouldAskAutoCompletion || autoCompletion === null) {
-    trace('typing', 'no auto-completion to show');
+    context.debug('typing', 'no auto-completion to show');
   } else if (!hasNothingMoved) {
-    trace('typing', 'auto-completion dropped: the text or the caret moved while waiting');
+    context.debug('typing', 'auto-completion dropped: the text or the caret moved while waiting');
   } else {
     showAutoCompletion(context, autoCompletion, caret!);
   }
   if (mistakes === null || autoCompletion === null) {
-    trace('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
+    context.debug('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
     context.setState({ requestStatus: { kind: 'failed' } });
     setTimeout(() => updateRequestStatus(context), 2000);
     return;
@@ -125,7 +124,7 @@ async function sendLLMRequest(context: AssistantContext) {
 async function askSpellCheck(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
   context.log({ type: 'spell-check-request', text: draft });
   const result = await spellCheckWithLLM(
-    context.options.llmClient,
+    context,
     {
       draft,
       caretOffset: caret,
@@ -149,7 +148,7 @@ async function askSpellCheck(context: AssistantContext, draft: string, caret: nu
 async function askAutoCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
   context.log({ type: 'auto-completion-request', text: draft });
   const result = await autoCompleteWithLLM(
-    context.options.llmClient,
+    context,
     {
       draft,
       caretOffset: caret,
@@ -185,7 +184,7 @@ function openPopover(context: AssistantContext) {
 }
 
 export function handleInput(context: AssistantContext, event: TextInput) {
-  trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
+  context.debug('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
   if (event.inputType === 'historyUndo') {
     noticeUndo(context);
   } else if (event.inputType === 'historyRedo') {
@@ -199,22 +198,22 @@ export function handleInput(context: AssistantContext, event: TextInput) {
   }
   redrawUnderlines(context);
   if (context.isAutoCorrecting) {
-    trace('typing', 'auto-correct changed the text, not the user: no new request');
+    context.debug('typing', 'auto-correct changed the text, not the user: no new request');
     return;
   }
   if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {
-    trace('typing', 'undo or redo: no new request');
+    context.debug('typing', 'undo or redo: no new request');
     return;
   }
   if (isTypingAutoCompletion && context.getState().autoCompletion) {
-    trace('typing', 'the input followed the auto-completion and some of it is left: no new request');
+    context.debug('typing', 'the input followed the auto-completion and some of it is left: no new request');
     return;
   }
   if (
     event.inputType.startsWith('delete') &&
     context.editorControl.getText().trimEnd() === context.typing.lastSentText.trimEnd()
   ) {
-    trace('typing', 'only trailing spaces were removed since the last request: no new request');
+    context.debug('typing', 'only trailing spaces were removed since the last request: no new request');
     return;
   }
   scheduleLLMRequest(context);

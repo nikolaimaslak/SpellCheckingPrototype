@@ -13,7 +13,7 @@ const APPLY_SETTINGS_DEBOUNCE_MS = 500;
 export function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [appliedSettings, setAppliedSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const { debuggerLines, onEvent, clearDebugger } = useDebugger();
+  const { debuggerEvents, onEvent, clearDebugger } = useDebugger();
 
   useEffect(() => {
     const timer = setTimeout(() => setAppliedSettings(settings), APPLY_SETTINGS_DEBOUNCE_MS);
@@ -68,7 +68,7 @@ export function App() {
             onChange={(ignoredWords) => updateSettings({ ignoredWords })}
           />
         </div>
-        <Debugger lines={debuggerLines} onClear={clearDebugger} />
+        <Debugger debuggerEvents={debuggerEvents} onClear={clearDebugger} />
       </main>
     </div>
   );

@@ -70,15 +70,21 @@ export function FixesPopover({ popover, fieldRef, onPick, onIgnore, onAddToDicti
       }
     };
     const onMove = () => onClose(false);
+    const onScroll = (e: Event) => {
+      const isFieldMoved = e.target === document || (e.target instanceof Node && e.target.contains(fieldRef.current));
+      if (isFieldMoved) {
+        onClose(false);
+      }
+    };
     window.addEventListener('keydown', onKey, true);
     document.addEventListener('mousedown', onOutside, true);
     window.addEventListener('resize', onMove);
-    window.addEventListener('scroll', onMove, true);
+    window.addEventListener('scroll', onScroll, true);
     return () => {
       window.removeEventListener('keydown', onKey, true);
       document.removeEventListener('mousedown', onOutside, true);
       window.removeEventListener('resize', onMove);
-      window.removeEventListener('scroll', onMove, true);
+      window.removeEventListener('scroll', onScroll, true);
     };
   }, [items, focused, onClose]);
 

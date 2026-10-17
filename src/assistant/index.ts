@@ -2,9 +2,8 @@ import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type Assis
 import * as checkWhileTyping from './check-while-typing';
 import { hideAutoCompletion } from './auto-completion';
 import * as spellCheck from './spell-check';
-import { trace } from './trace';
 
-export type { AssistantOptions, AssistantState, AssistantEvent, ChatMessage, EditorControl, LLMClient, LLMResult, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
+export type { AssistantOptions, AssistantState, AssistantEvent, ChatMessage, DebugArea, EditorControl, LLMClient, LLMResult, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
 export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
@@ -16,6 +15,13 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     editorControl,
     options,
     log: (event) => context.options.onEvent(event),
+    debug: (area, message, details) =>
+      context.options.onEvent({
+        type: 'debug',
+        area,
+        message,
+        details,
+      }),
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
@@ -36,7 +42,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     },
   };
 
-  trace('assistant', 'attached to the field', {
+  context.debug('assistant', 'attached to the field', {
     spellCheckMode: options.spellCheckMode,
     withAutoCompletion: options.withAutoCompletion,
   });
@@ -62,7 +68,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     closePopover: (shouldReturnCaret: boolean) => spellCheck.closePopover(context, shouldReturnCaret),
 
     updateOptions(newOptions: AssistantOptions) {
-      trace('assistant', 'settings changed', {
+      context.debug('assistant', 'settings changed', {
         spellCheckMode: newOptions.spellCheckMode,
         withAutoCompletion: newOptions.withAutoCompletion,
       });
@@ -81,7 +87,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     },
 
     release() {
-      trace('assistant', 'released (the page is closing)');
+      context.debug('assistant', 'release called');
       checkWhileTyping.stopCheckWhileTyping(context);
       spellCheck.stopSpellCheck(context);
       listeners.clear();

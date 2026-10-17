@@ -1,7 +1,6 @@
 import { AUTO_COMPLETION_EXAMPLES, AUTO_COMPLETION_SYSTEM_MESSAGE } from './auto-completion-prompt';
 import { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } from './spell-check-prompt';
-import { trace } from './trace';
-import type { ChatMessage, LLMClient, LLMResult } from './types';
+import type { AssistantContext, ChatMessage, LLMResult } from './types';
 
 const LLM_TIMEOUT_MS = 5000;
 
@@ -27,11 +26,11 @@ export interface Mistake {
   isSure: boolean;
 }
 
-export async function spellCheckWithLLM(llmClient: LLMClient, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
+export async function spellCheckWithLLM(context: AssistantContext, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
   const userMessage = buildSpellCheckMessage(request);
-  trace('llm', 'spell check: user message', userMessage);
-  const reply = await askWithTimeout(llmClient, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
-  trace('llm', 'spell check: raw reply', reply);
+  context.debug('llm', 'spell check: user message', userMessage);
+  const reply = await askWithTimeout(context, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  context.debug('llm', 'spell check: raw reply', reply);
   if ('error' in reply) {
     return reply;
   }
@@ -39,11 +38,11 @@ export async function spellCheckWithLLM(llmClient: LLMClient, request: SpellChec
   return mistakes === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: mistakes };
 }
 
-export async function autoCompleteWithLLM(llmClient: LLMClient, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
+export async function autoCompleteWithLLM(context: AssistantContext, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
   const userMessage = buildAutoCompletionMessage(request);
-  trace('llm', 'auto-completion: user message', userMessage);
-  const reply = await askWithTimeout(llmClient, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
-  trace('llm', 'auto-completion: raw reply', reply);
+  context.debug('llm', 'auto-completion: user message', userMessage);
+  const reply = await askWithTimeout(context, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  context.debug('llm', 'auto-completion: raw reply', reply);
   if ('error' in reply) {
     return reply;
   }
@@ -51,14 +50,14 @@ export async function autoCompleteWithLLM(llmClient: LLMClient, request: AutoCom
   return autoCompletion === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: autoCompletion };
 }
 
-async function askWithTimeout(llmClient: LLMClient, messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>> {
+async function askWithTimeout(context: AssistantContext, messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>> {
   const startedAt = performance.now();
   try {
-    const reply = await llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]));
-    trace('llm', `${'error' in reply ? `failed: ${reply.error}` : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
+    const reply = await context.options.llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]));
+    context.debug('llm', `${'error' in reply ? `failed: ${reply.error}` : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
     return reply;
   } catch (error) {
-    trace('llm', `failed after ${Math.round(performance.now() - startedAt)} ms`, error);
+    context.debug('llm', `failed after ${Math.round(performance.now() - startedAt)} ms: ${String(error)}`);
     return { error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
   }
 }
