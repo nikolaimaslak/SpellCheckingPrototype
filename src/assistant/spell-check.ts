@@ -109,11 +109,6 @@ function autoCorrectSureMistakes(context: AssistantContext) {
   const wordFixes = placesToFix.map((place) => ({ place, fix: place.mistake.fixes[0] }));
   for (const { place, fix } of replaceWords(context, wordFixes)) {
     context.spellCheck.fixByOriginal.set(place.word, fix);
-    context.log({
-      type: 'auto-correct',
-      original: place.word,
-      fix,
-    });
   }
 }
 
@@ -127,11 +122,6 @@ export function noticeUndo(context: AssistantContext) {
     context.spellCheck.fixByOriginal.delete(original);
     context.spellCheck.undoneAutoCorrections.push({ original, fix });
     addIgnoredWord(context, original);
-    context.log({
-      type: 'auto-correct-undo',
-      original,
-      fix,
-    });
   }
 }
 
@@ -142,11 +132,6 @@ export function noticeRedo(context: AssistantContext) {
     context.debug('spell-check', `Ctrl/Cmd+Shift+Z brought back "${fix}": "${original}" is no longer ignored`);
     context.spellCheck.fixByOriginal.set(original, fix);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
-    context.log({
-      type: 'auto-correct-redo',
-      original,
-      fix,
-    });
   }
   if (redone.length) {
     context.spellCheck.undoneAutoCorrections = context.spellCheck.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
@@ -199,11 +184,6 @@ export function pickFix(context: AssistantContext, fix: string) {
   }
   context.debug('spell-check', `picked "${fix}" for "${place.word}"`);
   context.editorControl.replaceText(place.start, place.end, fix);
-  context.log({
-    type: 'pick-fix',
-    original: place.word,
-    fix,
-  });
   redrawUnderlines(context);
 }
 
@@ -228,5 +208,4 @@ export function ignoreWord(context: AssistantContext) {
   }
   addIgnoredWord(context, place.word);
   context.debug('spell-check', `"${place.word}" added to the ignored words: never auto-corrected`);
-  context.log({ type: 'ignore-word', word: place.word });
 }

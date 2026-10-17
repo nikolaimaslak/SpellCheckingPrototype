@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createAssistant, type AssistantOptions, type AssistantEvent, type EditorControl, type KeyPress, type LLMClient, type TextSpan } from '.';
+import { createAssistant, type AssistantOptions, type EditorControl, type KeyPress, type LLMClient, type TextSpan } from '.';
 
 interface FakeLLMAnswer {
   mistakes: {
@@ -39,7 +39,6 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
   const llmClient: LLMClient = {
     ask: async () => ({ answer: JSON.stringify(answer) }),
   };
-  const events: AssistantEvent[] = [];
   const options: AssistantOptions = {
     llmClient,
     spellCheckMode: 'auto-correct',
@@ -51,14 +50,14 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
     onIgnoredWordsChange: () => {},
     onCustomDictionaryChange: () => {},
     llmContext: '',
-    onEvent: (event) => events.push(event),
+    onEvent: () => {},
   };
-  return { assistant: createAssistant(editorControl, options), events };
+  return createAssistant(editorControl, options);
 }
 
 test('without a DOM, a sure mistake is auto-corrected through the editor control', async () => {
   const { editorControl, memory } = createTextEditorControl('I will sen the form');
-  const { assistant, events } = startAssistant(editorControl, {
+  const assistant = startAssistant(editorControl, {
     mistakes: [
       {
         word: 'sen',
@@ -70,15 +69,14 @@ test('without a DOM, a sure mistake is auto-corrected through the editor control
     nextSentence: '',
   });
   assistant.handleInput({ inputType: 'insertText', data: 'm' });
-  await expect.poll(() => events.some((event) => event.type === 'auto-correct')).toBe(true);
-  expect(memory.text).toBe('I will send the form');
+  await expect.poll(() => memory.text).toBe('I will send the form');
   expect(memory.caret).toBe('I will send the form'.length);
   assistant.release();
 });
 
 test('without a DOM, the auto-completion shows in the state and Tab inserts it', async () => {
   const { editorControl, memory } = createTextEditorControl('Your request was received');
-  const { assistant } = startAssistant(editorControl, { mistakes: [], nextSentence: ' and will be done.' });
+  const assistant = startAssistant(editorControl, { mistakes: [], nextSentence: ' and will be done.' });
   assistant.handleInput({ inputType: 'insertText', data: 'd' });
   await expect.poll(() => assistant.getState().autoCompletion?.text).toBe(' and will be done.');
 

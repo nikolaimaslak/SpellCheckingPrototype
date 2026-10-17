@@ -73,23 +73,11 @@ export interface AssistantState {
 
 export const INITIAL_STATE: AssistantState = {};
 
-export type AssistantEvent =
-  | {
-      type: 'debug';
-      area: DebugArea;
-      message: string;
-      details?: unknown;
-    }
-  | { type: 'spell-check-request' | 'auto-completion-request'; text: string }
-  | { type: 'spell-check-answer' | 'auto-completion-answer'; answer: unknown }
-  | { type: 'spell-check-error' | 'auto-completion-error'; error: string }
-  | {
-      type: 'auto-correct' | 'auto-correct-undo' | 'auto-correct-redo' | 'pick-fix';
-      original: string;
-      fix: string;
-    }
-  | { type: 'ignore-word'; word: string }
-  | { type: 'auto-completion-accept'; text: string };
+export interface AssistantEvent {
+  area: DebugArea;
+  message: string;
+  details?: unknown;
+}
 
 export interface AssistantOptions {
   llmClient: LLMClient;
@@ -123,7 +111,6 @@ export interface TypingData {
 export interface AssistantContext {
   editorControl: EditorControl;
   options: AssistantOptions;
-  log(event: AssistantEvent): void;
   debug(area: DebugArea, message: string, details?: unknown): void;
   getState(): AssistantState;
   setState(patch: Partial<AssistantState>): void;

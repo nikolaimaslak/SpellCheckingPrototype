@@ -12,23 +12,7 @@ const AREA_COLORS: Record<DebugArea, string> = {
   'auto-completion': 'text-emerald-300',
 };
 
-function areaOf(event: AssistantEvent): DebugArea {
-  if (event.type === 'debug') {
-    return event.area;
-  }
-  if (event.type.startsWith('auto-correct')) {
-    return 'auto-correct';
-  }
-  if (event.type.startsWith('auto-completion')) {
-    return 'auto-completion';
-  }
-  return 'spell-check';
-}
-
 function describe(event: AssistantEvent): string {
-  if (event.type !== 'debug') {
-    return JSON.stringify(event);
-  }
   const details = event.details === undefined ? '' : ` ${JSON.stringify(event.details)}`;
   return `[${event.area}] ${event.message}${details}`;
 }
@@ -54,7 +38,7 @@ export function Debugger({ debuggerEvents, onClear }: { debuggerEvents: Debugger
         <pre ref={pre} className="h-64 min-h-16 resize-y space-y-1.5 overflow-auto rounded bg-slate-900 p-2 pr-16 text-xs leading-5 whitespace-pre-wrap break-all">
           {debuggerEvents.length ? (
             debuggerEvents.map((debuggerEvent) => (
-              <div key={debuggerEvent.id} className={`${AREA_COLORS[areaOf(debuggerEvent.event)]} ${debuggerEvent.event.type === 'debug' ? '' : 'font-bold'}`}>
+              <div key={debuggerEvent.id} className={AREA_COLORS[debuggerEvent.event.area]}>
                 <span className="text-slate-500">{debuggerEvent.time}</span> <DebuggerEventText text={describe(debuggerEvent.event)} />
               </div>
             ))

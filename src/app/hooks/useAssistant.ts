@@ -17,6 +17,7 @@ export function useAssistant(
   onIgnoredWordsChange: (text: string) => void,
   onCustomDictionaryChange: (text: string) => void,
 ) {
+  const llmClient = useMemo(() => createOpenAILLMClient(settings.apiKey), [settings.apiKey]);
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
       spellCheckMode: !settings.withSpellCheck
@@ -31,12 +32,12 @@ export function useAssistant(
       withAutoCompletion: settings.withAutoCompletion,
       isMac,
       debounceMs: DEBOUNCE_MS,
-      llmClient: createOpenAILLMClient(settings.apiKey),
+      llmClient,
       llmContext: settings.llmContext,
       onEvent,
     };
     return assistantOptions;
-  }, [settings, onEvent, onIgnoredWordsChange, onCustomDictionaryChange]);
+  }, [settings, llmClient, onEvent, onIgnoredWordsChange, onCustomDictionaryChange]);
 
   const [assistant, setAssistant] = useState<Assistant>();
   const appliedOptions = useRef(options);

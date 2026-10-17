@@ -54,7 +54,7 @@ async function askWithTimeout(context: AssistantContext, messages: ChatMessage[]
   const startedAt = performance.now();
   try {
     const reply = await context.options.llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]));
-    context.debug('llm', `${'error' in reply ? `failed: ${reply.error}` : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
+    context.debug('llm', `${'error' in reply ? 'failed' : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
     return reply;
   } catch (error) {
     context.debug('llm', `failed after ${Math.round(performance.now() - startedAt)} ms: ${String(error)}`);

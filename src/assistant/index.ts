@@ -7,6 +7,31 @@ export type { AssistantOptions, AssistantState, AssistantEvent, ChatMessage, Deb
 export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
+function describeOptions(options: AssistantOptions, previous?: AssistantOptions): Record<string, unknown> {
+  const described: Record<string, unknown> = {};
+  for (const key of Object.keys(options) as (keyof AssistantOptions)[]) {
+    const value = options[key];
+    const previousValue = previous?.[key];
+    if (typeof value === 'function') {
+      continue;
+    }
+    if (Array.isArray(value) && Array.isArray(previousValue) && value.join('\n') === previousValue.join('\n')) {
+      continue;
+    }
+    if (value === previousValue) {
+      continue;
+    }
+    if (key === 'llmClient') {
+      described[key] = previous ? 'new client' : 'set';
+    } else if (key === 'llmContext') {
+      described[key] = `${options.llmContext.length} characters`;
+    } else {
+      described[key] = value;
+    }
+  }
+  return described;
+}
+
 export function createAssistant(editorControl: EditorControl, options: AssistantOptions) {
   let state = INITIAL_STATE;
   const listeners = new Set<() => void>();
@@ -14,10 +39,8 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
   const context: AssistantContext = {
     editorControl,
     options,
-    log: (event) => context.options.onEvent(event),
     debug: (area, message, details) =>
       context.options.onEvent({
-        type: 'debug',
         area,
         message,
         details,
@@ -42,10 +65,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     },
   };
 
-  context.debug('assistant', 'attached to the field', {
-    spellCheckMode: options.spellCheckMode,
-    withAutoCompletion: options.withAutoCompletion,
-  });
+  context.debug('assistant', 'attached to the field', describeOptions(options));
 
   return {
     getState: () => state,
@@ -68,10 +88,10 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
     closePopover: (shouldReturnCaret: boolean) => spellCheck.closePopover(context, shouldReturnCaret),
 
     updateOptions(newOptions: AssistantOptions) {
-      context.debug('assistant', 'settings changed', {
-        spellCheckMode: newOptions.spellCheckMode,
-        withAutoCompletion: newOptions.withAutoCompletion,
-      });
+      const changed = describeOptions(newOptions, context.options);
+      if (Object.keys(changed).length) {
+        context.debug('assistant', 'settings changed', changed);
+      }
       context.options = newOptions;
       context.ignoredWords = newOptions.ignoredWords;
       context.customDictionary = new Set(newOptions.customDictionary);

@@ -66,7 +66,6 @@ function acceptAll(context: AssistantContext, autoCompletion: AutoCompletionStat
   context.debug('auto-completion', `accepted ${JSON.stringify(autoCompletion.text)} (one undo step)`);
   hideAutoCompletion(context);
   context.editorControl.replaceText(caret, caret, autoCompletion.text);
-  context.log({ type: 'auto-completion-accept', text: autoCompletion.text });
 }
 
 function acceptNextWord(context: AssistantContext, autoCompletion: AutoCompletionState) {
