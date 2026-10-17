@@ -1,5 +1,4 @@
 import type { Mistake } from './llm';
-import type { DiffSegment } from './fix-spelling/word-diff';
 import type { PlacedMistake } from './text/mistake-places';
 
 export type TextDirection = 'ltr' | 'rtl';
@@ -26,19 +25,9 @@ export interface GhostState {
   direction: TextDirection;
 }
 
-export interface FixSpellingState {
-  busy: boolean;
-  preview?: {
-    dir: TextDirection;
-    segments: DiffSegment[];
-    message?: string;
-  };
-}
-
 export interface AssistantState {
   popover?: PopoverState;
   ghost?: GhostState;
-  fixSpelling: FixSpellingState;
   loader?:
     | {
         kind: 'debounce';
@@ -49,7 +38,7 @@ export interface AssistantState {
     | { kind: 'failed' };
 }
 
-export const INITIAL_STATE: AssistantState = { fixSpelling: { busy: false } };
+export const INITIAL_STATE: AssistantState = {};
 
 export type AssistEvent =
   | {
@@ -57,14 +46,12 @@ export type AssistEvent =
       text: string;
       withCompletion: boolean;
     }
-  | { type: 'llm-answer' | 'fix-spelling-reply'; reply: unknown }
-  | { type: 'fix-spelling-request'; text: string }
+  | { type: 'llm-answer'; reply: unknown }
   | {
       type: 'autocorrect' | 'revert' | 'pick';
       original: string;
       replacement: string;
     }
-  | { type: 'fix-spelling'; text: string }
   | { type: 'ignore'; word: string }
   | { type: 'completion-accepted'; text: string };
 
@@ -95,11 +82,6 @@ export interface TypingData {
   isComposing: boolean;
 }
 
-export interface FixSpellingData {
-  runningRequest?: AbortController;
-  openPreview?: { sentDraft: string; fixedText: string };
-}
-
 export interface AssistantContext {
   field: HTMLElement;
   options: AssistantOptions;
@@ -112,5 +94,4 @@ export interface AssistantContext {
   customWords: Set<string>;
   spelling: SpellingData;
   typing: TypingData;
-  fixSpelling: FixSpellingData;
 }

@@ -28,9 +28,3 @@ export function directionOfLastWord(text: string): TextDirection {
   const lastWord = text.match(LETTERS)?.at(-1) ?? '';
   return /\p{Script=Arabic}/u.test(lastWord) ? 'rtl' : 'ltr';
 }
-
-export function directionOfText(text: string): TextDirection {
-  const arabicLetters = text.match(/\p{Script=Arabic}/gu)?.length ?? 0;
-  const latinLetters = text.match(/\p{Script=Latin}/gu)?.length ?? 0;
-  return arabicLetters > latinLetters ? 'rtl' : 'ltr';
-}

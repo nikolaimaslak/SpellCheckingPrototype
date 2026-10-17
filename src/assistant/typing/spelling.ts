@@ -105,9 +105,6 @@ export function noticeRedo(context: AssistantContext) {
 }
 
 export function openPopoverAtCaret(context: AssistantContext): boolean {
-  if (context.getState().fixSpelling.preview) {
-    return false;
-  }
   const fieldText = readFieldText(context.field);
   const caret = caretOffset(fieldText);
   if (caret === undefined) {

@@ -2,7 +2,7 @@ import { checkDraftWithLLM } from '../llm';
 import { caretOffset, readFieldText } from '../text/field-text';
 import type { AssistantContext, AssistantState } from '../types';
 import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
-import { displayAndAutocorrectMistakes, closePopover, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
+import { displayAndAutocorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spelling';
 import { trace } from '../trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
@@ -143,11 +143,6 @@ function openPopover(context: AssistantContext) {
   }
 }
 
-export function closePanels(context: AssistantContext) {
-  hideGhost(context);
-  closePopover(context);
-}
-
 export function handleInput(context: AssistantContext, event: InputEvent) {
   trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
   if (event.inputType === 'historyUndo') {
@@ -163,7 +158,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
-    trace('typing', 'our own replacement (auto-correct, pick or Fix spelling): no new request');
+    trace('typing', 'our own replacement (auto-correct or pick): no new request');
     return;
   }
   if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {

@@ -4,7 +4,6 @@ import { isMac } from '../../assistant/browser';
 import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
-import { SpellingFixesPreview } from './SpellingFixesPreview';
 import { DebounceRing } from './DebounceRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
@@ -39,12 +38,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
         <div className="mr-auto flex items-center gap-2">
           <h2 className="text-lg font-semibold">Message field</h2>
           <span role="status" className="flex items-center gap-1.5 text-sm text-slate-500">
-            {state.fixSpelling.busy ? (
-              <>
-                <span aria-hidden="true" className="size-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
-                Fixing spelling…
-              </>
-            ) : state.loader?.kind === 'debounce' ? (
+            {state.loader?.kind === 'debounce' ? (
               <>
                 <DebounceRing key={state.loader.startedAt} durationMs={state.loader.durationMs} />
                 Waiting for you to stop typing…
@@ -112,9 +106,6 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
       </dl>
       {assistant && (
         <>
-          {state.fixSpelling.preview && (
-            <SpellingFixesPreview preview={state.fixSpelling.preview} onAccept={assistant.acceptSpellingFixes} onDismiss={assistant.dismissSpellingFixes} />
-          )}
           {state.ghost && isFocused && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover

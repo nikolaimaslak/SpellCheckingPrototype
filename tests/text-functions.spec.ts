@@ -1,17 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { wordDiff } from '../src/assistant/fix-spelling/word-diff';
 import { buildUserMessage, parseAnswer, type CheckRequest, type Mistake } from '../src/assistant/llm';
 import { findMistakesInText } from '../src/assistant/text/mistake-places';
-import { directionOfLastWord, directionOfText } from '../src/assistant/text/words';
-
-test('wordDiff marks the replaced word', () => {
-  expect(wordDiff('I will sen it', 'I will send it')).toEqual([
-    { type: 'same', text: 'I will ' },
-    { type: 'removed', text: 'sen' },
-    { type: 'added', text: 'send' },
-    { type: 'same', text: ' it' },
-  ]);
-});
+import { directionOfLastWord } from '../src/assistant/text/words';
 
 test('findMistakesInText places a mistake by its context, also in Arabic', () => {
   const you: Mistake = {
@@ -87,8 +77,6 @@ test('parseAnswer keeps well-formed mistakes and reads the next sentence', () =>
 });
 
 test('text direction follows the letters', () => {
-  expect(directionOfText('Hello سارة')).toBe('ltr');
-  expect(directionOfText('مرحبا سارة hi')).toBe('rtl');
   expect(directionOfLastWord('Hello سارة')).toBe('rtl');
   expect(directionOfLastWord('مرحبا Sasha')).toBe('ltr');
 });

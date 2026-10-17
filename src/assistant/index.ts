@@ -1,4 +1,3 @@
-import { acceptSpellingFixes, dismissSpellingFixes, fixSpellingNow, stopFixSpelling } from './fix-spelling/fix-spelling';
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
 import * as checkWhileTyping from './typing/check-while-typing';
 import { hideGhost } from './typing/ghost-text';
@@ -34,7 +33,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       lastSentText: '',
       isComposing: false,
     },
-    fixSpelling: {},
   };
 
   trace('assistant', 'attached to the field', {
@@ -62,9 +60,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
     ignoreWord: () => spelling.ignoreWord(context),
     addToDictionary: (word: string) => spelling.addToDictionary(context, word),
     closePopover: (returnCaret: boolean) => spelling.closePopover(context, returnCaret),
-    fixSpellingNow: () => fixSpellingNow(context),
-    acceptSpellingFixes: () => acceptSpellingFixes(context),
-    dismissSpellingFixes: () => dismissSpellingFixes(context),
 
     updateOptions(newOptions: AssistantOptions) {
       trace('assistant', 'settings changed', {
@@ -90,7 +85,6 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       trace('assistant', 'released (the page is closing)');
       checkWhileTyping.stopCheckWhileTyping(context);
       spelling.stopSpelling(context);
-      stopFixSpelling(context);
       listeners.clear();
     },
   };
