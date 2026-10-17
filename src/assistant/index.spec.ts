@@ -82,7 +82,7 @@ test('without a DOM, the auto-completion shows in the state and Tab inserts it',
   const { editorControl, memory } = createTextEditorControl('Your request was received');
   const { assistant } = startAssistant(editorControl, { mistakes: [], nextSentence: ' and will be done.' });
   assistant.handleInput({ inputType: 'insertText', data: 'd' });
-  await expect.poll(() => assistant.getState().ghost?.text).toBe(' and will be done.');
+  await expect.poll(() => assistant.getState().autoCompletion?.text).toBe(' and will be done.');
 
   const tab: KeyPress = {
     key: 'Tab',

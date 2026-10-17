@@ -1,10 +1,10 @@
 import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState, type EditorControl, type KeyPress, type TextInput } from './types';
 import * as checkWhileTyping from './check-while-typing';
-import { hideGhost } from './ghost-text';
+import { hideAutoCompletion } from './auto-completion';
 import * as spellCheck from './spell-check';
 import { trace } from './trace';
 
-export type { AssistantOptions, AssistantState, AssistEvent, EditorControl, GhostState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
+export type { AssistantOptions, AssistantState, AssistEvent, EditorControl, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
 export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
@@ -78,7 +78,7 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
         spellCheck.redrawUnderlines(context);
       }
       if (!newOptions.withAutoCompletion) {
-        hideGhost(context);
+        hideAutoCompletion(context);
       }
     },
 

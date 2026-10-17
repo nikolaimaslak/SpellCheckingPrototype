@@ -1,6 +1,6 @@
 import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from './llm';
 import type { AssistantContext, AssistantState, KeyPress, TextInput } from './types';
-import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
+import { autoCompletionFollowsTyping, handleAutoCompletionKey, hideAutoCompletion, hideAutoCompletionIfCaretMoved, showAutoCompletion } from './auto-completion';
 import { displayAndAutocorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spell-check';
 import { trace } from './trace';
 
@@ -111,7 +111,7 @@ async function sendLLMRequest(context: AssistantContext) {
   } else if (!hasNothingMoved) {
     trace('typing', 'auto-completion dropped: the text or the caret moved while waiting');
   } else {
-    showGhost(context, autoCompletion, caret!);
+    showAutoCompletion(context, autoCompletion, caret!);
   }
   if (mistakes === null || autoCompletion === null) {
     trace('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
@@ -180,7 +180,7 @@ function canAskAutoCompletion(context: AssistantContext, text: string, caret: nu
 
 function openPopover(context: AssistantContext) {
   if (openPopoverAtCaret(context)) {
-    hideGhost(context);
+    hideAutoCompletion(context);
   }
 }
 
@@ -193,9 +193,9 @@ export function handleInput(context: AssistantContext, event: TextInput) {
   } else {
     context.spellCheck.undoneAutoCorrections = [];
   }
-  const isFollowingGhost = ghostFollowsTyping(context, event);
-  if (!isFollowingGhost) {
-    hideGhost(context);
+  const isTypingAutoCompletion = autoCompletionFollowsTyping(context, event);
+  if (!isTypingAutoCompletion) {
+    hideAutoCompletion(context);
   }
   redrawUnderlines(context);
   if (context.isReplacingWords) {
@@ -206,8 +206,8 @@ export function handleInput(context: AssistantContext, event: TextInput) {
     trace('typing', 'undo or redo: no new request');
     return;
   }
-  if (isFollowingGhost && context.getState().ghost) {
-    trace('typing', 'the input followed the ghost text and some of it is left: no new request');
+  if (isTypingAutoCompletion && context.getState().autoCompletion) {
+    trace('typing', 'the input followed the auto-completion and some of it is left: no new request');
     return;
   }
   if (
@@ -224,7 +224,7 @@ export function handleKeyDown(context: AssistantContext, event: KeyPress): boole
   if (event.key === 'Escape') {
     cancelPendingRequest(context);
   }
-  return handleGhostKey(context, event);
+  return handleAutoCompletionKey(context, event);
 }
 
 export function handleKeyUp(context: AssistantContext, event: KeyPress) {
@@ -238,13 +238,13 @@ export function handleClick(context: AssistantContext) {
 }
 
 export function handleSelectionChange(context: AssistantContext) {
-  hideGhostIfCaretMoved(context);
+  hideAutoCompletionIfCaretMoved(context);
   redrawUnderlines(context);
 }
 
 export function handleCompositionStart(context: AssistantContext) {
   context.typing.isComposing = true;
-  hideGhost(context);
+  hideAutoCompletion(context);
 }
 
 export function handleCompositionEnd(context: AssistantContext) {
@@ -254,5 +254,5 @@ export function handleCompositionEnd(context: AssistantContext) {
 export function stopCheckWhileTyping(context: AssistantContext) {
   clearTimeout(context.typing.requestTimer);
   context.typing.runningRequest?.abort();
-  hideGhost(context);
+  hideAutoCompletion(context);
 }

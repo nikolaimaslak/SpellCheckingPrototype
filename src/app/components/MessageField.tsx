@@ -3,7 +3,7 @@ import type { AssistEvent } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
-import { GhostText } from './GhostText';
+import { AutoCompletionText } from './AutoCompletionText';
 import { DebounceRing } from './DebounceRing';
 import { SuggestionPopover } from './SuggestionPopover';
 
@@ -117,7 +117,7 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
       </dl>
       {assistant && (
         <>
-          {state.ghost && isFocused && <GhostText ghost={state.ghost} fieldRef={fieldRef} />}
+          {state.autoCompletion && isFocused && <AutoCompletionText autoCompletion={state.autoCompletion} fieldRef={fieldRef} />}
           {state.popover && (
             <SuggestionPopover
               key={`${state.popover.wordStartOffset}:${state.popover.wordEndOffset}`}

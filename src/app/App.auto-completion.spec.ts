@@ -7,57 +7,57 @@ test('Tab accepts the auto-completion as one insert', async ({ page }) => {
   const demo = await openDemoPage(page, autoCompletionAfterReceived);
   await demo.field.click();
   await page.keyboard.type('Your request was received');
-  await expect.poll(demo.ghostText).toBe(' and will be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' and will be done.');
   await page.keyboard.press('Tab');
   await expect(demo.field).toHaveText('Your request was received and will be done.');
-  await expect.poll(demo.ghostText).toBe(null);
+  await expect.poll(demo.autoCompletionText).toBe(null);
 });
 
-test('typing what the ghost says or accepting one word keeps the rest, with no new request', async ({ page }) => {
+test('typing what the auto-completion says or accepting one word keeps the rest, with no new request', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ nextSentence: ' and will be done.' }));
   await demo.field.click();
   await page.keyboard.type('Your request was received');
-  await expect.poll(demo.ghostText).toBe(' and will be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' and will be done.');
 
   await page.keyboard.press(ACCEPT_WORD_KEY);
-  await expect.poll(demo.ghostText).toBe(' will be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' will be done.');
   await page.keyboard.type(' will');
-  await expect.poll(demo.ghostText).toBe(' be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' be done.');
   await demo.waitPastDebounce();
   expect(demo.autoCompletionMessages).toHaveLength(1);
 });
 
-test('typing something else or Escape hides the ghost', async ({ page }) => {
+test('typing something else or Escape hides the auto-completion', async ({ page }) => {
   const demo = await openDemoPage(page, autoCompletionAfterReceived);
   await demo.field.click();
   await page.keyboard.type('Your request was received');
-  await expect.poll(demo.ghostText).toBe(' and will be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' and will be done.');
   await page.keyboard.press('Escape');
-  await expect.poll(demo.ghostText).toBe(null);
+  await expect.poll(demo.autoCompletionText).toBe(null);
 
   await page.keyboard.type('x');
   await page.keyboard.press('Backspace');
-  await expect.poll(demo.ghostText).toBe(' and will be done.');
+  await expect.poll(demo.autoCompletionText).toBe(' and will be done.');
   await page.keyboard.type(' but');
-  await expect.poll(demo.ghostText).toBe(null);
+  await expect.poll(demo.autoCompletionText).toBe(null);
 });
 
-test('Enter moves the ghost to the new line without its leading space, with no new request', async ({ page }) => {
+test('Enter moves the auto-completion to the new line without its leading space, with no new request', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ nextSentence: ' your request has been received.' }));
   await demo.field.click();
   await page.keyboard.type('Dear Sasha,');
-  await expect.poll(demo.ghostText).toBe(' your request has been received.');
+  await expect.poll(demo.autoCompletionText).toBe(' your request has been received.');
 
   await page.keyboard.press('Enter');
-  await expect.poll(demo.ghostText).toBe('your request has been received.');
+  await expect.poll(demo.autoCompletionText).toBe('your request has been received.');
   await page.keyboard.press('Enter');
   await page.keyboard.press(ACCEPT_WORD_KEY);
-  await expect.poll(demo.ghostText).toBe(' request has been received.');
+  await expect.poll(demo.autoCompletionText).toBe(' request has been received.');
   await demo.waitPastDebounce();
   expect(demo.autoCompletionMessages).toHaveLength(1);
 });
 
-test('the ghost shows at the end of an earlier line, and the model sees the caret there', async ({ page }) => {
+test('the auto-completion shows at the end of an earlier line, and the model sees the caret there', async ({ page }) => {
   const demo = await openDemoPage(page, (draft) => ({ nextSentence: draft.includes('Sasha,‸') ? ' your request has been received.' : '' }));
   await demo.field.click();
   await page.keyboard.type('Hi Sasha');
@@ -68,7 +68,7 @@ test('the ghost shows at the end of an earlier line, and the model sees the care
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('End');
   await page.keyboard.type(',');
-  await expect.poll(demo.ghostText).toBe(' your request has been received.');
+  await expect.poll(demo.autoCompletionText).toBe(' your request has been received.');
   expect(demo.autoCompletionDrafts().at(-1)).toBe('Hi Sasha,‸\nBest regards, Daniel');
   await page.keyboard.press('Tab');
   await expect(demo.field).toHaveText(/^Hi Sasha, your request has been received\.\s*Best regards, Daniel$/);
@@ -94,5 +94,5 @@ test('Escape while the debounce runs cancels the request', async ({ page }) => {
   await page.keyboard.press('Escape');
   await demo.waitPastDebounce();
   expect(demo.userMessages).toHaveLength(0);
-  await expect.poll(demo.ghostText).toBe(null);
+  await expect.poll(demo.autoCompletionText).toBe(null);
 });

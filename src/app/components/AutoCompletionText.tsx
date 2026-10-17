@@ -1,8 +1,8 @@
 import { useEffect, useReducer, type RefObject } from 'react';
-import type { GhostState } from '../../assistant';
-import { measureGhost } from '../lib/ghost-layout';
+import type { AutoCompletionState } from '../../assistant';
+import { measureAutoCompletion } from '../lib/auto-completion-layout';
 
-export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: RefObject<HTMLElement | null> }) {
+export function AutoCompletionText({ autoCompletion, fieldRef }: { autoCompletion: AutoCompletionState; fieldRef: RefObject<HTMLElement | null> }) {
   const [, remeasure] = useReducer((count: number) => count + 1, 0);
   useEffect(() => {
     window.addEventListener('resize', remeasure);
@@ -13,8 +13,8 @@ export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: Re
     };
   }, []);
 
-  const hasTextBelow = ghost.fieldText.slice(ghost.caretOffset).trim() !== '';
-  const layout = fieldRef.current && measureGhost(fieldRef.current, ghost.direction, hasTextBelow);
+  const hasTextBelow = autoCompletion.fieldText.slice(autoCompletion.caretOffset).trim() !== '';
+  const layout = fieldRef.current && measureAutoCompletion(fieldRef.current, autoCompletion.direction, hasTextBelow);
   if (!layout) {
     return null;
   }
@@ -24,7 +24,7 @@ export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: Re
       className="pointer-events-none fixed z-40 m-0 p-0 whitespace-pre-wrap text-slate-400 [overflow-wrap:anywhere]"
       style={layout}
     >
-      {ghost.text}
+      {autoCompletion.text}
     </div>
   );
 }

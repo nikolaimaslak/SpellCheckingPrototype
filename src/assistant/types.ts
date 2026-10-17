@@ -38,7 +38,7 @@ export interface PopoverState {
   suggestions: string[];
 }
 
-export interface GhostState {
+export interface AutoCompletionState {
   text: string;
   caretOffset: number;
   fieldText: string;
@@ -47,7 +47,7 @@ export interface GhostState {
 
 export interface AssistantState {
   popover?: PopoverState;
-  ghost?: GhostState;
+  autoCompletion?: AutoCompletionState;
   loader?:
     | {
         kind: 'debounce';

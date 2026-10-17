@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import { caretRect, contentRect } from './browser';
 import type { TextDirection } from '../../assistant';
 
-export function measureGhost(field: HTMLElement, direction: TextDirection, hasTextBelow: boolean): CSSProperties | null {
+export function measureAutoCompletion(field: HTMLElement, direction: TextDirection, hasTextBelow: boolean): CSSProperties | null {
   const caret = caretRect(field);
   const content = contentRect(field);
   const style = getComputedStyle(field);

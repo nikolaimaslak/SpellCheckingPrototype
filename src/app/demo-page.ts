@@ -36,11 +36,11 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
   await page.getByLabel('OpenAI API key').fill('test-key');
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'true');
-  const ghost = page.locator('div.fixed[aria-hidden="true"]');
+  const autoCompletion = page.locator('div.fixed[aria-hidden="true"]');
   return {
     field,
     userMessages,
-    ghostText: () => ghost.textContent({ timeout: 1000 }).catch(() => null),
+    autoCompletionText: () => autoCompletion.textContent({ timeout: 1000 }).catch(() => null),
     spellCheckMessages,
     autoCompletionMessages,
     spellCheckDrafts: () => spellCheckMessages.map(draftOf),

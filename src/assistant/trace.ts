@@ -4,7 +4,7 @@ const AREA_COLORS = {
   llm: '#9333ea',
   'spell-check': '#dc2626',
   replace: '#ea580c',
-  ghost: '#64748b',
+  'auto-completion': '#64748b',
 };
 
 export type TraceArea = keyof typeof AREA_COLORS;
