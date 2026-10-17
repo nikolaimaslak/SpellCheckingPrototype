@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { createAssistant, type AssistantOptions, type AssistEvent, type EditorControl, type KeyPress, type TextSpan } from '.';
+import { createAssistant, type AssistantOptions, type AssistEvent, type EditorControl, type KeyPress, type LLMClient, type TextSpan } from '.';
 
 interface FakeLLMAnswer {
   mistakes: {
@@ -36,10 +36,12 @@ function createTextEditorControl(text: string) {
 }
 
 function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
-  globalThis.fetch = async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] }));
+  const llmClient: LLMClient = {
+    ask: async () => ({ answer: JSON.stringify(answer) }),
+  };
   const events: AssistEvent[] = [];
   const options: AssistantOptions = {
-    apiKey: 'test-key',
+    llmClient,
     spellCheckMode: 'auto-correct',
     withAutoCompletion: true,
     isMac: false,
@@ -52,11 +54,6 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer) {
   };
   return { assistant: createAssistant(editorControl, options), events };
 }
-
-const realFetch = globalThis.fetch;
-test.afterEach(() => {
-  globalThis.fetch = realFetch;
-});
 
 test('without a DOM, a sure mistake is auto-corrected through the editor control', async () => {
   const { editorControl, memory } = createTextEditorControl('I will sen the form');

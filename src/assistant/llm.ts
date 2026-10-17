@@ -1,8 +1,9 @@
 import { AUTO_COMPLETION_EXAMPLES, AUTO_COMPLETION_SYSTEM_MESSAGE } from './auto-completion-prompt';
 import { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } from './spell-check-prompt';
 import { trace } from './trace';
+import type { ChatMessage, LLMClient, LLMResult } from './types';
 
-const MODEL = 'gpt-4.1-mini';
+const LLM_TIMEOUT_MS = 5000;
 
 export interface SpellCheckRequest {
   draft: string;
@@ -26,17 +27,10 @@ export interface Mistake {
   isSure: boolean;
 }
 
-export interface ChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
-
-export type LLMResult<T> = { answer: T } | { error: string };
-
-export async function spellCheckWithLLM(apiKey: string, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
+export async function spellCheckWithLLM(llmClient: LLMClient, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
   const userMessage = buildSpellCheckMessage(request);
   trace('llm', 'spell check: user message', userMessage);
-  const reply = await askLLM(apiKey, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  const reply = await askWithTimeout(llmClient, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
   trace('llm', 'spell check: raw reply', reply);
   if ('error' in reply) {
     return reply;
@@ -45,10 +39,10 @@ export async function spellCheckWithLLM(apiKey: string, request: SpellCheckReque
   return mistakes === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: mistakes };
 }
 
-export async function autoCompleteWithLLM(apiKey: string, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
+export async function autoCompleteWithLLM(llmClient: LLMClient, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
   const userMessage = buildAutoCompletionMessage(request);
   trace('llm', 'auto-completion: user message', userMessage);
-  const reply = await askLLM(apiKey, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  const reply = await askWithTimeout(llmClient, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
   trace('llm', 'auto-completion: raw reply', reply);
   if ('error' in reply) {
     return reply;
@@ -57,41 +51,14 @@ export async function autoCompleteWithLLM(apiKey: string, request: AutoCompletio
   return autoCompletion === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: autoCompletion };
 }
 
-interface ChatCompletion {
-  choices?: { message?: { content?: string | null } }[];
-  error?: { message?: string };
-}
-
-async function askLLM(apiKey: string, messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>> {
-  if (!apiKey) {
-    trace('llm', 'no API key: request skipped');
-    return { error: 'no API key' };
-  }
+async function askWithTimeout(llmClient: LLMClient, messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>> {
   const startedAt = performance.now();
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: MODEL,
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        messages,
-      }),
-      signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
-    });
-    if (!response.ok) {
-      const body = (await response.json().catch(() => ({}))) as ChatCompletion;
-      const error = `HTTP ${response.status}${body.error?.message ? `: ${body.error.message}` : ''}`;
-      trace('llm', `${error} after ${Math.round(performance.now() - startedAt)} ms`);
-      return { error };
-    }
-    const chatCompletion = (await response.json()) as ChatCompletion;
-    trace('llm', `answered in ${Math.round(performance.now() - startedAt)} ms`);
-    const content = chatCompletion.choices?.[0]?.message?.content;
-    return content ? { answer: content } : { error: 'empty answer' };
+    const reply = await llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]));
+    trace('llm', `${'error' in reply ? `failed: ${reply.error}` : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
+    return reply;
   } catch (error) {
-    trace('llm', `failed after ${Math.round(performance.now() - startedAt)} ms (aborted, timeout or network)`, error);
+    trace('llm', `failed after ${Math.round(performance.now() - startedAt)} ms`, error);
     return { error: error instanceof Error ? `${error.name}: ${error.message}` : String(error) };
   }
 }

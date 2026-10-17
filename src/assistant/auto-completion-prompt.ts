@@ -1,4 +1,4 @@
-import type { ChatMessage } from './llm';
+import type { ChatMessage } from './types';
 
 export const AUTO_COMPLETION_SYSTEM_MESSAGE = `
 You help the writer write a message by continuing it at the caret. The context before the draft, when given, says who the writer is and who they write to.

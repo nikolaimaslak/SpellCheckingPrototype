@@ -125,7 +125,7 @@ async function sendLLMRequest(context: AssistantContext) {
 async function askSpellCheck(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
   context.log({ type: 'spell-check-request', text: draft });
   const result = await spellCheckWithLLM(
-    context.options.apiKey,
+    context.options.llmClient,
     {
       draft,
       caretOffset: caret,
@@ -149,7 +149,7 @@ async function askSpellCheck(context: AssistantContext, draft: string, caret: nu
 async function askAutoCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
   context.log({ type: 'auto-completion-request', text: draft });
   const result = await autoCompleteWithLLM(
-    context.options.apiKey,
+    context.options.llmClient,
     {
       draft,
       caretOffset: caret,

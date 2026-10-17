@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore, type RefObject } fr
 import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions, type AssistEvent } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { createContentEditableEditorControl } from '../lib/content-editable-editor-control';
+import { createOpenAILLMClient } from '../lib/openai-llm-client';
 import { lines, type AppSettings } from '../lib/settings';
 
 const DEBOUNCE_MS = 1000;
@@ -17,14 +18,18 @@ export function useAssistant(
 ) {
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
-      spellCheckMode: !settings.withSpellCheck ? 'off' : settings.withAutoCorrect ? 'auto-correct' : 'underline',
+      spellCheckMode: !settings.withSpellCheck
+        ? 'off'
+        : settings.withAutoCorrect
+          ? 'auto-correct'
+          : 'underline',
       customDictionary: lines(settings.customDictionary),
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
       withAutoCompletion: settings.withAutoCompletion,
       isMac,
       debounceMs: DEBOUNCE_MS,
-      apiKey: settings.apiKey,
+      llmClient: createOpenAILLMClient(settings.apiKey),
       llmContext: settings.llmContext,
       log: onLog,
     };

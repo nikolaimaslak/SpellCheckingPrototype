@@ -4,7 +4,7 @@ import { hideAutoCompletion } from './auto-completion';
 import * as spellCheck from './spell-check';
 import { trace } from './trace';
 
-export type { AssistantOptions, AssistantState, AssistEvent, EditorControl, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
+export type { AssistantOptions, AssistantState, AssistEvent, ChatMessage, EditorControl, LLMClient, LLMResult, AutoCompletionState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
 export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
@@ -39,7 +39,6 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
   trace('assistant', 'attached to the field', {
     spellCheckMode: options.spellCheckMode,
     withAutoCompletion: options.withAutoCompletion,
-    hasApiKey: !!options.apiKey,
   });
 
   return {
@@ -66,7 +65,6 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
       trace('assistant', 'settings changed', {
         spellCheckMode: newOptions.spellCheckMode,
         withAutoCompletion: newOptions.withAutoCompletion,
-        hasApiKey: !!newOptions.apiKey,
       });
       context.options = newOptions;
       context.ignoredWords = newOptions.ignoredWords;

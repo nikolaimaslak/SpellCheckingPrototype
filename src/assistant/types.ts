@@ -17,6 +17,17 @@ export interface EditorControl {
   showAutoCorrectedWords(spans: TextSpan[]): void;
 }
 
+export interface ChatMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export type LLMResult<T> = { answer: T } | { error: string };
+
+export interface LLMClient {
+  ask(messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>>;
+}
+
 export interface KeyPress {
   key: string;
   ctrlKey: boolean;
@@ -73,7 +84,7 @@ export type AssistEvent =
   | { type: 'auto-completion-accepted'; text: string };
 
 export interface AssistantOptions {
-  apiKey: string;
+  llmClient: LLMClient;
   spellCheckMode: 'off' | 'underline' | 'auto-correct';
   withAutoCompletion: boolean;
   isMac: boolean;
