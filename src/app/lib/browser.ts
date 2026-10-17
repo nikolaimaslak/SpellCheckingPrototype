@@ -1,4 +1,9 @@
-import type { Rect } from './types';
+export interface Rect {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
 
 export function replaceText(field: HTMLElement, range: Range, text: string) {
   restoreSelection(field, range);

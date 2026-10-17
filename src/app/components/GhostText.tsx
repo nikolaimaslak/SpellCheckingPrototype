@@ -1,5 +1,5 @@
 import { useEffect, useReducer, type RefObject } from 'react';
-import type { GhostState } from '../../assistant/types';
+import type { GhostState } from '../../assistant';
 import { measureGhost } from '../lib/ghost-layout';
 
 export function GhostText({ ghost, fieldRef }: { ghost: GhostState; fieldRef: RefObject<HTMLElement | null> }) {

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
-import { rectOfRange } from '../../assistant/browser';
-import { rangeOf, readFieldText } from '../../assistant/text/field-text';
-import type { PopoverState, Rect } from '../../assistant/types';
+import type { PopoverState } from '../../assistant';
+import { rectOfRange, type Rect } from '../lib/browser';
+import { rangeOf, readFieldText } from '../lib/field-text';
 
 interface Props {
   popover: PopoverState;

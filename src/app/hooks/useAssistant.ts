@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore, type RefObject } from 'react';
-import { createAssistant, type Assistant, type AssistantOptions, type AssistEvent } from '../../assistant';
-import { INITIAL_STATE } from '../../assistant/types';
+import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions, type AssistEvent } from '../../assistant';
+import { isMac } from '../lib/browser';
+import { createContentEditableEditorControl } from '../lib/content-editable-editor-control';
 import { lines, type AppSettings } from '../lib/settings';
 
 const DEBOUNCE_MS = 1000;
@@ -21,6 +22,7 @@ export function useAssistant(
       ignoredWords: lines(settings.ignoredWords),
       onIgnoredWordsChange: (words) => onIgnoredWordsChange(words.join('\n')),
       withAutoCompletion: settings.withAutoCompletion,
+      isMac,
       debounceMs: DEBOUNCE_MS,
       apiKey: settings.apiKey,
       llmContext: settings.llmContext,
@@ -36,7 +38,7 @@ export function useAssistant(
     if (!field) {
       return;
     }
-    const created = createAssistant(field, options);
+    const created = createAssistant(createContentEditableEditorControl(field), options);
     setAssistant(created);
     return () => {
       created.release();

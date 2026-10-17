@@ -1,4 +1,4 @@
-import type { TextDirection } from '../types';
+import type { TextDirection } from './types';
 
 export interface WordPlace {
   word: string;

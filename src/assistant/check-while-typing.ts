@@ -1,9 +1,8 @@
-import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from '../llm';
-import { caretOffset, readFieldText } from '../text/field-text';
-import type { AssistantContext, AssistantState } from '../types';
+import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from './llm';
+import type { AssistantContext, AssistantState, KeyPress, TextInput } from './types';
 import { ghostFollowsTyping, handleGhostKey, hideGhost, hideGhostIfCaretMoved, showGhost } from './ghost-text';
 import { displayAndAutocorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spell-check';
-import { trace } from '../trace';
+import { trace } from './trace';
 
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
@@ -48,7 +47,7 @@ function scheduleLLMRequest(context: AssistantContext) {
     trace('typing', 'spell check and auto-completion are off: no request');
     return;
   }
-  if (!readFieldText(context.field).text.trim()) {
+  if (!context.editorControl.getText().trim()) {
     trace('typing', 'the field is empty: no request');
     clearTimeout(context.typing.requestTimer);
     context.typing.requestTimer = undefined;
@@ -68,25 +67,25 @@ async function sendLLMRequest(context: AssistantContext) {
   clearTimeout(context.typing.requestTimer);
   context.typing.requestTimer = undefined;
 
-  const sentText = readFieldText(context.field);
-  const caret = caretOffset(sentText);
-  context.typing.lastSentText = sentText.text;
+  const sentText = context.editorControl.getText();
+  const caret = context.editorControl.getCaret();
+  context.typing.lastSentText = sentText;
 
-  if (!sentText.text.trim()) {
+  if (!sentText.trim()) {
     trace('typing', 'debounce over, but the field is empty: nothing to send');
     updateLoader(context);
     return;
   }
 
   const shouldSpellCheck = context.options.spellCheckMode !== 'off';
-  const shouldAskAutoCompletion = canAskAutoCompletion(context, sentText.text, caret);
+  const shouldAskAutoCompletion = canAskAutoCompletion(context, sentText, caret);
   if (!shouldSpellCheck && !shouldAskAutoCompletion) {
     trace('typing', 'debounce over, but spell check is off and no auto-completion can be asked for here: nothing to send');
     updateLoader(context);
     return;
   }
   trace('typing', `debounce over: sending the draft (${[shouldSpellCheck && 'spell check', shouldAskAutoCompletion && 'auto-completion'].filter(Boolean).join(' + ')})`, {
-    draft: sentText.text,
+    draft: sentText,
     caret,
   });
 
@@ -94,8 +93,8 @@ async function sendLLMRequest(context: AssistantContext) {
   context.typing.runningRequest = request;
   updateLoader(context);
   const [mistakes, autoCompletion] = await Promise.all([
-    shouldSpellCheck ? askSpellCheck(context, sentText.text, caret, request.signal) : [],
-    shouldAskAutoCompletion ? askAutoCompletion(context, sentText.text, caret!, request.signal) : '',
+    shouldSpellCheck ? askSpellCheck(context, sentText, caret, request.signal) : [],
+    shouldAskAutoCompletion ? askAutoCompletion(context, sentText, caret!, request.signal) : '',
   ]);
   if (request.signal.aborted) {
     trace('typing', 'answers dropped: the request was aborted');
@@ -103,8 +102,7 @@ async function sendLLMRequest(context: AssistantContext) {
   }
   context.typing.runningRequest = undefined;
 
-  const currentText = readFieldText(context.field);
-  const hasNothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
+  const hasNothingMoved = context.editorControl.getText() === sentText && context.editorControl.getCaret() === caret;
   if (shouldSpellCheck && mistakes) {
     displayAndAutocorrectMistakes(context, mistakes);
   }
@@ -186,7 +184,7 @@ function openPopover(context: AssistantContext) {
   }
 }
 
-export function handleInput(context: AssistantContext, event: InputEvent) {
+export function handleInput(context: AssistantContext, event: TextInput) {
   trace('typing', `input: ${event.inputType}${event.data ? ` ${JSON.stringify(event.data)}` : ''}`);
   if (event.inputType === 'historyUndo') {
     noticeUndo(context);
@@ -214,7 +212,7 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   }
   if (
     event.inputType.startsWith('delete') &&
-    readFieldText(context.field).text.trimEnd() === context.typing.lastSentText.trimEnd()
+    context.editorControl.getText().trimEnd() === context.typing.lastSentText.trimEnd()
   ) {
     trace('typing', 'only trailing spaces were removed since the last request: no new request');
     return;
@@ -222,14 +220,14 @@ export function handleInput(context: AssistantContext, event: InputEvent) {
   scheduleLLMRequest(context);
 }
 
-export function handleKeyDown(context: AssistantContext, event: KeyboardEvent) {
+export function handleKeyDown(context: AssistantContext, event: KeyPress): boolean {
   if (event.key === 'Escape') {
     cancelPendingRequest(context);
   }
-  handleGhostKey(context, event);
+  return handleGhostKey(context, event);
 }
 
-export function handleKeyUp(context: AssistantContext, event: KeyboardEvent) {
+export function handleKeyUp(context: AssistantContext, event: KeyPress) {
   if (CARET_KEYS.has(event.key) && !event.shiftKey && !context.spellCheck.openPopover) {
     openPopover(context);
   }
@@ -240,10 +238,6 @@ export function handleClick(context: AssistantContext) {
 }
 
 export function handleSelectionChange(context: AssistantContext) {
-  const anchor = document.getSelection()?.anchorNode;
-  if (!anchor || !context.field.contains(anchor)) {
-    return;
-  }
   hideGhostIfCaretMoved(context);
   redrawUnderlines(context);
 }

@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
-import { caretRect, contentRect } from '../../assistant/browser';
-import type { TextDirection } from '../../assistant/types';
+import { caretRect, contentRect } from './browser';
+import type { TextDirection } from '../../assistant';
 
 export function measureGhost(field: HTMLElement, direction: TextDirection, hasTextBelow: boolean): CSSProperties | null {
   const caret = caretRect(field);

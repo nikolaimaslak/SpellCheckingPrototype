@@ -1,13 +1,33 @@
 import type { Mistake } from './llm';
-import type { PlacedMistake } from './text/mistake-places';
+import type { PlacedMistake } from './mistake-places';
 
 export type TextDirection = 'ltr' | 'rtl';
 
-export interface Rect {
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
+export interface TextSpan {
+  start: number;
+  end: number;
+}
+
+export interface EditorControl {
+  getText(): string;
+  getCaret(): number | undefined;
+  setCaret(offset: number): void;
+  replaceText(start: number, end: number, text: string): void;
+  showUnderlines(spans: TextSpan[]): void;
+  showReplacedWords(spans: TextSpan[]): void;
+}
+
+export interface KeyPress {
+  key: string;
+  ctrlKey: boolean;
+  altKey: boolean;
+  shiftKey: boolean;
+  metaKey: boolean;
+}
+
+export interface TextInput {
+  inputType: string;
+  data: string | null;
 }
 
 export interface PopoverState {
@@ -56,6 +76,7 @@ export interface AssistantOptions {
   apiKey: string;
   spellCheckMode: 'off' | 'underline' | 'auto-correct';
   withAutoCompletion: boolean;
+  isMac: boolean;
   debounceMs: number;
   customWords: string[];
   ignoredWords: string[];
@@ -68,7 +89,7 @@ export interface SpellCheckData {
   mistakes: Mistake[];
   replacementByOriginal: Map<string, string>;
   undoneAutoCorrections: { original: string; replacement: string }[];
-  openPopover?: { place: PlacedMistake; selectionBefore?: Range };
+  openPopover?: { place: PlacedMistake; caretBefore?: number };
 }
 
 export interface TypingData {
@@ -80,7 +101,7 @@ export interface TypingData {
 }
 
 export interface AssistantContext {
-  field: HTMLElement;
+  editorControl: EditorControl;
   options: AssistantOptions;
   log(event: AssistEvent): void;
   getState(): AssistantState;

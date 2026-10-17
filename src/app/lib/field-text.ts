@@ -127,9 +127,13 @@ export function rangeOf(fieldText: FieldText, start: number, end: number): Range
 }
 
 export function placeCaret(fieldText: FieldText, offset: number) {
-  const piece =
-    fieldText.pieces.find((candidate) => offset >= candidate.start && offset <= candidate.start + candidate.length) ??
-    fieldText.pieces.find((candidate) => candidate.start >= offset);
+  const pieceAtOffset = fieldText.pieces.find((candidate) => offset >= candidate.start && offset <= candidate.start + candidate.length);
+  const emptyLine = fieldText.emptyLines.find((line) => line.start === offset);
+  if (!pieceAtOffset && emptyLine) {
+    document.getSelection()?.collapse(emptyLine.element, 0);
+    return;
+  }
+  const piece = pieceAtOffset ?? fieldText.pieces.find((candidate) => candidate.start >= offset);
   if (piece) {
     document.getSelection()?.collapse(piece.node, Math.max(0, offset - piece.start));
   } else {

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { buildAutoCompletionMessage, buildSpellCheckMessage, parseAutoCompletion, parseMistakes, type AutoCompletionRequest, type Mistake, type SpellCheckRequest } from '../src/assistant/llm';
-import { findMistakesInText } from '../src/assistant/text/mistake-places';
-import { directionOfLastWord } from '../src/assistant/text/words';
+import { findMistakesInText } from '../src/assistant/mistake-places';
+import { directionOfLastWord } from '../src/assistant/words';
 
 test('findMistakesInText places a mistake by its context, also in Arabic', () => {
   const you: Mistake = {

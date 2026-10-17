@@ -1,6 +1,6 @@
-import type { Mistake } from '../llm';
+import type { Mistake } from './llm';
 import { findWordPlaces, type WordPlace } from './words';
-import { trace } from '../trace';
+import { trace } from './trace';
 
 export interface PlacedMistake extends WordPlace {
   mistake: Mistake;

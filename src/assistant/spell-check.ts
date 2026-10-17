@@ -1,34 +1,30 @@
-import { removeHighlight, replaceText, restoreSelection, selectedRange, showHighlight } from '../browser';
-import type { Mistake } from '../llm';
-import { caretOffset, placeCaret, rangeOf, readFieldText, type FieldText } from '../text/field-text';
-import { findMistakesInText, type PlacedMistake } from '../text/mistake-places';
-import { directionOfLastWord, findWordPlaces, type WordPlace } from '../text/words';
-import type { AssistantContext } from '../types';
-import { trace } from '../trace';
+import type { Mistake } from './llm';
+import { findMistakesInText, type PlacedMistake } from './mistake-places';
+import { directionOfLastWord, findWordPlaces, type WordPlace } from './words';
+import type { AssistantContext, TextSpan } from './types';
+import { trace } from './trace';
 
-const SPELL_CHECK_ERROR_HIGHLIGHT = 'bp-spell-check-error';
-const REPLACED_HIGHLIGHT = 'bp-autocorrected';
 const REPLACED_FLASH_MS = 2000;
 
 export function stopSpellCheck(context: AssistantContext) {
   closePopover(context);
-  removeHighlight(SPELL_CHECK_ERROR_HIGHLIGHT);
+  context.editorControl.showUnderlines([]);
 }
 
 function mistakePlaces(context: AssistantContext, text: string): PlacedMistake[] {
   return findMistakesInText(text, context.spellCheck.mistakes).filter((place) => !context.customWords.has(place.word));
 }
 
-function finishedMistakePlaces(context: AssistantContext, fieldText: FieldText): PlacedMistake[] {
-  const caret = caretOffset(fieldText);
-  const isFollowedByBoundary = (place: PlacedMistake) => /^[^\p{L}\p{M}\p{N}]/u.test(fieldText.text.slice(place.end));
-  return mistakePlaces(context, fieldText.text).filter((place) => place.end !== caret && isFollowedByBoundary(place));
+function finishedMistakePlaces(context: AssistantContext): PlacedMistake[] {
+  const text = context.editorControl.getText();
+  const caret = context.editorControl.getCaret();
+  const isFollowedByBoundary = (place: PlacedMistake) => /^[^\p{L}\p{M}\p{N}]/u.test(text.slice(place.end));
+  return mistakePlaces(context, text).filter((place) => place.end !== caret && isFollowedByBoundary(place));
 }
 
 export function displayAndAutocorrectMistakes(context: AssistantContext, newMistakes: Mistake[]) {
   context.spellCheck.mistakes = newMistakes;
-  const fieldText = readFieldText(context.field);
-  const placed = findMistakesInText(fieldText.text, newMistakes);
+  const placed = findMistakesInText(context.editorControl.getText(), newMistakes);
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
   trace('spell-check', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
   if (notFound.length) {
@@ -43,12 +39,11 @@ export function displayAndAutocorrectMistakes(context: AssistantContext, newMist
 }
 
 export function redrawUnderlines(context: AssistantContext) {
-  const fieldText = readFieldText(context.field);
-  if (!fieldText.text.trim()) {
+  const text = context.editorControl.getText();
+  if (!text.trim()) {
     context.spellCheck.mistakes = [];
   }
-  const underlined = mistakePlaces(context, fieldText.text);
-  showHighlight(SPELL_CHECK_ERROR_HIGHLIGHT, underlined.map((place) => rangeOf(fieldText, place.start, place.end)));
+  context.editorControl.showUnderlines(mistakePlaces(context, text).map((place) => ({ start: place.start, end: place.end })));
 }
 
 interface WordReplacement {
@@ -66,9 +61,7 @@ function replaceWords(context: AssistantContext, replacements: WordReplacement[]
 }
 
 function replaceWordsNow(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
-  const caretBefore = caretOffset(readFieldText(context.field));
-  const selectionBefore = selectedRange();
-  const isCaretOnEmptyLine = selectionBefore?.startContainer.nodeType === Node.ELEMENT_NODE;
+  const caretBefore = context.editorControl.getCaret();
   const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
   const applied: WordReplacement[] = [];
   const replacedSpans: { start: number; length: number }[] = [];
@@ -76,14 +69,13 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
 
   for (const replacement of lastFirst) {
     const { place } = replacement;
-    const currentText = readFieldText(context.field);
-    if (currentText.text.slice(place.start, place.end) !== place.word) {
+    if (context.editorControl.getText().slice(place.start, place.end) !== place.word) {
       trace('replace', `skipped "${place.word}" @${place.start}: the text there changed`);
       continue;
     }
     trace('replace', `"${place.word}" @${place.start} → "${replacement.replacement}" (native edit: one Ctrl/Cmd+Z)`);
 
-    replaceText(context.field, rangeOf(currentText, place.start, place.end), replacement.replacement);
+    context.editorControl.replaceText(place.start, place.end, replacement.replacement);
     const lengthChange = replacement.replacement.length - place.word.length;
     if (caretBefore !== undefined && place.end <= caretBefore) {
       caretShift += lengthChange;
@@ -96,26 +88,22 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
     return applied;
   }
 
-  const textAfter = readFieldText(context.field);
-  if (isCaretOnEmptyLine && selectionBefore) {
-    trace('replace', 'caret put back on its empty line');
-    restoreSelection(context.field, selectionBefore);
-  } else if (caretBefore !== undefined) {
+  if (caretBefore !== undefined) {
     trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
-    placeCaret(textAfter, caretBefore + caretShift);
+    context.editorControl.setCaret(caretBefore + caretShift);
   }
-  flash(context, replacedSpans.map((span) => rangeOf(textAfter, span.start, span.start + span.length)));
+  flash(context, replacedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));
   return applied.reverse();
 }
 
-function flash(context: AssistantContext, ranges: Range[]) {
-  showHighlight(REPLACED_HIGHLIGHT, ranges);
+function flash(context: AssistantContext, spans: TextSpan[]) {
+  context.editorControl.showReplacedWords(spans);
   clearTimeout(context.replacedFlashTimer);
-  context.replacedFlashTimer = setTimeout(() => showHighlight(REPLACED_HIGHLIGHT, []), REPLACED_FLASH_MS);
+  context.replacedFlashTimer = setTimeout(() => context.editorControl.showReplacedWords([]), REPLACED_FLASH_MS);
 }
 
 function autoCorrectSureMistakes(context: AssistantContext) {
-  const placesToFix = finishedMistakePlaces(context, readFieldText(context.field)).filter((place) => place.mistake.isSure);
+  const placesToFix = finishedMistakePlaces(context).filter((place) => place.mistake.isSure);
   if (placesToFix.length) {
     trace('spell-check', `auto-correcting ${placesToFix.length} word(s)`, placesToFix.map((place) => `${place.word} → ${place.mistake.fixes[0]}`));
   }
@@ -131,7 +119,7 @@ function autoCorrectSureMistakes(context: AssistantContext) {
 }
 
 export function noticeUndo(context: AssistantContext) {
-  const fieldText = readFieldText(context.field).text;
+  const fieldText = context.editorControl.getText();
   for (const [original, replacement] of context.spellCheck.replacementByOriginal) {
     if (!findWordPlaces(fieldText, [original]).length) {
       continue;
@@ -149,7 +137,7 @@ export function noticeUndo(context: AssistantContext) {
 }
 
 export function noticeRedo(context: AssistantContext) {
-  const fieldText = readFieldText(context.field).text;
+  const fieldText = context.editorControl.getText();
   const redone = context.spellCheck.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
   for (const { original, replacement } of redone) {
     trace('spell-check', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
@@ -168,18 +156,17 @@ export function noticeRedo(context: AssistantContext) {
 }
 
 export function openPopoverAtCaret(context: AssistantContext): boolean {
-  const fieldText = readFieldText(context.field);
-  const caret = caretOffset(fieldText);
+  const caret = context.editorControl.getCaret();
   if (caret === undefined) {
     return false;
   }
-  const place = mistakePlaces(context, fieldText.text).find((candidate) => candidate.start <= caret && caret <= candidate.end);
+  const place = mistakePlaces(context, context.editorControl.getText()).find((candidate) => candidate.start <= caret && caret <= candidate.end);
   if (!place) {
     return false;
   }
 
   trace('spell-check', `popover opened for "${place.word}"`, place.mistake.fixes);
-  context.spellCheck.openPopover = { place, selectionBefore: selectedRange() };
+  context.spellCheck.openPopover = { place, caretBefore: caret };
   context.setState({
     popover: {
       word: place.word,
@@ -199,21 +186,20 @@ export function closePopover(context: AssistantContext, shouldReturnCaret = fals
   }
   context.spellCheck.openPopover = undefined;
   context.setState({ popover: undefined });
-  if (shouldReturnCaret && closing.selectionBefore) {
-    restoreSelection(context.field, closing.selectionBefore);
+  if (shouldReturnCaret && closing.caretBefore !== undefined) {
+    context.editorControl.setCaret(closing.caretBefore);
   }
 }
 
 export function pickSuggestion(context: AssistantContext, suggestion: string) {
   const place = context.spellCheck.openPopover?.place;
   closePopover(context, true);
-  const fieldText = readFieldText(context.field);
-  if (!place || fieldText.text.slice(place.start, place.end) !== place.word) {
+  if (!place || context.editorControl.getText().slice(place.start, place.end) !== place.word) {
     trace('spell-check', 'pick ignored: the word changed while the popover was open');
     return;
   }
   trace('spell-check', `picked "${suggestion}" for "${place.word}"`);
-  replaceText(context.field, rangeOf(fieldText, place.start, place.end), suggestion);
+  context.editorControl.replaceText(place.start, place.end, suggestion);
   context.log({
     type: 'pick',
     original: place.word,

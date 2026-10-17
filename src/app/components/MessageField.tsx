@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { AssistEvent } from '../../assistant';
-import { isMac } from '../../assistant/browser';
+import { isMac } from '../lib/browser';
 import { useAssistant } from '../hooks/useAssistant';
 import type { AppSettings } from '../lib/settings';
 import { GhostText } from './GhostText';
@@ -26,9 +26,15 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
     if (!assistant) {
       return;
     }
-    document.addEventListener('selectionchange', assistant.handleSelectionChange);
+    const handleSelectionChange = () => {
+      const anchor = document.getSelection()?.anchorNode;
+      if (anchor && fieldRef.current?.contains(anchor)) {
+        assistant.handleSelectionChange();
+      }
+    };
+    document.addEventListener('selectionchange', handleSelectionChange);
     return () => {
-      document.removeEventListener('selectionchange', assistant.handleSelectionChange);
+      document.removeEventListener('selectionchange', handleSelectionChange);
     };
   }, [assistant]);
 
@@ -73,7 +79,12 @@ export function MessageField({ settings, toolbar, onLog, onAddToDictionary, onIg
             setIsEmpty(!e.currentTarget.textContent);
             assistant?.handleInput(e.nativeEvent as InputEvent);
           }}
-          onKeyDown={(e) => assistant?.handleKeyDown(e.nativeEvent)}
+          onKeyDown={(e) => {
+            if (assistant?.handleKeyDown(e.nativeEvent)) {
+              e.preventDefault();
+              e.nativeEvent.stopImmediatePropagation();
+            }
+          }}
           onKeyUp={(e) => assistant?.handleKeyUp(e.nativeEvent)}
           onMouseUp={() => assistant?.handleClick()}
           onCompositionStart={() => assistant?.handleCompositionStart()}

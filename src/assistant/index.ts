@@ -1,18 +1,19 @@
-import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState } from './types';
-import * as checkWhileTyping from './typing/check-while-typing';
-import { hideGhost } from './typing/ghost-text';
-import * as spellCheck from './typing/spell-check';
+import { INITIAL_STATE, type AssistantContext, type AssistantOptions, type AssistantState, type EditorControl, type KeyPress, type TextInput } from './types';
+import * as checkWhileTyping from './check-while-typing';
+import { hideGhost } from './ghost-text';
+import * as spellCheck from './spell-check';
 import { trace } from './trace';
 
-export type { AssistantOptions, AssistantState, AssistEvent } from './types';
+export type { AssistantOptions, AssistantState, AssistEvent, EditorControl, GhostState, KeyPress, PopoverState, TextDirection, TextInput, TextSpan } from './types';
+export { INITIAL_STATE } from './types';
 export type Assistant = ReturnType<typeof createAssistant>;
 
-export function createAssistant(field: HTMLElement, options: AssistantOptions) {
+export function createAssistant(editorControl: EditorControl, options: AssistantOptions) {
   let state = INITIAL_STATE;
   const listeners = new Set<() => void>();
 
   const context: AssistantContext = {
-    field,
+    editorControl,
     options,
     log: (event) => context.options.log(event),
     getState: () => state,
@@ -48,13 +49,13 @@ export function createAssistant(field: HTMLElement, options: AssistantOptions) {
       return () => void listeners.delete(listener);
     },
 
-    handleInput: (event: InputEvent) => checkWhileTyping.handleInput(context, event),
-    handleKeyDown: (event: KeyboardEvent) => checkWhileTyping.handleKeyDown(context, event),
+    handleInput: (event: TextInput) => checkWhileTyping.handleInput(context, event),
+    handleKeyDown: (event: KeyPress) => checkWhileTyping.handleKeyDown(context, event),
     handleClick: () => checkWhileTyping.handleClick(context),
     handleSelectionChange: () => checkWhileTyping.handleSelectionChange(context),
     handleCompositionStart: () => checkWhileTyping.handleCompositionStart(context),
     handleCompositionEnd: () => checkWhileTyping.handleCompositionEnd(context),
-    handleKeyUp: (event: KeyboardEvent) => checkWhileTyping.handleKeyUp(context, event),
+    handleKeyUp: (event: KeyPress) => checkWhileTyping.handleKeyUp(context, event),
 
     pickSuggestion: (suggestion: string) => spellCheck.pickSuggestion(context, suggestion),
     ignoreWord: () => spellCheck.ignoreWord(context),
