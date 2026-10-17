@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiKeyField } from "./components/ApiKeyField";
 import { Checkbox } from "./components/Checkbox";
-import { EventLog } from "./components/EventLog";
+import { Debugger } from "./components/Debugger";
 import { LLMContextField } from "./components/LLMContextField";
 import { MessageField } from "./components/MessageField";
 import { TextArea } from "./components/TextArea";
-import { useEventLog } from "./hooks/useEventLog";
+import { useDebugger } from "./hooks/useDebugger";
 import { DEFAULT_SETTINGS, lines, type AppSettings } from "./lib/settings";
 
 const APPLY_SETTINGS_DEBOUNCE_MS = 500;
@@ -13,7 +13,7 @@ const APPLY_SETTINGS_DEBOUNCE_MS = 500;
 export function App() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [appliedSettings, setAppliedSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const { logLines, logEvent, clearLog } = useEventLog();
+  const { debuggerLines, logEvent, clearDebugger } = useDebugger();
 
   useEffect(() => {
     const timer = setTimeout(() => setAppliedSettings(settings), APPLY_SETTINGS_DEBOUNCE_MS);
@@ -75,7 +75,7 @@ export function App() {
             onChange={(ignoredWords) => updateSettings({ ignoredWords })}
           />
         </div>
-        <EventLog lines={logLines} onClear={clearLog} />
+        <Debugger lines={debuggerLines} onClear={clearDebugger} />
       </main>
     </div>
   );
