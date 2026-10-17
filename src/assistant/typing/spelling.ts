@@ -66,8 +66,7 @@ function replaceWords(context: AssistantContext, replacements: WordReplacement[]
 }
 
 function replaceWordsNow(context: AssistantContext, replacements: WordReplacement[]): WordReplacement[] {
-  const { field } = context;
-  const caretBefore = caretOffset(readFieldText(field));
+  const caretBefore = caretOffset(readFieldText(context.field));
   const selectionBefore = selectedRange();
   const isCaretOnEmptyLine = selectionBefore?.startContainer.nodeType === Node.ELEMENT_NODE;
   const lastFirst = [...replacements].sort((first, second) => second.place.start - first.place.start);
@@ -77,14 +76,14 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
 
   for (const replacement of lastFirst) {
     const { place } = replacement;
-    const currentText = readFieldText(field);
+    const currentText = readFieldText(context.field);
     if (currentText.text.slice(place.start, place.end) !== place.word) {
       trace('replace', `skipped "${place.word}" @${place.start}: the text there changed`);
       continue;
     }
     trace('replace', `"${place.word}" @${place.start} → "${replacement.replacement}" (native edit: one Ctrl/Cmd+Z)`);
 
-    replaceText(field, rangeOf(currentText, place.start, place.end), replacement.replacement);
+    replaceText(context.field, rangeOf(currentText, place.start, place.end), replacement.replacement);
     const lengthChange = replacement.replacement.length - place.word.length;
     if (caretBefore !== undefined && place.end <= caretBefore) {
       caretShift += lengthChange;
@@ -97,10 +96,10 @@ function replaceWordsNow(context: AssistantContext, replacements: WordReplacemen
     return applied;
   }
 
-  const textAfter = readFieldText(field);
+  const textAfter = readFieldText(context.field);
   if (isCaretOnEmptyLine && selectionBefore) {
     trace('replace', 'caret put back on its empty line');
-    restoreSelection(field, selectionBefore);
+    restoreSelection(context.field, selectionBefore);
   } else if (caretBefore !== undefined) {
     trace('replace', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     placeCaret(textAfter, caretBefore + caretShift);
@@ -151,11 +150,10 @@ export function noticeUndo(context: AssistantContext) {
 
 export function noticeRedo(context: AssistantContext) {
   const fieldText = readFieldText(context.field).text;
-  const { spelling } = context;
-  const redone = spelling.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
+  const redone = context.spelling.undoneAutoCorrections.filter(({ original }) => !findWordPlaces(fieldText, [original]).length);
   for (const { original, replacement } of redone) {
     trace('spelling', `Ctrl/Cmd+Shift+Z brought back "${replacement}": "${original}" is no longer ignored`);
-    spelling.replacementByOriginal.set(original, replacement);
+    context.spelling.replacementByOriginal.set(original, replacement);
     context.ignoredWords = context.ignoredWords.filter((word) => word !== original);
     context.log({
       type: 'autocorrect',
@@ -164,7 +162,7 @@ export function noticeRedo(context: AssistantContext) {
     });
   }
   if (redone.length) {
-    spelling.undoneAutoCorrections = spelling.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
+    context.spelling.undoneAutoCorrections = context.spelling.undoneAutoCorrections.filter((undone) => !redone.includes(undone));
     context.options.onIgnoredWordsChange(context.ignoredWords);
   }
 }

@@ -8,13 +8,12 @@ import { trace } from '../trace';
 const CARET_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End']);
 
 function updateLoader(context: AssistantContext) {
-  const { typing } = context;
-  const loader: AssistantState['loader'] = typing.runningRequest
+  const loader: AssistantState['loader'] = context.typing.runningRequest
     ? { kind: 'request' }
-    : typing.requestTimer
+    : context.typing.requestTimer
       ? {
           kind: 'debounce',
-          startedAt: typing.debounceStartedAt,
+          startedAt: context.typing.debounceStartedAt,
           durationMs: context.options.debounceMs,
         }
       : undefined;
@@ -26,59 +25,59 @@ function updateLoader(context: AssistantContext) {
 }
 
 function abortRunningRequest(context: AssistantContext, why: string) {
-  const { typing } = context;
-  if (typing.runningRequest) {
+  if (context.typing.runningRequest) {
     trace('typing', `${why}: the running request is aborted`);
-    typing.runningRequest.abort();
-    typing.runningRequest = undefined;
+    context.typing.runningRequest.abort();
+    context.typing.runningRequest = undefined;
   }
 }
 
 export function cancelPendingRequest(context: AssistantContext) {
-  const { typing } = context;
-  if (typing.requestTimer) {
+  if (context.typing.requestTimer) {
     trace('typing', 'Escape: the debounce timer is cleared');
-    clearTimeout(typing.requestTimer);
-    typing.requestTimer = undefined;
+    clearTimeout(context.typing.requestTimer);
+    context.typing.requestTimer = undefined;
   }
   abortRunningRequest(context, 'Escape');
   updateLoader(context);
 }
 
 function scheduleLLMRequest(context: AssistantContext) {
-  const { typing, options } = context;
   abortRunningRequest(context, 'text changed');
-  if (options.spellCheckMode === 'off' && !options.withCompletion) {
+  if (context.options.spellCheckMode === 'off' && !context.options.withCompletion) {
     trace('typing', 'spelling and completion are off: no request');
     return;
   }
   if (!readFieldText(context.field).text.trim()) {
     trace('typing', 'the field is empty: no request');
-    clearTimeout(typing.requestTimer);
-    typing.requestTimer = undefined;
-    typing.lastSentText = '';
+    clearTimeout(context.typing.requestTimer);
+    context.typing.requestTimer = undefined;
+    context.typing.lastSentText = '';
     updateLoader(context);
     return;
   }
-  trace('typing', typing.requestTimer ? `typing continues: debounce timer restarted (${options.debounceMs} ms)` : `debounce timer started: request in ${options.debounceMs} ms unless typing continues`);
-  clearTimeout(typing.requestTimer);
-  typing.requestTimer = setTimeout(() => void sendLLMRequest(context), options.debounceMs);
-  typing.debounceStartedAt = Date.now();
+  trace('typing', context.typing.requestTimer ? `typing continues: debounce timer restarted (${context.options.debounceMs} ms)` : `debounce timer started: request in ${context.options.debounceMs} ms unless typing continues`);
+  clearTimeout(context.typing.requestTimer);
+  context.typing.requestTimer = setTimeout(() => void sendLLMRequest(context), context.options.debounceMs);
+  context.typing.debounceStartedAt = Date.now();
   updateLoader(context);
 }
 
 async function sendLLMRequest(context: AssistantContext) {
-  const { typing, options, field } = context;
-  clearTimeout(typing.requestTimer);
-  typing.requestTimer = undefined;
-  const sentText = readFieldText(field);
+
+  clearTimeout(context.typing.requestTimer);
+  context.typing.requestTimer = undefined;
+
+  const sentText = readFieldText(context.field);
   const caret = caretOffset(sentText);
-  typing.lastSentText = sentText.text;
+  context.typing.lastSentText = sentText.text;
+
   if (!sentText.text.trim()) {
     trace('typing', 'debounce over, but the field is empty: nothing to send');
     updateLoader(context);
     return;
   }
+
   const shouldAskCompletion = canAskCompletion(context, sentText.text, caret);
   trace('typing', `debounce over: sending the draft${shouldAskCompletion ? ' (spelling + completion after the caret)' : ' (spelling only)'}`, {
     draft: sentText.text,
@@ -86,7 +85,7 @@ async function sendLLMRequest(context: AssistantContext) {
   });
 
   const request = new AbortController();
-  typing.runningRequest = request;
+  context.typing.runningRequest = request;
   updateLoader(context);
   context.log({
     type: 'send-to-llm',
@@ -94,13 +93,13 @@ async function sendLLMRequest(context: AssistantContext) {
     withCompletion: shouldAskCompletion,
   });
   const answer = await checkDraftWithLLM(
-    options.apiKey,
+    context.options.apiKey,
     {
       draft: sentText.text,
       shouldAskCompletion,
       caretOffset: caret,
       isCaretOnNewLine: sentText.text.slice(0, caret).endsWith('\n'),
-      llmContext: options.llmContext,
+      llmContext: context.options.llmContext,
       customWords: [...context.customWords],
       ignoredWords: context.ignoredWords,
     },
@@ -110,14 +109,14 @@ async function sendLLMRequest(context: AssistantContext) {
     trace('typing', 'answer dropped: the request was aborted');
     return;
   }
-  typing.runningRequest = undefined;
+  context.typing.runningRequest = undefined;
   context.log({ type: 'llm-answer', reply: answer });
 
   if (answer) {
-    const currentText = readFieldText(field);
+    const currentText = readFieldText(context.field);
     const nothingMoved = currentText.text === sentText.text && caretOffset(currentText) === caret;
     trace('typing', `answer: ${answer.mistakes.length} mistake(s), completion ${JSON.stringify(answer.completion)}; field ${nothingMoved ? 'unchanged' : 'changed'} since sending`);
-    if (options.spellCheckMode !== 'off') {
+    if (context.options.spellCheckMode !== 'off') {
       displayAndAutocorrectMistakes(context, answer.mistakes);
     }
     if (!shouldAskCompletion) {
