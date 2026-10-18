@@ -113,7 +113,7 @@ async function sendLLMRequest(context: AssistantContext) {
     showAutoCompletion(context, autoCompletion, caret!);
   }
   if (mistakes === null || autoCompletion === null) {
-    context.debug('typing', 'a request got no answer (no key, network error, timeout or unreadable JSON): red cross for 2 s');
+    context.debug('typing', 'auto-completion failed');
     context.setState({ requestStatus: { kind: 'failed' } });
     setTimeout(() => updateRequestStatus(context), 2000);
     return;
