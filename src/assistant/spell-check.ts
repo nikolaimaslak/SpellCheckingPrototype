@@ -27,7 +27,7 @@ export function displayAndAutoCorrectMistakes(context: AssistantContext, newMist
   const notFound = newMistakes.filter((mistake) => !placed.some((place) => place.mistake === mistake));
   context.debug('spell-check', `model reported ${newMistakes.length} mistake(s); ${placed.length} place(s) found in the field`, placed.map((place) => `${place.word} @${place.start} → ${place.mistake.fixes.join(' / ')}${place.mistake.isSure ? ' (sure)' : ''}`));
   if (notFound.length) {
-    context.debug('spell-check', 'not placed in the text (the text changed, the model did not copy the surrounding text exactly, or the word is in it more than once): ignored', notFound);
+    context.debug('spell-check', 'not placed in the text (the word is gone, or the model did not copy the surrounding text exactly and the word is in the text more than once): ignored', notFound);
   }
   if (context.options.spellCheckMode === 'auto-correction') {
     autoCorrectSureMistakes(context);

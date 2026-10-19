@@ -1,24 +1,29 @@
 import type { Mistake } from './llm';
-import { findWordPlaces, type WordPlace } from './words';
+import { escapeForRegExp, findWordPlaces, type WordPlace } from './words';
 
 export interface PlacedMistake extends WordPlace {
   mistake: Mistake;
 }
 
-const withPlainSpaces = (text: string) => text.replace(/\u00A0/g, ' ');
+const withAnySpaces = (text: string) => escapeForRegExp(text).replace(/\s+/g, '\\s+');
 
 export function findMistakesInText(text: string, mistakes: Mistake[]): PlacedMistake[] {
-  const plainText = withPlainSpaces(text);
   const placesByStart = new Map<number, PlacedMistake>();
   for (const mistake of mistakes) {
-    const surroundingText = withPlainSpaces(mistake.surroundingText);
-    const wordsInSurroundingText = findWordPlaces(surroundingText, [mistake.word]);
+    const wordsInSurroundingText = findWordPlaces(mistake.surroundingText, [mistake.word]);
     if (wordsInSurroundingText.length !== 1) {
       continue;
     }
     const wordInSurroundingText = wordsInSurroundingText[0];
-    for (let surroundingTextStart = plainText.indexOf(surroundingText); surroundingTextStart !== -1; surroundingTextStart = plainText.indexOf(surroundingText, surroundingTextStart + 1)) {
-      const start = surroundingTextStart + wordInSurroundingText.start;
+    const before = withAnySpaces(mistake.surroundingText.slice(0, wordInSurroundingText.start));
+    const after = withAnySpaces(mistake.surroundingText.slice(wordInSurroundingText.end));
+    const surroundingTextPattern = new RegExp(`(${before})${escapeForRegExp(mistake.word)}${after}`, 'gu');
+    const starts = [...text.matchAll(surroundingTextPattern)].map((match) => match.index + match[1].length);
+    const wordsInText = findWordPlaces(text, [mistake.word]);
+    if (!starts.length && wordsInText.length === 1) {
+      starts.push(wordsInText[0].start);
+    }
+    for (const start of starts) {
       placesByStart.set(start, {
         word: mistake.word,
         start,

@@ -7,7 +7,7 @@ export interface WordPlace {
 }
 
 const LETTERS = /[\p{L}\p{M}]+/gu;
-const escapeForRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+export const escapeForRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export function findWordPlaces(text: string, words: Iterable<string>): WordPlace[] {
   const places: WordPlace[] = [];
