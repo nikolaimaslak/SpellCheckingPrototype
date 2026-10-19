@@ -4,7 +4,7 @@ Demo of LLM spell checking, auto-correction, and inline auto-completion, in Engl
 
 **Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
 
-Paste an OpenAI API key at the top of the page (kept in memory only, not saved).
+The page talks to a local LLM server: an OpenAI-compatible endpoint at `http://127.0.0.1:8000/v1/chat/completions` (vLLM with `google/gemma-4-31B-it`).
 
 ## Run locally
 

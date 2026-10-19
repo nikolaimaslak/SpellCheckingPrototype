@@ -1,15 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openDemoPage } from './demo-page';
-
-test('without a key the field and the toggles are off', async ({ page }) => {
-  await page.goto('/');
-  const field = page.getByRole('textbox', { name: 'Agent message' });
-  await expect(field).toHaveAttribute('contenteditable', 'false');
-  expect(await field.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('"Paste your API key above to start typing."');
-  for (const name of ['Spell check', 'Auto-correction', 'Auto-completion']) {
-    await expect(page.getByRole('checkbox', { name })).toBeDisabled();
-  }
-});
+import { LLM_URL } from './lib/local-llm-client';
 
 test('the placeholder shows only while the field is empty', async ({ page }) => {
   const { field } = await openDemoPage(page, () => ({}));
@@ -56,10 +47,10 @@ test('clearing the field clears the request status and sends no request', async 
 
 test('a failed request shows in the status and in the event log with its reason', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({}));
-  await page.route('https://api.openai.com/**', (route) => route.fulfill({ status: 401, json: { error: { message: 'Incorrect API key provided.' } } }));
+  await page.route(LLM_URL, (route) => route.fulfill({ status: 500, json: { error: { message: 'model is loading' } } }));
   await demo.field.click();
   await page.keyboard.type('Hi');
   await expect(page.getByRole('status')).toHaveText(/LLM request failed/);
   await page.getByText('Debugger').click();
-  await expect(page.locator('pre')).toContainText('[spell-check] request failed: HTTP 401: Incorrect API key provided.');
+  await expect(page.locator('pre')).toContainText('[spell-check] request failed: HTTP 500: model is loading');
 });

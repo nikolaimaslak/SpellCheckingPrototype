@@ -2,7 +2,7 @@ import { AUTO_COMPLETION_EXAMPLES, AUTO_COMPLETION_SYSTEM_MESSAGE } from './auto
 import { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } from './spell-check-prompt';
 import type { AssistantContext, ChatMessage, LLMResult } from './types';
 
-const LLM_TIMEOUT_MS = 5000;
+const LLM_TIMEOUT_MS = 20000;
 
 export interface SpellCheckRequest {
   draft: string;

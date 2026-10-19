@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { Mistake } from '../assistant/llm';
+import { LLM_URL } from './lib/local-llm-client';
 
 export interface FakeAnswer {
   mistakes?: Mistake[];
@@ -15,7 +16,7 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
   const userMessages: string[] = [];
   const spellCheckMessages: string[] = [];
   const autoCompletionMessages: string[] = [];
-  await page.route('https://api.openai.com/**', async (route) => {
+  await page.route(LLM_URL, async (route) => {
     const body = JSON.parse(route.request().postData() ?? '{}') as { messages: { content: string }[] };
     const userMessage = body.messages.at(-1)!.content;
     userMessages.push(userMessage);
@@ -38,7 +39,6 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(llmReply) } }] } });
   });
   await page.goto('/');
-  await page.getByLabel('OpenAI API key').fill('test-key');
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'true');
   const autoCompletion = page.locator('div.fixed[aria-hidden="true"]');
