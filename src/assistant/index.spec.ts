@@ -35,7 +35,7 @@ function createTextEditorControl(text: string) {
   return { editorControl, memory };
 }
 
-function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer, ignoredWords: string[] = []) {
+function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer, optionsToChange: Partial<AssistantOptions> = {}) {
   const llmClient: LLMClient = {
     ask: async () => ({ answer: JSON.stringify(answer) }),
   };
@@ -46,11 +46,12 @@ function startAssistant(editorControl: EditorControl, answer: FakeLLMAnswer, ign
     isMac: false,
     debounceMs: 10,
     customDictionary: [],
-    ignoredWords,
+    ignoredWords: [],
     onIgnoredWordsChange: () => {},
     onCustomDictionaryChange: () => {},
     llmContext: '',
     onEvent: () => {},
+    ...optionsToChange,
   };
   return createAssistant(editorControl, options);
 }
@@ -89,7 +90,7 @@ test('a sure mistake on an ignored word is underlined but never auto-corrected',
       ],
       nextSentence: '',
     },
-    ['sen'],
+    { ignoredWords: ['sen'] },
   );
   assistant.handleInput({ inputType: 'insertText', data: 'm' });
   await expect.poll(() => memory.underlines).toEqual([{ start: 7, end: 10 }]);
@@ -112,5 +113,27 @@ test('without a DOM, the auto-completion shows in the state and Tab inserts it',
   };
   expect(assistant.handleKeyDown(tab)).toBe(true);
   expect(memory.text).toBe('Your request was received and will be done.');
+  assistant.release();
+});
+
+test('the auto-completion shows as soon as it arrives, even when the spell check hangs and then fails', async () => {
+  const { editorControl } = createTextEditorControl('Your request was received');
+  let failSpellCheck = () => {};
+  const llmClient: LLMClient = {
+    ask: (messages) =>
+      messages.at(-1)!.content.includes('Complete the draft at ‸')
+        ? Promise.resolve({ answer: JSON.stringify({ nextSentence: ' and will be done.' }) })
+        : new Promise((resolve) => {
+            failSpellCheck = () => resolve({ error: 'timed out' });
+          }),
+  };
+  const assistant = startAssistant(editorControl, { mistakes: [], nextSentence: '' }, { llmClient });
+  assistant.handleInput({ inputType: 'insertText', data: 'd' });
+  await expect.poll(() => assistant.getState().autoCompletion?.text).toBe(' and will be done.');
+  expect(assistant.getState().requestStatus).toEqual({ kind: 'request' });
+
+  failSpellCheck();
+  await expect.poll(() => assistant.getState().requestStatus).toEqual({ kind: 'failed' });
+  expect(assistant.getState().autoCompletion?.text).toBe(' and will be done.');
   assistant.release();
 });

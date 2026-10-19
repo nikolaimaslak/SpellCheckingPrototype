@@ -1,4 +1,4 @@
-import { spellCheckWithLLM, autoCompleteWithLLM, type Mistake } from './llm';
+import { spellCheckWithLLM, autoCompleteWithLLM } from './llm';
 import type { AssistantContext, AssistantState, KeyPress, TextInput } from './types';
 import { autoCompletionFollowsTyping, handleAutoCompletionKey, hideAutoCompletion, hideAutoCompletionIfCaretMoved, showAutoCompletion } from './auto-completion';
 import { displayAndAutoCorrectMistakes, noticeRedo, noticeUndo, openPopoverAtCaret, redrawUnderlines } from './spell-check';
@@ -91,58 +91,70 @@ async function sendLLMRequest(context: AssistantContext) {
   const request = new AbortController();
   context.typing.runningRequest = request;
   updateRequestStatus(context);
-  const [mistakes, autoCompletion] = await Promise.all([
-    shouldSpellCheck ? askSpellCheck(context, sentText, caret, request.signal) : [],
-    shouldAskAutoCompletion ? askAutoCompletion(context, sentText, caret!, request.signal) : '',
+
+  const expected: ExpectedField = { text: sentText, caret };
+
+  const [isSpellCheckDone, isAutoCompletionDone] = await Promise.all([
+    shouldSpellCheck ? askSpellCheck(context, expected, request.signal) : true,
+    shouldAskAutoCompletion ? askAutoCompletion(context, expected, request.signal) : true,
   ]);
+
   if (request.signal.aborted) {
     context.debug('typing', 'answers dropped: the request was aborted');
     return;
   }
+
   context.typing.runningRequest = undefined;
 
-  const hasNothingMoved = context.editorControl.getText() === sentText && context.editorControl.getCaret() === caret;
-  if (shouldSpellCheck && mistakes) {
-    displayAndAutoCorrectMistakes(context, mistakes);
-  }
-  if (!shouldAskAutoCompletion || autoCompletion === null) {
-    context.debug('typing', 'no auto-completion to show');
-  } else if (!hasNothingMoved) {
-    context.debug('typing', 'auto-completion dropped: the text or the caret moved while waiting');
-  } else {
-    showAutoCompletion(context, autoCompletion, caret!);
-  }
-  if (mistakes === null || autoCompletion === null) {
-    context.debug('typing', 'auto-completion failed');
+  if (!isSpellCheckDone || !isAutoCompletionDone) {
+    context.debug('typing', `failed: ${[!isSpellCheckDone && 'spell check', !isAutoCompletionDone && 'auto-completion'].filter(Boolean).join(' and ')}`);
     context.setState({ requestStatus: { kind: 'failed' } });
     setTimeout(() => updateRequestStatus(context), 2000);
     return;
   }
+
   updateRequestStatus(context);
 }
 
-async function askSpellCheck(context: AssistantContext, draft: string, caret: number | undefined, signal: AbortSignal): Promise<Mistake[] | null> {
+interface ExpectedField {
+  text: string;
+  caret: number | undefined;
+}
+
+function isUntouched(context: AssistantContext, expected: ExpectedField): boolean {
+  return context.editorControl.getText() === expected.text && context.editorControl.getCaret() === expected.caret;
+}
+
+async function askSpellCheck(context: AssistantContext, expected: ExpectedField, signal: AbortSignal): Promise<boolean> {
   const result = await spellCheckWithLLM(
     context,
     {
-      draft,
-      caretOffset: caret,
+      draft: expected.text,
+      caretOffset: expected.caret,
       llmContext: context.options.llmContext,
       customDictionary: [...context.customDictionary],
     },
     signal,
   );
   if (signal.aborted) {
-    return null;
+    return false;
   }
   if ('error' in result) {
     context.debug('spell-check', `request failed: ${result.error}`);
-    return null;
+    return false;
   }
-  return result.answer;
+  const wasUntouched = isUntouched(context, expected);
+  displayAndAutoCorrectMistakes(context, result.answer);
+  if (wasUntouched) {
+    expected.text = context.editorControl.getText();
+    expected.caret = context.editorControl.getCaret();
+  }
+  return true;
 }
 
-async function askAutoCompletion(context: AssistantContext, draft: string, caret: number, signal: AbortSignal): Promise<string | null> {
+async function askAutoCompletion(context: AssistantContext, expected: ExpectedField, signal: AbortSignal): Promise<boolean> {
+  const draft = expected.text;
+  const caret = expected.caret!;
   const result = await autoCompleteWithLLM(
     context,
     {
@@ -154,13 +166,18 @@ async function askAutoCompletion(context: AssistantContext, draft: string, caret
     signal,
   );
   if (signal.aborted) {
-    return null;
+    return false;
   }
   if ('error' in result) {
     context.debug('auto-completion', `request failed: ${result.error}`);
-    return null;
+    return false;
   }
-  return result.answer;
+  if (!isUntouched(context, expected)) {
+    context.debug('typing', 'auto-completion dropped: the text or the caret moved while waiting');
+    return true;
+  }
+  showAutoCompletion(context, result.answer, expected.caret!);
+  return true;
 }
 
 function canAskAutoCompletion(context: AssistantContext, text: string, caret: number | undefined): boolean {
