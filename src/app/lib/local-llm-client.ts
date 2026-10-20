@@ -1,6 +1,6 @@
 import type { LLMClient } from '../../assistant';
 
-export const LLM_URL = 'http://127.0.0.1:8000/v1/chat/completions';
+export const LLM_URL = '/v1/chat/completions';
 const MODEL = 'google/gemma-4-31B-it';
 
 interface ChatCompletion {

@@ -10,5 +10,8 @@ export default defineConfig({
     // and nothing is exposed to the network.
     host: '127.0.0.1',
     port: 5173,
+    // For sharing the page through `ngrok http 5173`; /v1 goes to the LLM tunnel on this machine.
+    allowedHosts: ['.ngrok-free.app'],
+    proxy: { '/v1': 'http://127.0.0.1:8000' },
   },
 });

@@ -6,7 +6,7 @@ Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop,
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1). Spell check and auto-completion need the local LLM server at http://127.0.0.1:8000 |
+| `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1). Spell check and auto-completion need the LLM server at http://127.0.0.1:8000: the page calls `/v1/chat/completions` on its own origin and Vite forwards `/v1` there. To share the page: `ngrok http 5173` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm test` | Playwright tests (`src/**/*.spec.ts`) in Chrome with a fake LLM, no key or network needed |
@@ -29,7 +29,7 @@ GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `ma
 ## Hard constraints
 
 - **No browser extensions.** Everything is page code.
-- **The only network calls are to the local LLM server** (`http://127.0.0.1:8000`, OpenAI-compatible, no key), made by the demo's `LLMClient` (`src/app/lib/local-llm-client.ts`): the spell check and the auto-completion. `src/assistant/` makes no network calls itself.
+- **The only network calls are to the LLM server** (`/v1/chat/completions` on the page's origin, forwarded by Vite to `http://127.0.0.1:8000`, OpenAI-compatible, no key), made by the demo's `LLMClient` (`src/app/lib/local-llm-client.ts`): the spell check and the auto-completion. `src/assistant/` makes no network calls itself.
 - **Never write decorations into the editable DOM.** Use the CSS Custom Highlight API for underlines and an overlay for auto-completion. The assistant changes text only through `EditorControl.replaceText`, and each call must be one native undo step (the contenteditable `EditorControl` uses `replaceText` in `src/app/lib/browser.ts`).
 - **`src/assistant/` never touches the DOM**: no `document`, `window`, DOM nodes, ranges or DOM events. Everything it needs comes through `EditorControl` and the handler arguments.
 - **Licensing.** No GPL/LGPL terms. Any new dependency needs its license checked first.
