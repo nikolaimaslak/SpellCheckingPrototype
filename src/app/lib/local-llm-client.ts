@@ -1,7 +1,7 @@
 import type { LLMClient } from '../../assistant';
 
 export const LLM_URL = '/v1/chat/completions';
-const MODEL = 'google/gemma-4-31B-it';
+const MODEL = 'google/gemma-4-26B-A4B-it';
 
 interface ChatCompletion {
   choices?: { message?: { content?: string | null } }[];

@@ -4,7 +4,7 @@ Demo of LLM spell checking, auto-correction, and inline auto-completion, in Engl
 
 **Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
 
-The page calls `/v1/chat/completions` on its own origin, and the dev server forwards `/v1` to the LLM server at `http://127.0.0.1:8000` (vLLM with `google/gemma-4-31B-it`, an OpenAI-compatible endpoint).
+The page calls `/v1/chat/completions` on its own origin, and the dev server forwards `/v1` to the LLM server at `http://127.0.0.1:8000` (vLLM with `google/gemma-4-26B-A4B-it`, an OpenAI-compatible endpoint).
 
 To share the page, keep the LLM tunnel and `npm run dev` running, then run `ngrok http 5173` and send the https URL it prints.
 
