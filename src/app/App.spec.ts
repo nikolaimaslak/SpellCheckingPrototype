@@ -52,5 +52,6 @@ test('a failed request shows in the status and in the event log with its reason'
   await page.keyboard.type('Hi');
   await expect(page.getByRole('status')).toHaveText(/LLM request failed/);
   await page.getByText('Debugger').click();
+  await page.getByRole('checkbox', { name: /Verbose/ }).check();
   await expect(page.locator('pre')).toContainText('[spell-check] request failed: HTTP 500: model is loading');
 });

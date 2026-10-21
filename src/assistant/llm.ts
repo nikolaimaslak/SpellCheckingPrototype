@@ -27,9 +27,15 @@ export interface Mistake {
 
 export async function spellCheckWithLLM(context: AssistantContext, request: SpellCheckRequest, signal: AbortSignal): Promise<LLMResult<Mistake[]>> {
   const userMessage = buildSpellCheckMessage(request);
-  context.debug('llm', 'spell check: user message', userMessage);
-  const reply = await askWithTimeout(context, [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  context.debug('llm', 'spell check: request', { draft: request.draft, userMessage });
+
+  const reply = await askWithTimeout(context, [
+    { role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE },
+    ...SPELL_CHECK_EXAMPLES,
+    { role: 'user', content: userMessage }
+  ], signal);
   context.debug('llm', 'spell check: raw reply', reply);
+
   if ('error' in reply) {
     return reply;
   }
@@ -39,8 +45,11 @@ export async function spellCheckWithLLM(context: AssistantContext, request: Spel
 
 export async function autoCompleteWithLLM(context: AssistantContext, request: AutoCompletionRequest, signal: AbortSignal): Promise<LLMResult<string>> {
   const userMessage = buildAutoCompletionMessage(request);
-  context.debug('llm', 'auto-completion: user message', userMessage);
-  const reply = await askWithTimeout(context, [{ role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE }, ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }], signal);
+  context.debug('llm', 'auto-completion: request', { draft: request.draft, userMessage });
+  const reply = await askWithTimeout(context, [
+    { role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE },
+    ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }
+  ], signal);
   context.debug('llm', 'auto-completion: raw reply', reply);
   if ('error' in reply) {
     return reply;

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { AssistantEvent, DebugArea } from '../../assistant';
 import { useDebugger } from '../providers/DebuggerProvider';
+import { Checkbox } from './Checkbox';
 import { DebuggerEventText } from './DebuggerEventText';
 
 const AREA_COLORS: Record<DebugArea, string> = {
@@ -18,7 +19,9 @@ function describe(event: AssistantEvent): string {
 }
 
 export function Debugger() {
-  const { debuggerEvents, clearDebugger } = useDebugger();
+  const { debuggerEvents: allDebuggerEvents, clearDebugger } = useDebugger();
+  const [isVerbose, setIsVerbose] = useState(false);
+  const debuggerEvents = isVerbose ? allDebuggerEvents : allDebuggerEvents.filter((debuggerEvent) => debuggerEvent.event.area === 'llm');
   const pre = useRef<HTMLPreElement>(null);
   const scrollToEnd = () => {
     if (pre.current) {
@@ -42,6 +45,7 @@ export function Debugger() {
           <span className="ml-1 font-normal text-slate-500">({debuggerEvents.length})</span>
         </h2>
       </summary>
+      <Checkbox label="Verbose: every event, not only the LLM requests and answers" isChecked={isVerbose} onChange={setIsVerbose} />
       <div className="relative">
         <pre ref={pre} className="h-64 min-h-16 resize-y space-y-1.5 overflow-auto rounded bg-slate-900 p-2 pr-36 text-xs leading-5 whitespace-pre-wrap break-all">
           {debuggerEvents.length ? (
