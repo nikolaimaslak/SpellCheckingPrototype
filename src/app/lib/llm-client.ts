@@ -8,18 +8,18 @@ interface ChatCompletion {
   error?: { message?: string };
 }
 
-export function createLLMClient(apiKey: string): LLMClient {
+export function createLLMClient(apiKey: string, model = MODEL, url = LLM_URL): LLMClient {
   const llmClient: LLMClient = {
     async ask(messages, signal) {
       if (!apiKey) {
         return { error: 'no API key' };
       }
       try {
-        const response = await fetch(LLM_URL, {
+        const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
           body: JSON.stringify({
-            model: MODEL,
+            model,
             temperature: 0.2,
             response_format: { type: 'json_object' },
             messages,
