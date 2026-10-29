@@ -11,10 +11,14 @@ Needs Node.js 24 (`.nvmrc`) and a current Chrome or Edge.
 ```sh
 npm install
 cp .env.example .env   # fill in LLM_API_KEY, BASIC_AUTH_USER, BASIC_AUTH_PASSWORD
-npm start
 ```
 
-Open http://127.0.0.1:8787/. For hot reload, run `npm run server` and `npm run dev` side by side and open http://localhost:5173/.
+Then, in two terminals:
+
+```sh
+npm run server   # the API on 127.0.0.1:$PORT (8787 by default)
+npm run dev      # the page with hot reload on http://localhost:5173/
+```
 
 ## Deploy
 
