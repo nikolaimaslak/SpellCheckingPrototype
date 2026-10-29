@@ -2,7 +2,7 @@
 
 Demo of LLM spell checking, auto-correction, and inline auto-completion, in English and Arabic.
 
-The page talks to a small Node backend (`server/`) behind Basic auth. Only the backend knows the LLM API key.
+The page talks to a small Node backend (`server/`) behind Basic auth.
 
 ## Run locally
 
