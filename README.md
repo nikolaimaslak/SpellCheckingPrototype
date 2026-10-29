@@ -24,8 +24,8 @@ On a machine with Node 24:
 git clone https://github.com/nikolaimaslak/SpellCheckingPrototype.git
 cd SpellCheckingPrototype
 npm ci
-cp .env.example .env   # fill in the three values
-npm start              # serves the page and /api on 127.0.0.1:8787
+cp .env.example .env   # fill in the key and the Basic auth user and password;
+npm start              # serves the page and /api on 127.0.0.1:$PORT
 ```
 
 ## License
