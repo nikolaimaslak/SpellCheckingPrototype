@@ -2,9 +2,7 @@
 
 Demo of LLM spell checking, auto-correction, and inline auto-completion, in English and Arabic.
 
-The page talks to a small Node backend (`server/`) behind Basic auth. The backend holds the LLM API key and forwards `/api/autocorrection` and `/api/autocompletion` to an OpenAI-compatible chat completions endpoint (`LLM_URL` and `MODEL` in `server/openai-chat-client.ts`).
-
-To share the page, keep the LLM tunnel and `npm run dev` running, then run `ngrok http 5173` and send the https URL it prints.
+The page talks to a small Node backend (`server/`) behind Basic auth. Only the backend knows the LLM API key.
 
 ## Run locally
 
@@ -16,7 +14,19 @@ cp .env.example .env   # fill in LLM_API_KEY, BASIC_AUTH_USER, BASIC_AUTH_PASSWO
 npm start
 ```
 
-Open http://127.0.0.1:8787/ and log in with the Basic auth user and password. For development with hot reload, run `npm run server` and `npm run dev` side by side and open http://localhost:5173/. `CLAUDE.md` describes the code layout.
+Open http://127.0.0.1:8787/. For hot reload, run `npm run server` and `npm run dev` side by side and open http://localhost:5173/.
+
+## Deploy
+
+On a machine with Node 24:
+
+```sh
+git clone https://github.com/nikolaimaslak/SpellCheckingPrototype.git
+cd SpellCheckingPrototype
+npm ci
+cp .env.example .env   # fill in the three values
+npm start              # serves the page and /api on 127.0.0.1:8787
+```
 
 ## License
 
