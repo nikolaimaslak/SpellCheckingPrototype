@@ -1,5 +1,7 @@
 node_modules/
 dist/
+server.js
+SpellCheckingPrototype.tar.gz
 coverage/
 test-results/
 playwright-report/
@@ -9,3 +11,4 @@ playwright-report/
 .vite/
 
 .env
+
