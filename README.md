@@ -2,8 +2,6 @@
 
 Demo of LLM spell checking, auto-correction, and inline auto-completion, in English and Arabic.
 
-**Try it:** https://nikolaimaslak.github.io/SpellCheckingPrototype/
-
 The page talks to a small Node backend (`server/`) behind Basic auth. The backend holds the LLM API key and forwards `/api/autocorrection` and `/api/autocompletion` to an OpenAI-compatible chat completions endpoint (`LLM_URL` and `MODEL` in `server/openai-chat-client.ts`).
 
 To share the page, keep the LLM tunnel and `npm run dev` running, then run `ngrok http 5173` and send the https URL it prints.

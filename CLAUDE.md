@@ -14,7 +14,7 @@ Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop,
 | `npm test` | Playwright tests (`src/**/*.spec.ts`) in Chrome with a fake LLM, no key or network needed |
 | `npm run eval` | Spell check prompt eval against the real LLM: runs `eval/spell-check-cases.json` (drafts with the expected mistakes, English, Arabic and mixed) and prints pass rate, recall, precision, fix accuracy, dangerous `sure: true` reports and latency. Needs `LLM_API_KEY`, from `.env` (copy `.env.example`, ignored by git) or the environment. Flags: `--runs 3`, `--model`, `--url`, `--filter <name part>`, `--verbose`, `--concurrency 4` |
 
-GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `main` and every pull request; `deploy-pages.yml` builds and publishes the page to GitHub Pages on every push to `main`.
+GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `main` and every pull request.
 
 ## Layout
 
