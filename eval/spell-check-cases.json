@@ -56,5 +56,19 @@
   { "name": "Arabic shorthand inshallah", "preset": "Arabic", "draft": "انشالله يتم خلال يومين.", "expected": [{ "word": "انشالله", "fixes": ["إن شاء الله"], "sure": false }] },
   { "name": "mixed clean", "preset": "Arabic", "draft": "تم استلام طلبك، case number CS-2026-048214.", "expected": [] },
   { "name": "mixed with English typo", "preset": "Arabic", "draft": "تم استلام طلبك وسيتم معالجته خلال 3 working dayz.", "expected": [{ "word": "dayz", "fixes": ["days"], "sure": true }] },
-  { "name": "mixed with Arabic typo", "preset": "English", "draft": "Your request CS-2026-048213 تم استلامة.", "expected": [{ "word": "استلامة", "fixes": ["استلامه"] }] }
+  { "name": "mixed with Arabic typo", "preset": "English", "draft": "Your request CS-2026-048213 تم استلامة.", "expected": [{ "word": "استلامة", "fixes": ["استلامه"] }] },
+  { "name": "Arabic dropped letter", "preset": "Arabic", "draft": "يرجى رفع صورة من الهوية الوطنة.", "expected": [{ "word": "الوطنة", "fixes": ["الوطنية"], "sure": true }] },
+  { "name": "Arabic doubled letter", "preset": "Arabic", "draft": "تم استلام طلبكك وسيتم معالجته.", "expected": [{ "word": "طلبكك", "fixes": ["طلبك"], "sure": true }] },
+  { "name": "Arabic wrong letter", "preset": "Arabic", "draft": "يمكنك تحميل شهادة الاشتراك من البوابة الإلكترونية في أي وقط.", "expected": [{ "word": "وقط", "fixes": ["وقت"], "sure": true }] },
+  { "name": "Arabic phonetic typo shukran", "preset": "Arabic", "draft": "شكرن لتواصلك معنا.", "expected": [{ "word": "شكرن", "fixes": ["شكراً", "شكرا"] }] },
+  { "name": "Arabic hamza on hamzat wasl", "preset": "Arabic", "draft": "تم إستلام طلبك وسيتم معالجته.", "expected": [{ "word": "إستلام", "fixes": ["استلام"] }] },
+  { "name": "Arabic ya for alef maqsura", "preset": "Arabic", "draft": "يمكنك الاطلاع علي التفاصيل في الملف الشخصي.", "expected": [{ "word": "علي", "fixes": ["على"] }] },
+  { "name": "Arabic ila written as ilayya", "preset": "Arabic", "draft": "يرجى إرسال المستندات إلي البريد الإلكتروني.", "expected": [{ "word": "إلي", "fixes": ["إلى"] }] },
+  { "name": "Arabic gender agreement", "preset": "Arabic", "draft": "الشهادة مقبول لدى البنوك والجهات الحكومية.", "expected": [{ "word": "مقبول", "fixes": ["مقبولة"] }] },
+  { "name": "Arabic verb number agreement", "preset": "Arabic", "draft": "يجب على صاحب العمل أن يبلغون عن إصابة العمل خلال ثلاثة أيام.", "expected": [{ "word": "يبلغون", "fixes": ["يبلغ"] }] },
+  { "name": "Arabic clean with customer name", "preset": "Arabic", "draft": "مرحباً سارة العتيبي، تم استلام طلبك.", "expected": [] },
+  { "name": "Arabic clean with unknown name", "preset": "Arabic", "draft": "مرحباً نورة، تم استلام طلبك.", "expected": [] },
+  { "name": "Arabic clean dialect", "preset": "Arabic", "draft": "وش رقم التسجيل حقك؟", "expected": [] },
+  { "name": "Arabic clean with Hindi digits", "preset": "Arabic", "draft": "سيتم معالجة طلبك خلال ٣ أيام عمل.", "expected": [] },
+  { "name": "Arabic typo before the caret, text after it", "preset": "Arabic", "draft": "تم استلام طلبكك وسيتم معالجته خلال ثلاثة أيام.", "caretOffset": 29, "expected": [{ "word": "طلبكك", "fixes": ["طلبك"], "sure": true }] }
 ]
