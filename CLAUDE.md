@@ -7,8 +7,8 @@ Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop,
 | Command | What it does |
 |---|---|
 | `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1) from source with hot reload. Vite forwards `/api` to the Node server, so run `npm run server` next to it |
-| `npm run server` | The Node backend (`server/index.ts`) at http://127.0.0.1:8787: Basic auth on everything, `POST /api/autocorrection` and `POST /api/autocompletion` forwarded to the LLM with the key, and the built page from `dist/`. Reads `LLM_API_KEY`, `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` from `.env` (copy `.env.example`) |
-| `npm start` | Build, then `npm run server`: one process serving the page and the API. To share: `ngrok http 8787` |
+| `npm run server` | The Node backend (`server/index.ts`) at http://127.0.0.1:$PORT (8787 by default; the Vite proxy reads the same `PORT`): Basic auth on everything, `POST /api/autocorrection` and `POST /api/autocompletion` forwarded to the LLM with the key, and the built page from `dist/`. Reads `LLM_API_KEY`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` and `PORT` from `.env` (copy `.env.example`) |
+| `npm start` | Build, then `npm run server`: one process serving the page and the API. To share: `ngrok http $PORT` |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm test` | Playwright tests (`src/**/*.spec.ts`) in Chrome with a fake LLM, no key or network needed |
