@@ -1,3 +1,4 @@
+import { keepAutoCompletionAfterAutoCorrection } from './auto-completion';
 import type { Mistake } from './llm';
 import { findMistakesInText, type PlacedMistake } from './mistake-places';
 import { directionOfLastWord, findWordPlaces, type WordPlace } from './words';
@@ -91,6 +92,7 @@ function replaceWordsNow(context: AssistantContext, wordFixes: WordFix[]): WordF
     context.debug('auto-correction', `caret put back: ${caretBefore} → ${caretBefore + caretShift}`);
     context.editorControl.setCaret(caretBefore + caretShift);
   }
+  keepAutoCompletionAfterAutoCorrection(context, caretShift);
   flash(context, autoCorrectedSpans.map((span) => ({ start: span.start, end: span.start + span.length })));
   return applied.reverse();
 }

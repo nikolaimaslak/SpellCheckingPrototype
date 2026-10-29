@@ -51,6 +51,21 @@ export function hideAutoCompletion(context: AssistantContext) {
   context.setState({ autoCompletion: undefined });
 }
 
+export function keepAutoCompletionAfterAutoCorrection(context: AssistantContext, caretShift: number) {
+  const autoCompletion = context.getState().autoCompletion;
+  if (!autoCompletion) {
+    return;
+  }
+  context.debug('auto-completion', `kept after the auto-correction, caret ${autoCompletion.caretOffset} → ${autoCompletion.caretOffset + caretShift}`);
+  context.setState({
+    autoCompletion: {
+      ...autoCompletion,
+      caretOffset: autoCompletion.caretOffset + caretShift,
+      textWhenShown: context.editorControl.getText(),
+    },
+  });
+}
+
 export function hideAutoCompletionIfCaretMoved(context: AssistantContext) {
   const autoCompletion = context.getState().autoCompletion;
   if (autoCompletion && context.editorControl.getCaret() !== autoCompletion.caretOffset) {

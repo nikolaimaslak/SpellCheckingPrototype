@@ -205,7 +205,7 @@ export function handleInput(context: AssistantContext, event: TextInput) {
     context.spellCheck.undoneAutoCorrections = [];
   }
   const isTypingAutoCompletion = autoCompletionFollowsTyping(context, event);
-  if (!isTypingAutoCompletion) {
+  if (!isTypingAutoCompletion && !context.isAutoCorrecting) {
     hideAutoCompletion(context);
   }
   redrawUnderlines(context);

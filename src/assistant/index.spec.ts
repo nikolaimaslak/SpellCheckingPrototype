@@ -116,6 +116,33 @@ test('without a DOM, the auto-completion shows in the state and Tab inserts it',
   assistant.release();
 });
 
+test('the auto-completion stays when a later spell check answer auto-corrects a word before the caret', async () => {
+  const { editorControl, memory } = createTextEditorControl('I will sen the form');
+  let answerSpellCheck = () => {};
+  const llmClient: LLMClient = {
+    ask: (messages) =>
+      messages.at(-1)!.content.includes('Complete the draft at ‸')
+        ? Promise.resolve({ answer: JSON.stringify({ nextSentence: ' today.' }) })
+        : new Promise((resolve) => {
+            answerSpellCheck = () => resolve({ answer: JSON.stringify({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }) });
+          }),
+  };
+  const assistant = startAssistant(editorControl, { mistakes: [], nextSentence: '' }, { llmClient });
+  const replaceTextSilently = editorControl.replaceText;
+  editorControl.replaceText = (start, end, inserted) => {
+    replaceTextSilently(start, end, inserted);
+    assistant.handleInput({ inputType: 'insertReplacementText', data: inserted });
+  };
+  assistant.handleInput({ inputType: 'insertText', data: 'm' });
+  await expect.poll(() => assistant.getState().autoCompletion?.text).toBe(' today.');
+
+  answerSpellCheck();
+  await expect.poll(() => memory.text).toBe('I will send the form');
+  assistant.handleSelectionChange();
+  expect(assistant.getState().autoCompletion).toMatchObject({ text: ' today.', caretOffset: 'I will send the form'.length });
+  assistant.release();
+});
+
 test('the auto-completion shows as soon as it arrives, even when the spell check hangs and then fails', async () => {
   const { editorControl } = createTextEditorControl('Your request was received');
   let failSpellCheck = () => {};
