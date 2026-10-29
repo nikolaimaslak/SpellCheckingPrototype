@@ -54,7 +54,7 @@
   { "name": "Arabic ha pronoun written as ta marbuta", "preset": "Arabic", "draft": "تم استلام طلبك وسيتم معالجتة.", "expected": [{ "word": "معالجتة", "fixes": ["معالجته"] }] },
   { "name": "Arabic swapped letters", "preset": "Arabic", "draft": "يرجى رفع الصورة عبر البوباة الإلكترونية.", "expected": [{ "word": "البوباة", "fixes": ["البوابة"], "sure": true }] },
   { "name": "Arabic shorthand inshallah", "preset": "Arabic", "draft": "انشالله يتم خلال يومين.", "expected": [{ "word": "انشالله", "fixes": ["إن شاء الله"], "sure": false }] },
-  { "name": "mixed clean", "preset": "Arabic", "draft": "تم استلام طلبك، case number CS-2026-048213.", "expected": [] },
+  { "name": "mixed clean", "preset": "Arabic", "draft": "تم استلام طلبك، case number CS-2026-048214.", "expected": [] },
   { "name": "mixed with English typo", "preset": "Arabic", "draft": "تم استلام طلبك وسيتم معالجته خلال 3 working dayz.", "expected": [{ "word": "dayz", "fixes": ["days"], "sure": true }] },
   { "name": "mixed with Arabic typo", "preset": "English", "draft": "Your request CS-2026-048213 تم استلامة.", "expected": [{ "word": "استلامة", "fixes": ["استلامه"] }] }
 ]

@@ -15,8 +15,9 @@ Rules:
 - Copy "word" and "context" exactly from the draft. Choose a short context containing exactly one occurrence of "word".
 - A fix replaces "word" entirely, so it must contain everything that should stand in its place and must differ from "word". When a word is missing, "word" is the neighbouring word and the fix is that word with the missing one added, such as "portal" with the fix "the portal". When words must change together, "word" is that short phrase, such as "will be" with the fix "is", or "update update" with the fix "update".
 - Fixes contain no punctuation.
-- Set "sure" to true only when there is exactly one clearly correct fix and the fix is obvious from the letters of "word" itself: a typo one or two letters away, swapped letters, a wrong word form, or a repeated word. A true value causes immediate automatic replacement; otherwise, use false.
-- When the fix is only a guess from the context, such as a garbled word that could mean several things, use "sure": false even if the context makes one meaning likely.
+- "sure": true replaces the writer's text at once without asking; "sure": false only shows a suggestion. Use true only when all of these hold: there is exactly one fix; the fix is a repeated word removed, a wrong form of the same word, or at most one edit away from "word" (one letter added, removed or changed, or two adjacent letters swapped); and no other real word is equally close to "word". Otherwise, use false.
+- The context never makes a fix sure. A word that is two or more edits from its fix, such as "nedawaw" or "sertifikate", is false even when the context leaves only one meaning. A word with several real words one edit away, such as "sen", is false even when the context favours one of them.
+- When in doubt, use false.
 - Never report names, text quoted from others, codes, URLs, email addresses, numbers, ALL CAPS tokens, or words listed under "Custom dictionary".
 - If an unknown word has no plausible spelling correction, treat it as a name and leave it unchanged.
 - ‸ marks the writer's caret and is not part of the draft: never put it in "word" or "context".
@@ -61,6 +62,15 @@ Please nedawaw and attach your ID`,
   {
     role: 'assistant',
     content: '{"mistakes": [{"word": "nedawaw", "context": "Please nedawaw and", "fixes": ["download", "upload"], "sure": false}]}',
+  },
+  {
+    role: 'user',
+    content: `Draft:
+Please attch the sertifikate to your request`,
+  },
+  {
+    role: 'assistant',
+    content: '{"mistakes": [{"word": "attch", "context": "Please attch the", "fixes": ["attach"], "sure": true}, {"word": "sertifikate", "context": "the sertifikate to", "fixes": ["certificate"], "sure": false}]}',
   },
   {
     role: 'user',
