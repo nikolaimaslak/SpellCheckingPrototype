@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { Mistake } from '../assistant/llm';
-import { LLM_URL } from './lib/llm-client';
+import { API_ROUTES } from './lib/llm-client';
 
 export interface FakeAnswer {
   mistakes?: Mistake[];
@@ -16,11 +16,11 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
   const userMessages: string[] = [];
   const spellCheckMessages: string[] = [];
   const autoCompletionMessages: string[] = [];
-  await page.route(LLM_URL, async (route) => {
+  await page.route('**/api/**', async (route) => {
     const body = JSON.parse(route.request().postData() ?? '{}') as { messages: { content: string }[] };
     const userMessage = body.messages.at(-1)!.content;
     userMessages.push(userMessage);
-    (userMessage.includes('Complete the draft at ‸') ? autoCompletionMessages : spellCheckMessages).push(userMessage);
+    (route.request().url().endsWith(API_ROUTES['auto-completion']) ? autoCompletionMessages : spellCheckMessages).push(userMessage);
     const draft = draftOf(userMessage);
     const answer: FakeAnswer = {
       mistakes: [],
@@ -36,10 +36,9 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
       })),
       nextSentence: answer.nextSentence,
     };
-    await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(llmReply) } }] } });
+    await route.fulfill({ json: { answer: JSON.stringify(llmReply) } });
   });
   await page.goto('/');
-  await page.getByLabel('LLM API key').fill('test-key');
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'true');
   const autoCompletion = page.locator('div.fixed[aria-hidden="true"]');

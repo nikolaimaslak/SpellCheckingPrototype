@@ -6,7 +6,6 @@ export interface AppSettings {
   customDictionary: string;
   ignoredWords: string;
   withAutoCompletion: boolean;
-  apiKey: string;
   llmContext: string;
 }
 
@@ -22,7 +21,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   withSpellCheck: true,
   withAutoCorrection: true,
   withAutoCompletion: true,
-  apiKey: '',
   ...presetSettings(PRESETS.English),
 };
 

@@ -1,16 +1,5 @@
 import { expect, test } from '@playwright/test';
 import { openDemoPage } from './demo-page';
-import { LLM_URL } from './lib/llm-client';
-
-test('without a key the field and the toggles are off', async ({ page }) => {
-  await page.goto('/');
-  const field = page.getByRole('textbox', { name: 'Agent message' });
-  await expect(field).toHaveAttribute('contenteditable', 'false');
-  expect(await field.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('"Paste your API key above to start typing."');
-  for (const name of ['Spell check', 'Auto-correction', 'Auto-completion']) {
-    await expect(page.getByRole('checkbox', { name })).toBeDisabled();
-  }
-});
 
 test('the placeholder shows only while the field is empty', async ({ page }) => {
   const { field } = await openDemoPage(page, () => ({}));
@@ -57,11 +46,11 @@ test('clearing the field clears the request status and sends no request', async 
 
 test('a failed request shows in the status and in the event log with its reason', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({}));
-  await page.route(LLM_URL, (route) => route.fulfill({ status: 500, json: { error: { message: 'model is loading' } } }));
+  await page.route('**/api/**', (route) => route.fulfill({ status: 502, json: { error: 'model is loading' } }));
   await demo.field.click();
   await page.keyboard.type('Hi');
   await expect(page.getByRole('status')).toHaveText(/LLM request failed/);
   await page.getByText('Debugger').click();
   await page.getByRole('checkbox', { name: /Verbose/ }).check();
-  await expect(page.locator('pre')).toContainText('[spell-check] request failed: HTTP 500: model is loading');
+  await expect(page.locator('pre')).toContainText('[spell-check] request failed: HTTP 502: model is loading');
 });

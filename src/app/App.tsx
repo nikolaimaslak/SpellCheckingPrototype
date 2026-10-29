@@ -1,4 +1,3 @@
-import { ApiKeyField } from './components/ApiKeyField';
 import { Debugger } from './components/Debugger';
 import { DebuggerProvider } from './providers/DebuggerProvider';
 import { LLMContextField } from './components/LLMContextField';
@@ -12,9 +11,8 @@ export function App() {
     <SettingsProvider>
       <DebuggerProvider>
         <div className="mx-auto max-w-6xl space-y-4 p-4">
-          <header className="flex flex-wrap items-center justify-between gap-4">
+          <header>
             <h1 className="text-xl font-semibold">Auto-completion and auto-correction demo</h1>
-            <ApiKeyField />
           </header>
           <main className="space-y-4">
             <MessageField />

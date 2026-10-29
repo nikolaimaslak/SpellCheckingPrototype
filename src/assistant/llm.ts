@@ -1,6 +1,6 @@
 import { AUTO_COMPLETION_EXAMPLES, AUTO_COMPLETION_SYSTEM_MESSAGE } from './auto-completion-prompt';
 import { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } from './spell-check-prompt';
-import type { AssistantContext, ChatMessage, LLMResult } from './types';
+import type { AssistantContext, ChatMessage, LLMRequestKind, LLMResult } from './types';
 
 const LLM_TIMEOUT_MS = 20000;
 
@@ -33,7 +33,7 @@ export async function spellCheckWithLLM(context: AssistantContext, request: Spel
     { role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE },
     ...SPELL_CHECK_EXAMPLES,
     { role: 'user', content: userMessage }
-  ], signal);
+  ], signal, 'spell-check');
   context.debug('llm', 'spell check: raw reply', reply);
 
   if ('error' in reply) {
@@ -49,7 +49,7 @@ export async function autoCompleteWithLLM(context: AssistantContext, request: Au
   const reply = await askWithTimeout(context, [
     { role: 'system', content: AUTO_COMPLETION_SYSTEM_MESSAGE },
     ...AUTO_COMPLETION_EXAMPLES, { role: 'user', content: userMessage }
-  ], signal);
+  ], signal, 'auto-completion');
   context.debug('llm', 'auto-completion: raw reply', reply);
   if ('error' in reply) {
     return reply;
@@ -58,10 +58,10 @@ export async function autoCompleteWithLLM(context: AssistantContext, request: Au
   return autoCompletion === null ? { error: `unreadable answer: ${reply.answer}` } : { answer: autoCompletion };
 }
 
-async function askWithTimeout(context: AssistantContext, messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>> {
+async function askWithTimeout(context: AssistantContext, messages: ChatMessage[], signal: AbortSignal, requestKind: LLMRequestKind): Promise<LLMResult<string>> {
   const startedAt = performance.now();
   try {
-    const reply = await context.options.llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]));
+    const reply = await context.options.llmClient.ask(messages, AbortSignal.any([signal, AbortSignal.timeout(LLM_TIMEOUT_MS)]), requestKind);
     context.debug('llm', `${'error' in reply ? 'failed' : 'answered'} after ${Math.round(performance.now() - startedAt)} ms`);
     return reply;
   } catch (error) {

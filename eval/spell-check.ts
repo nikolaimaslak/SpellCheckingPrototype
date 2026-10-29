@@ -20,7 +20,7 @@ registerHooks({
 const { buildSpellCheckMessage, parseMistakes } = await import('../src/assistant/llm.ts');
 const { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } = await import('../src/assistant/spell-check-prompt.ts');
 const { PRESETS } = await import('../src/app/lib/presets.ts');
-const { createLLMClient } = await import('../src/app/lib/llm-client.ts');
+const { createOpenAIChatClient } = await import('../server/openai-chat-client.ts');
 
 interface ExpectedMistake {
   word: string;
@@ -68,7 +68,7 @@ if (!apiKey) {
   console.error('Set LLM_API_KEY in .env or the environment to the key the page would use.');
   process.exit(1);
 }
-const llmClient = createLLMClient(apiKey, args.model, args.url);
+const llmClient = createOpenAIChatClient(apiKey, args.model, args.url);
 const runs = Number(args.runs);
 const concurrency = Number(args.concurrency);
 
@@ -94,7 +94,7 @@ async function runCase(evalCase: EvalCase): Promise<RunResult> {
   });
   const messages: ChatMessage[] = [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }];
   const startedAt = performance.now();
-  const reply = await llmClient.ask(messages, AbortSignal.timeout(LLM_TIMEOUT_MS));
+  const reply = await llmClient.ask(messages, AbortSignal.timeout(LLM_TIMEOUT_MS), 'spell-check');
   const ms = Math.round(performance.now() - startedAt);
   const empty: RunResult = {
     caseName: evalCase.name,

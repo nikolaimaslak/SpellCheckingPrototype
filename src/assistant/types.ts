@@ -26,8 +26,10 @@ export interface ChatMessage {
 
 export type LLMResult<T> = { answer: T } | { error: string };
 
+export type LLMRequestKind = 'spell-check' | 'auto-completion';
+
 export interface LLMClient {
-  ask(messages: ChatMessage[], signal: AbortSignal): Promise<LLMResult<string>>;
+  ask(messages: ChatMessage[], signal: AbortSignal, requestKind: LLMRequestKind): Promise<LLMResult<string>>;
 }
 
 export interface KeyPress {

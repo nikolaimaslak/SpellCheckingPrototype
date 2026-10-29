@@ -10,7 +10,8 @@ export default defineConfig({
     // and nothing is exposed to the network.
     host: '127.0.0.1',
     port: 5173,
-    // For sharing the page through `ngrok http 5173`.
+    // In dev the page comes from Vite and /api from the Node server (npm run server).
     allowedHosts: ['.ngrok-free.app'],
+    proxy: { '/api': 'http://127.0.0.1:8787' },
   },
 });
