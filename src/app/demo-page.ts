@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import type { Mistake } from '../assistant/llm';
-import { LLM_URL } from './lib/local-llm-client';
+import { LLM_URL } from './lib/llm-client';
 
 export interface FakeAnswer {
   mistakes?: Mistake[];
@@ -39,6 +39,7 @@ export async function openDemoPage(page: Page, answerFor: (draft: string) => Fak
     await route.fulfill({ json: { choices: [{ message: { content: JSON.stringify(llmReply) } }] } });
   });
   await page.goto('/');
+  await page.getByLabel('LLM API key').fill('test-key');
   const field = page.getByRole('textbox', { name: 'Agent message' });
   await expect(field).toHaveAttribute('contenteditable', 'true');
   const autoCompletion = page.locator('div.fixed[aria-hidden="true"]');

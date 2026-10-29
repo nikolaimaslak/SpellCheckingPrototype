@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type RefObj
 import { createAssistant, INITIAL_STATE, type Assistant, type AssistantOptions } from '../../assistant';
 import { isMac } from '../lib/browser';
 import { createContentEditableEditorControl } from '../lib/content-editable-editor-control';
-import { localLLMClient } from '../lib/local-llm-client';
+import { createLLMClient } from '../lib/llm-client';
 import { lines } from '../lib/settings';
 import { useDebugger } from '../providers/DebuggerProvider';
 import { useSettings } from '../providers/SettingsProvider';
@@ -15,6 +15,7 @@ const initialState = () => INITIAL_STATE;
 export function useAssistant(fieldRef: RefObject<HTMLElement | null>) {
   const { appliedSettings: settings, updateSettings } = useSettings();
   const { onEvent } = useDebugger();
+  const llmClient = useMemo(() => createLLMClient(settings.apiKey), [settings.apiKey]);
   const options = useMemo(() => {
     const assistantOptions: AssistantOptions = {
       spellCheckMode: !settings.withSpellCheck
@@ -29,12 +30,12 @@ export function useAssistant(fieldRef: RefObject<HTMLElement | null>) {
       withAutoCompletion: settings.withAutoCompletion,
       isMac,
       debounceMs: DEBOUNCE_MS,
-      llmClient: localLLMClient,
+      llmClient,
       llmContext: settings.llmContext,
       onEvent,
     };
     return assistantOptions;
-  }, [settings, onEvent, updateSettings]);
+  }, [settings, llmClient, onEvent, updateSettings]);
 
   const [assistant, setAssistant] = useState<Assistant>();
   const appliedOptions = useRef(options);

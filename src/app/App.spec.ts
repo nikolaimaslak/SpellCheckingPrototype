@@ -1,6 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { openDemoPage } from './demo-page';
-import { LLM_URL } from './lib/local-llm-client';
+import { LLM_URL } from './lib/llm-client';
+
+test('without a key the field and the toggles are off', async ({ page }) => {
+  await page.goto('/');
+  const field = page.getByRole('textbox', { name: 'Agent message' });
+  await expect(field).toHaveAttribute('contenteditable', 'false');
+  expect(await field.evaluate((element) => getComputedStyle(element, '::before').content)).toBe('"Paste your API key above to start typing."');
+  for (const name of ['Spell check', 'Auto-correction', 'Auto-completion']) {
+    await expect(page.getByRole('checkbox', { name })).toBeDisabled();
+  }
+});
 
 test('the placeholder shows only while the field is empty', async ({ page }) => {
   const { field } = await openDemoPage(page, () => ({}));
