@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT ?? 8787);
 const DIST_DIR = fileURLToPath(new URL('../dist/', import.meta.url));
 const LLM_TIMEOUT_MS = 20000;
 
-const llmClient = createOpenAIChatClient(requireEnv('LLM_API_KEY'));
+const llmClient = createOpenAIChatClient(requireEnv('LLM_API_KEY'), requireEnv('MODEL'), requireEnv('LLM_URL'));
 const credentials = Buffer.from(`${requireEnv('BASIC_AUTH_USER')}:${requireEnv('BASIC_AUTH_PASSWORD')}`);
 
 const app = express();

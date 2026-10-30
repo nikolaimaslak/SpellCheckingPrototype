@@ -1,14 +1,11 @@
 import type { LLMClient } from '../src/assistant/types.ts';
 
-export const LLM_URL = process.env.LLM_URL || 'https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions';
-export const MODEL = process.env.MODEL || 'google.gemma-4-26b-a4b';
-
 interface ChatCompletion {
   choices?: { message?: { content?: string | null } }[];
   error?: { message?: string };
 }
 
-export function createOpenAIChatClient(apiKey: string, model = MODEL, url = LLM_URL): LLMClient {
+export function createOpenAIChatClient(apiKey: string, model: string, url: string): LLMClient {
   const llmClient: LLMClient = {
     async ask(messages, signal) {
       try {
