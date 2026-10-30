@@ -1,7 +1,7 @@
 import type { LLMClient } from '../src/assistant/types.ts';
 
-export const LLM_URL = 'https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions';
-export const MODEL = 'google.gemma-4-31b';
+export const LLM_URL = process.env.LLM_URL || 'https://bedrock-mantle.us-east-1.api.aws/openai/v1/chat/completions';
+export const MODEL = process.env.MODEL || 'google.gemma-4-26b-a4b';
 
 interface ChatCompletion {
   choices?: { message?: { content?: string | null } }[];

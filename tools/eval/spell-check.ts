@@ -9,7 +9,7 @@ resolveExtensionlessImportsAsTs();
 const { buildSpellCheckMessage, parseMistakes } = await import('../../src/assistant/llm.ts');
 const { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } = await import('../../src/assistant/spell-check-prompt.ts');
 const { PRESETS } = await import('../../src/app/lib/presets.ts');
-const { createOpenAIChatClient } = await import('../../server/openai-chat-client.ts');
+const { createOpenAIChatClient, LLM_URL, MODEL } = await import('../../server/openai-chat-client.ts');
 
 interface ExpectedMistake {
   word: string;
@@ -63,7 +63,7 @@ const concurrency = Number(args.concurrency);
 
 const allCases = JSON.parse(await readFile(new URL('./spell-check-cases.json', import.meta.url), 'utf8')) as EvalCase[];
 const cases = allCases.filter((evalCase) => !args.filter || evalCase.name.includes(args.filter));
-console.log(`${cases.length} cases × ${runs} runs, model ${args.model ?? 'default'}, url ${args.url ?? 'default'}\n`);
+console.log(`${cases.length} cases × ${runs} runs, model ${args.model ?? MODEL}, url ${args.url ?? LLM_URL}\n`);
 
 const jobs = cases.flatMap((evalCase) => Array.from({ length: runs }, () => () => runCase(evalCase)));
 const results = await runWithLimit(jobs, concurrency, (done) => {
