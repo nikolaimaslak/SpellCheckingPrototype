@@ -4,18 +4,7 @@ import { parseArgs } from 'node:util';
 import type { Mistake } from '../src/assistant/llm.ts';
 import type { ChatMessage } from '../src/assistant/types.ts';
 
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    try {
-      return nextResolve(specifier, context);
-    } catch (error) {
-      if (specifier.startsWith('.') && !/\.[a-z]+$/.test(specifier)) {
-        return nextResolve(`${specifier}.ts`, context);
-      }
-      throw error;
-    }
-  },
-});
+resolveExtensionlessImportsAsTs();
 
 const { buildSpellCheckMessage, parseMistakes } = await import('../src/assistant/llm.ts');
 const { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } = await import('../src/assistant/spell-check-prompt.ts');
@@ -76,8 +65,10 @@ const allCases = JSON.parse(await readFile(new URL('./spell-check-cases.json', i
 const cases = allCases.filter((evalCase) => !args.filter || evalCase.name.includes(args.filter));
 console.log(`${cases.length} cases × ${runs} runs, model ${args.model ?? 'default'}, url ${args.url ?? 'default'}\n`);
 
-const jobs: (() => Promise<RunResult>)[] = cases.flatMap((evalCase) => Array.from({ length: runs }, () => () => runCase(evalCase)));
-const results = await runWithLimit(jobs, concurrency, (done) => process.stderr.write(`\r${done}/${jobs.length} runs`));
+const jobs = cases.flatMap((evalCase) => Array.from({ length: runs }, () => () => runCase(evalCase)));
+const results = await runWithLimit(jobs, concurrency, (done) => {
+  process.stderr.write(`\r${done}/${jobs.length} runs`);
+});
 process.stderr.write('\r'.padEnd(30) + '\r');
 printResults(cases, results);
 
@@ -92,7 +83,11 @@ async function runCase(evalCase: EvalCase): Promise<RunResult> {
     llmContext: preset.llmContext,
     customDictionary: preset.customDictionary,
   });
-  const messages: ChatMessage[] = [{ role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE }, ...SPELL_CHECK_EXAMPLES, { role: 'user', content: userMessage }];
+  const messages: ChatMessage[] = [
+    { role: 'system', content: SPELL_CHECK_SYSTEM_MESSAGE },
+    ...SPELL_CHECK_EXAMPLES,
+    { role: 'user', content: userMessage },
+  ];
   const startedAt = performance.now();
   const reply = await llmClient.ask(messages, AbortSignal.timeout(LLM_TIMEOUT_MS), 'spell-check');
   const ms = Math.round(performance.now() - startedAt);
@@ -152,7 +147,13 @@ function sameWord(a: string, b: string): boolean {
 }
 
 function isPass(result: RunResult): boolean {
-  return !result.error && !result.missed.length && !result.extra.length && !result.wrongFix.length && !result.wrongSure.length;
+  return (
+    !result.error &&
+    !result.missed.length &&
+    !result.extra.length &&
+    !result.wrongFix.length &&
+    !result.wrongSure.length
+  );
 }
 
 function isDangerous(mistake: Mistake): boolean {
@@ -189,10 +190,17 @@ function printResults(evalCases: EvalCase[], allResults: RunResult[]): void {
   const wrongFixTotal = sum(answered, (result) => result.wrongFix.length);
   const dangerous = answered.flatMap((result) => [...result.extra, ...result.wrongFix].filter(isDangerous)).length;
   const latencies = allResults.map((result) => result.ms).sort((a, b) => a - b);
-  const percentile = (p: number) => latencies[Math.min(latencies.length - 1, Math.floor((latencies.length * p) / 100))] ?? 0;
+  const percentile = (p: number) => {
+    const index = Math.min(
+      latencies.length - 1,
+      Math.floor((latencies.length * p) / 100)
+    );
+    return latencies[index] ?? 0;
+  };
+  const passCount = allResults.filter(isPass).length;
 
   console.log('');
-  console.log(`pass rate       ${percent(allResults.filter(isPass).length, allResults.length)}  (${allResults.filter(isPass).length}/${allResults.length} runs)`);
+  console.log(`pass rate       ${percent(passCount, allResults.length)}  (${passCount}/${allResults.length} runs)`);
   console.log(`recall          ${percent(foundTotal, expectedTotal)}  (expected mistakes found)`);
   console.log(`precision       ${percent(foundTotal, reportedTotal)}  (reports that were expected)`);
   console.log(`fix accuracy    ${percent(foundTotal - wrongFixTotal, foundTotal)}  (found mistakes with an accepted fix)`);
@@ -214,7 +222,11 @@ function sum<T>(items: T[], pick: (item: T) => number): number {
   return items.reduce((total, item) => total + pick(item), 0);
 }
 
-async function runWithLimit<T>(tasks: (() => Promise<T>)[], limit: number, onProgress: (done: number) => void): Promise<T[]> {
+async function runWithLimit<T>(
+  tasks: (() => Promise<T>)[],
+  limit: number,
+  onProgress: (done: number) => void,
+): Promise<T[]> {
   const results: T[] = new Array(tasks.length);
   let next = 0;
   let done = 0;
@@ -227,4 +239,20 @@ async function runWithLimit<T>(tasks: (() => Promise<T>)[], limit: number, onPro
   });
   await Promise.all(workers);
   return results;
+}
+
+function resolveExtensionlessImportsAsTs(): void {
+  registerHooks({
+    resolve(specifier, context, nextResolve) {
+      try {
+        return nextResolve(specifier, context);
+      } catch (error) {
+        const isRelativeWithoutExtension = specifier.startsWith('.') && !/\.[a-z]+$/.test(specifier);
+        if (isRelativeWithoutExtension) {
+          return nextResolve(`${specifier}.ts`, context);
+        }
+        throw error;
+      }
+    },
+  });
 }

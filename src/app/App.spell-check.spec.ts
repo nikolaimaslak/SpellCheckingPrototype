@@ -16,8 +16,9 @@ const unsureSen: Mistake = {
   isSure: false,
 };
 
-const underlinedCount = (page: import('@playwright/test').Page) =>
-  page.evaluate(() => CSS.highlights.get('bp-spell-check-error')?.size ?? 0);
+const underlinedCount = (page: import('@playwright/test').Page) => {
+  return page.evaluate(() => CSS.highlights.get('bp-spell-check-error')?.size ?? 0);
+};
 
 test('a sure mistake is auto-corrected, Ctrl/Cmd+Z brings it back as an ignored word, redo un-ignores it, and neither asks again', async ({ page }) => {
   const demo = await openDemoPage(page, () => ({ mistakes: [sureSen] }));

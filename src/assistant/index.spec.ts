@@ -120,12 +120,24 @@ test('the auto-completion stays when a later spell check answer auto-corrects a 
   const { editorControl, memory } = createTextEditorControl('I will sen the form');
   let answerSpellCheck = () => {};
   const llmClient: LLMClient = {
-    ask: (messages) =>
-      messages.at(-1)!.content.includes('Complete the draft at ‸')
+    ask: (messages) => {
+      return messages.at(-1)!.content.includes('Complete the draft at ‸')
         ? Promise.resolve({ answer: JSON.stringify({ nextSentence: ' today.' }) })
         : new Promise((resolve) => {
-            answerSpellCheck = () => resolve({ answer: JSON.stringify({ mistakes: [{ word: 'sen', context: 'will sen the', fixes: ['send'], sure: true }] }) });
-          }),
+            answerSpellCheck = () => resolve({
+              answer: JSON.stringify({
+                mistakes: [
+                  {
+                    word: 'sen',
+                    context: 'will sen the',
+                    fixes: ['send'],
+                    sure: true,
+                  },
+                ],
+              }),
+            });
+          });
+    },
   };
   const assistant = startAssistant(editorControl, { mistakes: [], nextSentence: '' }, { llmClient });
   const replaceTextSilently = editorControl.replaceText;
@@ -147,12 +159,13 @@ test('the auto-completion shows as soon as it arrives, even when the spell check
   const { editorControl } = createTextEditorControl('Your request was received');
   let failSpellCheck = () => {};
   const llmClient: LLMClient = {
-    ask: (messages) =>
-      messages.at(-1)!.content.includes('Complete the draft at ‸')
+    ask: (messages) => {
+      return messages.at(-1)!.content.includes('Complete the draft at ‸')
         ? Promise.resolve({ answer: JSON.stringify({ nextSentence: ' and will be done.' }) })
         : new Promise((resolve) => {
             failSpellCheck = () => resolve({ error: 'timed out' });
-          }),
+          });
+    },
   };
   const assistant = startAssistant(editorControl, { mistakes: [], nextSentence: '' }, { llmClient });
   assistant.handleInput({ inputType: 'insertText', data: 'd' });

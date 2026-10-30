@@ -44,6 +44,10 @@ GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `ma
 
 - TypeScript strict with `erasableSyntaxOnly` (no enums, no parameter properties).
 - No one-line `if` or `else`: every body goes in braces on its own line, even a single `return;` or call.
+- An arrow function is either one line or has a braced body: never break the line right after `=>`.
+- Avoid long lines. Shorten one with line breaks only: keep the logic exactly as it is, and do not pull parts out into new helpers, constants or variables just to make the line shorter.
+- Break lines with judgment, not like a formatter: break only where it makes the code easier to read. Lines that read as a set (a column of similar `console.log` calls, similar cases) stay one line each, even if one is a bit longer.
+- No comments to explain a block. When a block's purpose is not clear from the code, put it in a function whose name says what it does, and call it where it is needed.
 - Boolean names start with `is`, `has`, `should`, `with`, `can` or a similar word (`isSure`, `withAutoCompletion`, `shouldReturnCaret`). The only exceptions are names fixed by something outside the code: the LLM's JSON keys, library options, and DOM event fields (`KeyPress` keeps `KeyboardEvent`'s `ctrlKey` and the others, so a DOM event can be passed as is).
 - No more than 2 keys on one line: an object literal or object type with 3 or more keys puts each key on its own line.
 - One React component per file in `src/app/components/` and `src/app/providers/`, named after the component. No second component in a file, not even a small helper one.

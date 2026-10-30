@@ -34,8 +34,9 @@ export function readFieldText(field: HTMLElement): FieldText {
     text += data;
     hasLines = true;
   };
-  const isLastInBlock = (node: Node) =>
-    !node.nextSibling && (node.parentNode === field || BLOCK_TAGS.has((node.parentNode as Element).tagName));
+  const isLastInBlock = (node: Node) => {
+    return !node.nextSibling && (node.parentNode === field || BLOCK_TAGS.has((node.parentNode as Element).tagName));
+  };
 
   const visit = (node: Node) => {
     if (node.nodeType === Node.TEXT_NODE) {

@@ -39,12 +39,13 @@ export function createAssistant(editorControl: EditorControl, options: Assistant
   const context: AssistantContext = {
     editorControl,
     options,
-    debug: (area, message, details) =>
+    debug: (area, message, details) => {
       context.options.onEvent({
         area,
         message,
         details,
-      }),
+      });
+    },
     getState: () => state,
     setState(patch: Partial<AssistantState>) {
       state = { ...state, ...patch };
