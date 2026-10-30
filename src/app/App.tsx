@@ -18,7 +18,7 @@ export function App() {
             <MessageField />
             <section className="space-y-2 pt-4">
               <PresetPicker />
-              <div className="flex flex-col gap-3 lg:grid lg:h-48 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
+              <div className="flex flex-col gap-3 lg:grid lg:h-82.5 lg:resize-y lg:grid-cols-[minmax(0,1fr)_9rem_9rem] lg:grid-rows-[auto_minmax(0,1fr)_auto] lg:gap-x-3 lg:gap-y-1 lg:overflow-hidden">
                 <LLMContextField />
                 <WordListFields />
               </div>
