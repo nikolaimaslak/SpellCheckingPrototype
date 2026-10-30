@@ -8,7 +8,7 @@
   "engines": {
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node --disable-warning=ExperimentalWarning --watch-path=server server/index.ts --dev",
     "build": "tsc --noEmit && vite build",
     "build-server": "vite build --config vite-server.config.js",
     "package": "npm run build && npm run build-server && tar czf SpellCheckingPrototype.tar.gz .env.example dist server-dist",

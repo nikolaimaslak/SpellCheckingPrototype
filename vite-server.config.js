@@ -11,6 +11,7 @@ export default defineConfig({
     rollupOptions: {
       // 2. Ensure Node built-ins (path, fs, etc.) are not bundled
       external: [
+        'vite',
         ...builtinModules,
         ...builtinModules.map(m => `node:${m}`)
       ],

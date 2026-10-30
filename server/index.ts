@@ -1,9 +1,16 @@
 import express, { type RequestHandler } from 'express';
 import { timingSafeEqual } from 'node:crypto';
+import type { Server } from 'node:http';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { LLMRequestKind } from '../src/assistant/types.ts';
 import { createOpenAIChatClient } from './openai-chat-client.ts';
+
+const isDev = process.argv.includes('--dev');
+
+if (isDev) {
+  process.loadEnvFile('.env');
+}
 
 const PORT = Number(process.env.PORT ?? 8787);
 const DIST_DIR = fileURLToPath(new URL('../dist/', import.meta.url));
@@ -26,14 +33,29 @@ app.use((request, response, next) => {
 app.use(express.json({ limit: '1mb' }));
 app.post('/api/autocorrection', forwardToLLM('spell-check'));
 app.post('/api/autocompletion', forwardToLLM('auto-completion'));
-app.use(express.static(DIST_DIR));
-app.get('/{*path}', (_request, response) => {
-  response.sendFile(join(DIST_DIR, 'index.html'));
+
+const httpServer = app.listen(PORT, '127.0.0.1', () => {
+  console.log(`http://127.0.0.1:${PORT}, serving ${isDev ? 'the source with hot reload' : DIST_DIR}`);
 });
 
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`http://127.0.0.1:${PORT}, serving ${DIST_DIR}`);
-});
+if (isDev) {
+  await serveSourceWithHotReload(httpServer);
+} else {
+  serveBuiltPage();
+}
+
+async function serveSourceWithHotReload(server: Server): Promise<void> {
+  const { createServer } = await import('vite');
+  const vite = await createServer({ server: { middlewareMode: true, ws: { server } }, appType: 'spa' });
+  app.use(vite.middlewares);
+}
+
+function serveBuiltPage(): void {
+  app.use(express.static(DIST_DIR));
+  app.get('/{*path}', (_request, response) => {
+    response.sendFile(join(DIST_DIR, 'index.html'));
+  });
+}
 
 function forwardToLLM(requestKind: LLMRequestKind): RequestHandler {
   return async (request, response) => {

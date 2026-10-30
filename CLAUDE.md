@@ -6,7 +6,7 @@ Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop,
 
 | Command | What it does |
 |---|---|
-| `npm run dev` | The demo page at http://localhost:5173 (bound to 127.0.0.1) from source with hot reload. Vite forwards `/api` to the Node server, so run `npm run server` next to it |
+| `npm run dev` | One process for development at http://127.0.0.1:$PORT: the Node server serves the page from source through Vite in middleware mode (hot reload on the same port, behind the same Basic auth) and the API, and restarts when `server/` changes. It loads `.env` itself (`process.loadEnvFile`), because Node's `--env-file` in watch mode restarts the server in a loop once Vite starts |
 | `npm run server` | The Node backend (`server/index.ts`) at http://127.0.0.1:$PORT (8787 by default; the Vite proxy reads the same `PORT`): Basic auth on everything, `POST /api/autocorrection` and `POST /api/autocompletion` forwarded to the LLM with the key, and the built page from `dist/`. Reads `LLM_API_KEY`, `LLM_URL`, `MODEL`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD` and `PORT` from `.env` (copy `.env.example`) |
 | `npm start` | Build, then `npm run server`: one process serving the page and the API. To share: `ngrok http $PORT` |
 | `npm run typecheck` | `tsc --noEmit` |
@@ -27,7 +27,7 @@ GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `ma
   - `spell-check.ts`: underlines, popover, auto-correction with each fixed word as one undo step (never for ignored words: the code enforces it, and ignored words are not sent to the LLM), keeping the caret and flashing the auto-corrected words, undo and redo of an auto-correction.
   - `auto-completion.ts`: the auto-completion shown after the caret and its keys; the host draws it.
 - Tests sit next to the file they test, as `<file>.spec.ts`. The page tests fake the backend (`page.route('**/api/**')`), so no server runs in tests. In `src/assistant/` they run in Node, so with no DOM: the pure functions, and `index.spec.ts` drives the assistant through an in-memory `EditorControl`. `src/app/lib/field-text.spec.ts` reads a real contenteditable in the browser. `src/app/App*.spec.ts` open the whole page with a fake LLM (`src/app/demo-page.ts`): the page, spell check, auto-completion.
-- `server/`: the backend, Express 5 (MIT): `index.ts` (Basic auth, the two API routes, statics from `dist/`, `index.html` for any other GET) and `openai-chat-client.ts` (the upstream `LLMClient`: OpenAI-style chat completions with the key, the URL and the model it is given; also used by the eval).
+- `server/`: the backend, Express 5 (MIT): `index.ts` (Basic auth, the two API routes, then with `--dev` the source through Vite, otherwise statics from `dist/` and `index.html` for any other GET) and `openai-chat-client.ts` (the upstream `LLMClient`: OpenAI-style chat completions with the key, the URL and the model it is given; also used by the eval).
 - `tools/eval/`: the prompt eval, plain Node (`spell-check.ts` imports the real prompt, message builder and parser from `src/assistant/` and the upstream client from `server/`; a resolve hook adds `.ts` to the extensionless imports). The dataset is `spell-check-cases.json`: `preset` (a key of `PRESETS`), `draft`, optional `caretOffset` (default: end of the draft), `expected` mistakes with `word`, accepted `fixes`, and optional `sure` (left out when either value is fine).
 - Code has no comments: names say what things are.
 
