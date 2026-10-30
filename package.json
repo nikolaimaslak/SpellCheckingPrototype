@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "build-server": "vite build --config vite-server.config.js",
-    "package": "npm run build && npm run build-server && tar czf SpellCheckingPrototype.tar.gz server.js .env.example dist",
+    "package": "npm run build && npm run build-server && tar czf SpellCheckingPrototype.tar.gz .env.example dist server-dist",
     "preview": "vite preview",
     "server": "node --env-file=.env --disable-warning=ExperimentalWarning server/index.ts",
     "start": "npm run build && npm run server",
