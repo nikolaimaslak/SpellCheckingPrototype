@@ -1,8 +1,8 @@
 import type { LLMClient, LLMRequestKind, LLMResult } from '../../assistant';
 
 export const API_ROUTES: Record<LLMRequestKind, string> = {
-  'spell-check': '/api/autocorrection',
-  'auto-completion': '/api/autocompletion',
+  'spell-check': 'api/autocorrection',
+  'auto-completion': 'api/autocompletion',
 };
 
 export const apiLLMClient: LLMClient = {
