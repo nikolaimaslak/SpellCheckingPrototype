@@ -12,7 +12,7 @@ Demo of **auto-completion and auto-correction** in Bright Pattern Agent Desktop,
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm test` | Playwright tests (`src/**/*.spec.ts`) in Chrome with a fake LLM, no key or network needed |
-| `npm run eval` | Spell check prompt eval against the real LLM: runs `eval/spell-check-cases.json` (drafts with the expected mistakes, English, Arabic and mixed) and prints pass rate, recall, precision, fix accuracy, dangerous `sure: true` reports and latency. Needs `LLM_API_KEY`, from `.env` (copy `.env.example`, ignored by git) or the environment. Flags: `--runs 3`, `--model`, `--url`, `--filter <name part>`, `--verbose`, `--concurrency 4` |
+| `npm run eval` | Spell check prompt eval against the real LLM: runs `tools/eval/spell-check-cases.json` (drafts with the expected mistakes, English, Arabic and mixed) and prints pass rate, recall, precision, fix accuracy, dangerous `sure: true` reports and latency. Needs `LLM_API_KEY`, from `.env` (copy `.env.example`, ignored by git) or the environment. Flags: `--runs 3`, `--model`, `--url`, `--filter <name part>`, `--verbose`, `--concurrency 4` |
 
 GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `main` and every pull request.
 
@@ -28,7 +28,7 @@ GitHub Actions: `test.yml` runs the typecheck and the tests on every push to `ma
   - `auto-completion.ts`: the auto-completion shown after the caret and its keys; the host draws it.
 - Tests sit next to the file they test, as `<file>.spec.ts`. The page tests fake the backend (`page.route('**/api/**')`), so no server runs in tests. In `src/assistant/` they run in Node, so with no DOM: the pure functions, and `index.spec.ts` drives the assistant through an in-memory `EditorControl`. `src/app/lib/field-text.spec.ts` reads a real contenteditable in the browser. `src/app/App*.spec.ts` open the whole page with a fake LLM (`src/app/demo-page.ts`): the page, spell check, auto-completion.
 - `server/`: the backend, Express 5 (MIT): `index.ts` (Basic auth, the two API routes, statics from `dist/`, `index.html` for any other GET) and `openai-chat-client.ts` (the upstream `LLMClient`: OpenAI-style chat completions with the key, `LLM_URL`, `MODEL`; also used by the eval).
-- `eval/`: the prompt eval, plain Node (`spell-check.ts` imports the real prompt, message builder and parser from `src/assistant/` and the upstream client from `server/`; a resolve hook adds `.ts` to the extensionless imports). The dataset is `spell-check-cases.json`: `preset` (a key of `PRESETS`), `draft`, optional `caretOffset` (default: end of the draft), `expected` mistakes with `word`, accepted `fixes`, and optional `sure` (left out when either value is fine).
+- `tools/eval/`: the prompt eval, plain Node (`spell-check.ts` imports the real prompt, message builder and parser from `src/assistant/` and the upstream client from `server/`; a resolve hook adds `.ts` to the extensionless imports). The dataset is `spell-check-cases.json`: `preset` (a key of `PRESETS`), `draft`, optional `caretOffset` (default: end of the draft), `expected` mistakes with `word`, accepted `fixes`, and optional `sure` (left out when either value is fine).
 - Code has no comments: names say what things are.
 
 ## Hard constraints

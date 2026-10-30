@@ -1,15 +1,15 @@
 import { readFile } from 'node:fs/promises';
 import { registerHooks } from 'node:module';
 import { parseArgs } from 'node:util';
-import type { Mistake } from '../src/assistant/llm.ts';
-import type { ChatMessage } from '../src/assistant/types.ts';
+import type { Mistake } from '../../src/assistant/llm.ts';
+import type { ChatMessage } from '../../src/assistant/types.ts';
 
 resolveExtensionlessImportsAsTs();
 
-const { buildSpellCheckMessage, parseMistakes } = await import('../src/assistant/llm.ts');
-const { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } = await import('../src/assistant/spell-check-prompt.ts');
-const { PRESETS } = await import('../src/app/lib/presets.ts');
-const { createOpenAIChatClient } = await import('../server/openai-chat-client.ts');
+const { buildSpellCheckMessage, parseMistakes } = await import('../../src/assistant/llm.ts');
+const { SPELL_CHECK_EXAMPLES, SPELL_CHECK_SYSTEM_MESSAGE } = await import('../../src/assistant/spell-check-prompt.ts');
+const { PRESETS } = await import('../../src/app/lib/presets.ts');
+const { createOpenAIChatClient } = await import('../../server/openai-chat-client.ts');
 
 interface ExpectedMistake {
   word: string;
